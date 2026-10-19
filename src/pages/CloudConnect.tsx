@@ -18,10 +18,10 @@ export function CloudConnect() {
         e.preventDefault(); setBusy(true); setError('')
         try {
           await repo.setSetting(SYNC_KEYS.familyKey, key.trim())
+          await repo.setSetting('ui.childView', true)
           await engine.setEndpoint(DEFAULT_ENDPOINT)
           const result = engine.getSnapshot()
           if (result.status === 'error' || result.status === 'offline') throw new Error(result.lastError || '连接失败，请重试')
-          await repo.setSetting('ui.childView', true)
           refreshProfile()
         } catch (err) { setError(err instanceof Error ? err.message : '连接失败，请重试') }
         finally { setBusy(false) }

@@ -349,8 +349,14 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     syncNow,
 
     async setEndpoint(next) {
-      endpoint = next.trim() || DEFAULT_ENDPOINT
+      const previous = endpoint
+      endpoint = next.trim().replace(/\/+$/, '') || DEFAULT_ENDPOINT
       await repo.setSetting(SYNC_KEYS.endpoint, endpoint)
+      // 不同服务的水位线不可复用；保留本机记录和待上传队列，从头读取新服务。
+      if (previous !== endpoint) {
+        await repo.setSetting(SYNC_KEYS.seq, 0)
+        await repo.setSetting(SYNC_KEYS.resetSeq, null)
+      }
       update({ endpoint })
       await syncNow()
     },

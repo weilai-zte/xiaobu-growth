@@ -20,6 +20,19 @@
 
 GitHub Pages 不运行 Node 数据服务。独立云端服务使用 Supabase Edge Function 与 Postgres；所有手机和电脑共用一个家庭连接码，没有多用户系统。
 
+当前线上入口：<https://weilai-zte.github.io/xiaobu-growth/#/child>。家庭项目 `xiaobu-growth` 部署在新加坡区域，创建时月费报价为 0 美元。
+本机连接码保存在 `data/家庭连接码.txt`，已排除在 Git 及 JSON 备份之外。原 SQLite 迁移前备份为 `data/迁移前备份-20261019.sqlite`。
+所有设备请使用上述线上入口；原 `localhost:8788` 数据库作为迁移前保留副本，不会自动接收云端后续更新。
+
+真实云端检查（会创建并删除一条临时优势记录，不修改家庭已有记录）：
+
+```bash
+XB_CLOUD_VERIFY=1 npx vitest run tests/cloud.test.ts
+node scripts/verify-cloud.mjs
+```
+
+未携带家庭连接码的读取必须返回 401。`tests/cloud.test.ts` 默认跳过；只有家长明确验证时才连接真实家庭库，GitHub CI 不持有连接码。
+
 云端部署步骤：
 
 1. 在获授权的 Supabase 项目应用 `supabase/migrations/20261019_family_sync.sql`。数据表在私有 schema，启用 RLS，匿名角色不可直接读取或写入；RPC 仅 `service_role` 可调用。
