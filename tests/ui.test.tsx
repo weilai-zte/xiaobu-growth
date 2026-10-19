@@ -197,6 +197,37 @@ describe('睡眠记录', () => {
 })
 
 describe('儿童视图与隐私', () => {
+  it('孩子选择先做哪件事不产生打卡，点图卡才记录完成', async () => {
+    const child = await makeChild('全全')
+    await repo.setSetting(SETTINGS_KEYS.childView, true)
+    window.location.hash = '#/child'
+    const user = userEvent.setup()
+    render(<App />)
+    const choose = await screen.findByRole('button', { name: /我先做：.*垃圾/ })
+    await user.click(choose)
+    expect(choose).toHaveAttribute('aria-pressed', 'true')
+    expect(await repo.listChecks(child.id)).toHaveLength(0)
+    expect(await screen.findByRole('img', { name: '一直微笑着陪你的小鸟小步' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /垃圾放入垃圾桶，点一下完成/ }))
+    await waitFor(async () => expect((await repo.listChecks(child.id)).filter(c => c.status === 'done')).toHaveLength(1))
+  })
+  it('图片心愿可一键选填，选择优先心愿后首页显示同一个目标', async () => {
+    const child = await makeChild('全全')
+    await repo.setSetting(SETTINGS_KEYS.childView, true)
+    window.location.hash = '#/child/progress'
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(await screen.findByRole('button', { name: '一起做小饼干' }))
+    expect(screen.getByRole('textbox', { name: '我想要…' })).toHaveValue('一起做小饼干')
+    expect(await repo.listWishes(child.id)).toHaveLength(0)
+    await user.click(screen.getByRole('button', { name: '放进心愿小屋' }))
+    await user.click(await screen.findByRole('button', { name: '优先攒：一起做小饼干' }))
+    const wishes = await repo.listWishes(child.id)
+    await waitFor(async () => expect((await repo.getPrimaryProfile())?.focusWishId).toBe(wishes[0].id))
+    await user.click(screen.getByRole('link', { name: '我的任务' }))
+    expect(await screen.findByText('一起做小饼干')).toBeInTheDocument()
+    expect(screen.getByText('和爸爸妈妈一起约定星数')).toBeInTheDocument()
+  })
   it('儿童图卡点击即可记录，随后心愿小屋显示星星并保存自选礼物', async () => {
     const child = await makeChild('全全')
     const user = userEvent.setup()

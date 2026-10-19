@@ -218,6 +218,7 @@ export const CSV_COLUMNS: Record<string, Column[]> = {
     { key: 'id', label: 'ID' },
     { key: 'name', label: '名字' },
     { key: 'nickname', label: '小名' },
+    { key: 'focusWishId', label: '优先心愿 ID' },
     { key: 'birthDate', label: '出生日期', kind: 'day' },
     { key: 'gradeLabel', label: '年级' },
     { key: 'isPrimary', label: '主要档案', kind: 'bool' },

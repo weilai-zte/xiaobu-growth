@@ -105,6 +105,8 @@ function enumArray<T extends string>(
 
 export function validateChildProfile(draft: Draft<ChildProfile>) {
   const errors: string[] = []
+  const wishErr = optionalText(draft.focusWishId, '心愿标识', 100)
+  if (wishErr) errors.push(wishErr)
   const nameErr = requiredText(draft.name, '孩子名字', 20)
   if (nameErr) errors.push(nameErr)
   if (draft.birthDate !== null && draft.birthDate !== undefined && draft.birthDate !== '') {

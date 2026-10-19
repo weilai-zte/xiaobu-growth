@@ -30,7 +30,10 @@ export function PlayPicture({ kind, className = '' }: { kind: string; className?
     <ellipse cx="90" cy="134" rx="54" ry="7" fill="currentColor" opacity=".10" />
     <circle cx="90" cy="72" r="58" fill="currentColor" opacity=".09" />
     <g stroke="#454165" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-      {kind === 'shirt' ? <><path d="m64 29-29 22 16 24 14-8v57h51V67l14 8 16-24-29-22-17 8H81Z" fill="#a7d9c7"/><path d="M78 31q12 25 25 0" fill="#fff"/><path d="m78 81 9 9 19-22" fill="none"/></>
+      {kind === 'picnic' ? <><path d="M38 120h107M46 120l18-28h61l18 28" fill="#dcc3e7"/><path d="M119 93V38" fill="none"/><path d="M91 42q26-39 52 0l-26 23Z" fill="#a7cfaf"/><path d="m76 102 20 17m15-17-20 17" fill="none"/><path d="M45 63V40m-11 12h22" stroke="#c5a259"/></>
+      : kind === 'bake' ? <><path d="M47 79h86q-2 48-43 48T47 79Z" fill="#c0b1e5"/><path d="m108 77 24-40" fill="none"/><path d="M66 47q-7-11 3-21m20 25q-7-11 3-21" stroke="#9bbfb3" fill="none"/><circle cx="62" cy="62" r="17" fill="#efd8a0"/><circle cx="57" cy="57" r="2" fill="#6c5671" stroke="none"/><circle cx="67" cy="65" r="2" fill="#6c5671" stroke="none"/></>
+      : kind === 'bicycle' ? <><circle cx="46" cy="104" r="25" fill="#d7e8df"/><circle cx="135" cy="104" r="25" fill="#d7e8df"/><path d="m46 104 27-45 33 45H46l24-38h51l14 38m-25-63h13l-3 25M62 52h23" stroke="#7968a0" fill="none"/></>
+      : kind === 'shirt' ? <><path d="m64 29-29 22 16 24 14-8v57h51V67l14 8 16-24-29-22-17 8H81Z" fill="#a7d9c7"/><path d="M78 31q12 25 25 0" fill="#fff"/><path d="m78 81 9 9 19-22" fill="none"/></>
       : kind === 'bin' ? <><path d="m57 52 7 73h53l7-73" fill="#b3d8f5"/><path d="M51 48h80M75 45V33h32v12M81 68v39m20-39v39" fill="none"/><path d="m67 24 10-11 14 12-10 10Z" fill="#f8d998"/></>
       : kind === 'meal' ? <><circle cx="90" cy="79" r="42" fill="#fff"/><circle cx="90" cy="79" r="29" fill="#fae0a2"/><path d="M34 38v35m-8-35v22q8 15 16 0V38m-8 35v51m111-86q-17 29-3 38v48m3-86v38" fill="none"/><path d="m75 80 13 10 22-25" fill="none" stroke="#438975"/></>
       : kind === 'bag' ? <><path d="M72 43V29q18-17 36 0v14" fill="none"/><rect x="52" y="40" width="77" height="88" rx="22" fill="#bfb1ef"/><path d="M54 73h73" fill="none"/><rect x="67" y="88" width="47" height="27" rx="8" fill="#f6cd91"/><path d="M82 55h17" fill="none"/></>

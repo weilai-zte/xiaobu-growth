@@ -1,4 +1,21 @@
 import type { TaskRecord, RoutineCheck, Wish } from '../db/types'
+import { addDays } from './date'
+
+export function focusedWish(wishes: Wish[], id?: string | null): Wish | undefined {
+  const active = wishes.filter(w => !w.deleted && w.status !== 'redeemed')
+  return active.find(w => w.id === id) ?? active.find(w => w.status === 'approved' || w.status === 'requested') ?? active[0]
+}
+
+export function growthTrail(tasks: TaskRecord[], checks: RoutineCheck[], until: string) {
+  const days = new Set([
+    ...tasks.filter(t => !t.deleted && t.completion === 'independent').map(t => t.date),
+    ...checks.filter(c => !c.deleted && c.status === 'done').map(c => c.date),
+  ])
+  return Array.from({ length: 7 }, (_, i) => {
+    const date = addDays(until, i - 6)
+    return { date, done: days.has(date) }
+  })
+}
 
 export const STARS_PER_ACTION = 5
 export const BADGES = [
