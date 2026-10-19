@@ -12,6 +12,16 @@ export type ClockTime = string
 /** ISO 8601 时间戳 */
 export type ISOTime = string
 
+export type AdventureRoute = 'meadow' | 'stream' | 'forest'
+export interface AdventureRun extends Base {
+  childId: ID
+  date: DayKey
+  route: AdventureRoute
+  scene: number
+  material: 'leaf' | 'twig' | 'pebble'
+  bonusStars: number
+}
+
 export interface Base {
   id: ID
   createdAt: ISOTime

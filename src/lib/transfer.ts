@@ -2,6 +2,7 @@ import type { EntityName, GrowthDB } from '../db/db'
 import { ENTITY_LABELS, ENTITY_NAMES } from '../db/db'
 import { LABELS } from '../db/types'
 import { validWish } from './rewards'
+import { validAdventure } from './adventure'
 import {
   validateChildProfile,
   validateConflictLog,
@@ -30,12 +31,14 @@ export interface ExportBundle {
 
 /** 各实体在合并导入时的自然唯一键，用于避免重复数据 */
 const NATURAL_KEYS: Partial<Record<EntityName, string[]>> = {
+  adventureRuns: ['childId', 'date'],
   dailyLogs: ['childId', 'date'],
   routineChecks: ['ruleId', 'date'],
   weeklyReviews: ['childId', 'weekStart'],
 }
 
 const VALIDATORS: Partial<Record<EntityName, (row: Draft<never>) => ValidationResult>> = {
+  adventureRuns: (row) => validAdventure(row) ? { ok: true, errors: [] } : { ok: false, errors: ['冒险记录无效'] },
   wishes: (row) => validWish(row) ? { ok: true, errors: [] } : { ok: false, errors: ['心愿内容或星数无效'] },
   childProfiles: validateChildProfile as never,
   dailyLogs: validateDailyLog as never,
@@ -209,6 +212,12 @@ interface Column {
 }
 
 export const CSV_COLUMNS: Record<string, Column[]> = {
+  adventureRuns: [
+    { key: 'id', label: 'ID' }, { key: 'date', label: '冒险日期', kind: 'day' },
+    { key: 'route', label: '路线' }, { key: 'scene', label: '故事编号', kind: 'number' },
+    { key: 'material', label: '筑巢材料' }, { key: 'bonusStars', label: '奖励星星', kind: 'number' },
+    { key: 'createdAt', label: '记录时间', kind: 'datetime' },
+  ],
   wishes: [
     { key: 'id', label: 'ID' }, { key: 'name', label: '心愿' },
     { key: 'cost', label: '兑换星数', kind: 'number' }, { key: 'status', label: '状态' },

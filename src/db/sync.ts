@@ -10,6 +10,8 @@
  * 删除以墓碑形式同步，别的设备也能看到删除结果。
  */
 import { ENTITY_NAMES, type EntityName } from './db'
+import type { AdventureRoute, AdventureRun } from './types'
+import { validAdventure } from '../lib/adventure'
 import type { Repo } from './repo'
 
 export const SYNC_KEYS = {
@@ -49,6 +51,7 @@ export interface SyncEngineOptions {
 }
 
 export interface SyncEngine {
+  claimAdventure: (childId: string, date: string, route: AdventureRoute) => Promise<AdventureRun>
   getSnapshot: () => SyncSnapshot
   subscribe: (listener: () => void) => () => void
   start: () => Promise<void>
@@ -64,6 +67,7 @@ export interface SyncEngine {
 }
 
 interface SyncResponse {
+  adventure?: AdventureRun
   serverTime?: string
   seq?: number
   resetSeq?: number
@@ -123,12 +127,21 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     const headers: Record<string, string> = {}
     if (body !== undefined) headers['content-type'] = 'application/json'
     if (familyKey) headers['x-family-key'] = familyKey
-    const res = await doFetch(`${endpoint}${path}`, {
-      method,
-      headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
-      cache: 'no-store',
-    })
+    const controller = path === '/adventure' ? new AbortController() : undefined
+    const timeout = controller ? setTimeout(() => controller.abort(), 20000) : undefined
+    let res: Response
+    try {
+      res = await doFetch(`${endpoint}${path}`, {
+        method,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+        cache: 'no-store',
+        ...(controller ? { signal: controller.signal } : {}),
+      })
+    } catch (error) {
+      if (controller?.signal.aborted) throw new Error('这次连接超时，请再试一次；已保存的奖励不会重抽。')
+      throw error
+    } finally { if (timeout) clearTimeout(timeout) }
     if (!res.ok) {
       let detail = ''
       try {
@@ -288,6 +301,16 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
   }
 
   return {
+    async claimAdventure(childId, date, route) {
+      if (!await syncNow()) throw new Error('先连上网络，把今天的小任务保存好，再来出发吧。')
+      // 正在同步的一轮可能早于最新写入，再确认队列已排空。
+      if (await repo.outboxCount() > 0 && !await syncNow()) throw new Error('小任务还没保存好，请稍后重试。')
+      const response = await request('POST', '/adventure', { childId, date, route })
+      const row = response.adventure
+      if (!row || !validAdventure(row) || row.childId !== childId || row.date !== date) throw new Error('冒险结果没有收好，请再试一次；不会重复领奖。')
+      await repo.applyRemote('adventureRuns', [row as unknown as Record<string, unknown>])
+      return row
+    },
     getSnapshot: () => snapshot,
     subscribe: (listener) => {
       listeners.add(listener)

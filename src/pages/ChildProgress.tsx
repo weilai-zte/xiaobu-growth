@@ -6,7 +6,8 @@ import { useApp } from '../app/AppProvider'
 import { BADGES, focusedWish, starBalance } from '../lib/rewards'
 import { Card } from '../components/ui'
 import { PlayPicture, Celebration, TinyStar } from '../components/PlayCards'
-import { GrowthTrail, WishGoal } from '../components/GrowthJourney'
+import { BirdGrowth, GrowthTrail, WishGoal } from '../components/GrowthJourney'
+import { uniqueAdventures } from '../lib/adventure'
 import { todayKey } from '../lib/date'
 
 const PICTURES = [{ key: 'gift', label: '礼物' }, { key: 'ball', label: '运动' }, { key: 'book', label: '图书' }, { key: 'paint', label: '画画' }, { key: 'picnic', label: '出游' }]
@@ -21,14 +22,14 @@ export function ChildProgress({ parent = false }: { parent?: boolean }) {
   const { profile } = useApp()
   const childId = profile?.id
   const data = useLiveQuery(async () => childId ? {
-    tasks: await repo.listTaskRecords(childId), checks: await repo.listChecks(childId), wishes: await repo.listWishes(childId), strengths: await repo.listStrengths(childId),
+    tasks: await repo.listTaskRecords(childId), checks: await repo.listChecks(childId), wishes: await repo.listWishes(childId), strengths: await repo.listStrengths(childId), adventures: await repo.listAdventures(childId),
   } : undefined, [childId])
   const [name, setName] = useState('')
   const [picture, setPicture] = useState('gift')
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const [costs, setCosts] = useState<Record<string, string>>({})
-  const balance = starBalance(data?.tasks ?? [], data?.checks ?? [], data?.wishes ?? [])
+  const balance = starBalance(data?.tasks ?? [], data?.checks ?? [], data?.wishes ?? [], data?.adventures ?? [])
   const nextBadge = BADGES.find(b => b.at > balance.earned)
   const focus = focusedWish(data?.wishes ?? [], profile?.focusWishId)
   async function run(action: () => Promise<unknown>, success: string) {
@@ -39,6 +40,7 @@ export function ChildProgress({ parent = false }: { parent?: boolean }) {
     <section className="play-hero wish-hero"><div><span className="play-eyebrow">{parent ? '家长管理' : `${profile?.nickname || profile?.name || '我'}的心愿小屋`}</span><h1>{parent ? '星星与礼物' : '每一小步，都在发光'}</h1><p>攒星星，点亮图标，选一个自己的心愿。</p><div className="star-total"><span><TinyStar /></span> {balance.available}<small>颗可用星星</small></div></div><PlayPicture kind="gift" /></section>
     <Celebration message={message} />
     {!data && <p role="status">正在打开星星盒子…</p>}
+    {data && <BirdGrowth count={uniqueAdventures(data.adventures).length} runs={data.adventures} />}
     {!parent && data && <WishGoal wish={focus} available={balance.available} />}
     {data && <GrowthTrail tasks={data.tasks} checks={data.checks} date={todayKey()} />}
     <Card title="我的成长花园"><div className="badge-garden">{BADGES.map(b => <div key={b.at} className={`growth-badge ${balance.earned >= b.at ? 'lit' : ''}`}><PlayPicture kind={b.picture} /><strong>{b.name}</strong><small>{balance.earned >= b.at ? '已点亮' : `${b.at} 颗星点亮`}</small></div>)}</div>
@@ -59,7 +61,7 @@ export function ChildProgress({ parent = false }: { parent?: boolean }) {
     </Card>
     {(data?.wishes ?? []).some(w => w.status === 'redeemed') && <Card title="已经实现的心愿"><div className="wish-grid">{data!.wishes.filter(w => w.status === 'redeemed').map(w => <div className="wish-card" key={w.id}><PlayPicture kind={w.picture} /><strong>{w.name}</strong><p>已兑现 · {w.cost} 颗星</p></div>)}</div></Card>}
     {!!data?.strengths.length && <Card title="被记住的闪光时刻">{data.strengths.slice(0, 5).map(s => <article key={s.id}><p>{s.childAction}</p><p className="muted">{s.event}</p></article>)}</Card>}
-    <details className="play-steps"><summary>星星怎么攒？</summary><p>每项学习任务或生活图卡完成得 5 颗星；同一任务当天只算一次。历史有效记录和补记也参与计算。漏做不扣星，不要求连续打卡。撤回或删除完成记录后，对应星星也会撤回。没有每日额外奖励。</p><p>累计获得 5、25、60、120 颗星时，依次点亮小芽、小花、小树和火箭。礼物由孩子提出、家长确定星数；申请后先留住星星，家长送出后正式兑换。</p></details>
+    <details className="play-steps"><summary>星星怎么攒？</summary><p>每项学习任务或生活图卡完成得 5 颗星；同一任务当天只算一次。历史有效记录和补记也参与计算。漏做不扣星，不要求连续打卡。撤回或删除完成记录后，对应星星也会撤回。每日冒险获得的奖励星星另计，不计入当天15星出发门槛。</p><p>累计获得 5、25、60、120 颗星时，依次点亮小芽、小花、小树和火箭。礼物由孩子提出、家长确定星数；申请后先留住星星，家长送出后正式兑换。</p></details>
     {!parent && <Link className="btn" to="/rewards">请家长一起看心愿</Link>}
   </div>
 }

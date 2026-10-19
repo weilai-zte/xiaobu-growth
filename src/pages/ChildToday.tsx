@@ -9,16 +9,20 @@ import { BuddyBird, WishGoal } from '../components/GrowthJourney'
 import { focusedWish, starBalance } from '../lib/rewards'
 import { FeedbackSound } from '../components/FeedbackSound'
 import { PRAISE_TEXT } from '../lib/praise'
+import { Adventure, useAdventureDay } from '../components/Adventure'
+import { birdStage, uniqueAdventures } from '../lib/adventure'
 
 export function ChildToday() {
   const { profile } = useApp()
-  const { tasks, rules, checks, childId, date, loading } = useToday()
+  const adventureDate = useAdventureDay()
+  const { tasks, rules, checks, childId, date, loading } = useToday(adventureDate)
   const [message, setMessage] = useState('')
   const [chosenId, setChosenId] = useState('')
   const growth = useLiveQuery(async () => childId ? {
-    tasks: await repo.listTaskRecords(childId), checks: await repo.listChecks(childId), wishes: await repo.listWishes(childId),
+    tasks: await repo.listTaskRecords(childId), checks: await repo.listChecks(childId), wishes: await repo.listWishes(childId), adventures: await repo.listAdventures(childId),
   } : undefined, [childId])
-  const balance = starBalance(growth?.tasks ?? [], growth?.checks ?? [], growth?.wishes ?? [])
+  const balance = starBalance(growth?.tasks ?? [], growth?.checks ?? [], growth?.wishes ?? [], growth?.adventures ?? [])
+  const stage = birdStage(uniqueAdventures(growth?.adventures ?? []).length)
   const wish = focusedWish(growth?.wishes ?? [], profile?.focusWishId)
   const allCards = [
     ...tasks.map(task => ({ id: task.id, title: task.name, done: task.completion === 'independent', save: () => repo.updateTaskRecord(task.id, { completion: 'independent', status: 'finished', timer: null }) })),
@@ -27,7 +31,8 @@ export function ChildToday() {
   const cards = [...allCards].sort((a, b) => Number(a.done) - Number(b.done) || Number(b.id === chosenId) - Number(a.id === chosenId)).slice(0, 5)
   const doneToday = allCards.filter(card => card.done).length
   return <div className="play-world">
-    <section className="play-hero buddy-hero"><div className="buddy-intro"><span className="play-eyebrow">今天的小冒险 · 自己选一小步</span><h1>{profile?.nickname || profile?.name}，出发！</h1><p>我叫小步，今天也陪你一起。</p><Link className="star-wallet" to="/child/progress"><TinyStar /><strong>{growth ? balance.available : '…'}</strong><span>我的星星</span><span aria-hidden="true">→</span></Link></div><div className="buddy-stage"><BuddyBird earned={balance.earned} celebrating={doneToday > 0} /><span className="buddy-speech">选一件喜欢的，慢慢来。</span></div></section>
+    <section className="play-hero buddy-hero"><div className="buddy-intro"><span className="play-eyebrow">今天的小冒险 · 自己选一小步</span><h1>{profile?.nickname || profile?.name}，出发！</h1><p>{stage.key === 'egg' || stage.key === 'crack' ? '小步还在蛋里，我们一起等它长大。' : stage.text}</p><Link className="star-wallet" to="/child/progress"><TinyStar /><strong>{growth ? balance.available : '…'}</strong><span>我的星星</span><span aria-hidden="true">→</span></Link></div><div className="buddy-stage"><BuddyBird stage={stage.key} celebrating={doneToday > 0} /><span className="buddy-speech">{stage.name}</span></div></section>
+    {growth && childId && <Adventure key={date} childId={childId} date={date} tasks={growth.tasks} checks={growth.checks} runs={growth.adventures} />}
     {growth && <WishGoal wish={wish} available={balance.available} compact />}
     <Celebration message={message} />
     <div className="journey-section-heading"><div><span className="journey-kicker">做完后，点图片收下这一步</span><h2>今天先做哪一件？</h2></div><span className="today-leaves">已点亮 {doneToday} 张</span></div>

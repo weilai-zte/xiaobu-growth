@@ -26,6 +26,9 @@ export function TinyStar() {
 }
 
 export function PlayPicture({ kind, className = '' }: { kind: string; className?: string }) {
+  if (['map', 'stream', 'leaf', 'twig', 'pebble'].includes(kind)) return <svg viewBox="0 0 180 150" className={`play-picture ${className}`} aria-hidden="true" focusable="false"><circle cx="90" cy="75" r="60" fill="#eef1e7" /><g stroke="#625275" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+    {kind === 'map' ? <><path d="m30 40 40-13 40 13 40-13v90l-40 13-40-13-40 13Z" fill="#f1dfb9"/><path d="M70 27v90m40-77v90M49 84q50-68 83-14" fill="none" strokeDasharray="5 6"/><path d="m125 62 14 14m0-14-14 14" stroke="#8a70ad"/></> : kind === 'stream' ? <><path d="M26 60q50-35 128 0v45q-50-25-128 0Z" fill="#c6dfed"/><path d="M40 75q33-10 59-1m-34 17q30-6 67-1" fill="none" stroke="#7cabbf"/><path d="M43 53V26m0 9-14 9m14-3 17-10" fill="none" stroke="#7b9e7b"/><ellipse cx="140" cy="108" rx="16" ry="10" fill="#c7bcce"/></> : kind === 'leaf' ? <><path d="M48 118Q26 34 139 28q15 90-91 90Z" fill="#b5d5b2"/><path d="m48 118 65-67m-43 44 39 1M89 75V48" fill="none" stroke="#6f966e"/></> : kind === 'twig' ? <><path d="m47 120 72-90 11 8-72 90Z" fill="#ccb08c"/><path d="m85 76-27-4m48-20 30 2m-57 44 30 3" fill="none" stroke="#9c805f"/></> : <><path d="M37 99Q39 58 85 42q51-14 61 42 9 42-57 42-54 0-52-27Z" fill="#cbc1d4"/><path d="M63 77q25-19 49-10" fill="none" stroke="#f7f1fa"/></>}
+  </g></svg>
   return <svg viewBox="0 0 180 150" className={`play-picture ${className}`} aria-hidden="true" focusable="false">
     <ellipse cx="90" cy="134" rx="54" ry="7" fill="currentColor" opacity=".10" />
     <circle cx="90" cy="72" r="58" fill="currentColor" opacity=".09" />

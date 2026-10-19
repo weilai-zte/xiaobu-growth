@@ -1,4 +1,4 @@
-import type { TaskRecord, RoutineCheck, Wish } from '../db/types'
+import type { TaskRecord, RoutineCheck, Wish, AdventureRun } from '../db/types'
 import { addDays } from './date'
 
 export function focusedWish(wishes: Wish[], id?: string | null): Wish | undefined {
@@ -26,7 +26,7 @@ export const BADGES = [
 ]
 
 // 星星直接由有效记录计算，重复点击、删除和跨设备合并都不会产生额外流水。
-export function starBalance(tasks: TaskRecord[], checks: RoutineCheck[], wishes: Wish[]) {
+export function starBalance(tasks: TaskRecord[], checks: RoutineCheck[], wishes: Wish[], adventures: AdventureRun[] = []) {
   const actions = new Set<string>()
   for (const task of tasks) {
     if (!task.deleted && task.completion === 'independent') {
@@ -36,10 +36,11 @@ export function starBalance(tasks: TaskRecord[], checks: RoutineCheck[], wishes:
   for (const check of checks) {
     if (!check.deleted && check.status === 'done') actions.add(`rule:${check.date}:${check.ruleId}`)
   }
-  const earned = actions.size * STARS_PER_ACTION
+  const bonus = [...new Map(adventures.filter(r => !r.deleted).map(r => [r.id, r])).values()].reduce((sum, r) => sum + r.bonusStars, 0)
+  const earned = actions.size * STARS_PER_ACTION + bonus
   const spent = wishes.filter(w => !w.deleted && w.status === 'redeemed').reduce((sum, w) => sum + (w.cost ?? 0), 0)
   const reserved = wishes.filter(w => !w.deleted && w.status === 'requested').reduce((sum, w) => sum + (w.cost ?? 0), 0)
-  return { earned, spent, reserved, available: Math.max(0, earned - spent - reserved) }
+  return { earned, bonus, spent, reserved, available: Math.max(0, earned - spent - reserved) }
 }
 
 export function validWish(row: Partial<Wish>): boolean {

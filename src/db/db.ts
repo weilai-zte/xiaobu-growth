@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import type {
+  AdventureRun,
   ChildProfile,
   ConflictLog,
   DailyLog,
@@ -17,6 +18,7 @@ import type {
 } from './types'
 
 export class GrowthDB extends Dexie {
+  adventureRuns!: Table<AdventureRun, string>
   wishes!: Table<Wish, string>
   childProfiles!: Table<ChildProfile, string>
   dailyLogs!: Table<DailyLog, string>
@@ -67,6 +69,7 @@ export class GrowthDB extends Dexie {
       syncState: 'key',
     })
     this.version(3).stores({ wishes: 'id, childId, status' })
+    this.version(4).stores({ adventureRuns: 'id, childId, date, &[childId+date]' })
   }
 }
 
@@ -74,6 +77,7 @@ export const DB_NAME = 'xiaobu-growth'
 export const db = new GrowthDB()
 
 export type EntityName =
+  | 'adventureRuns'
   | 'wishes'
   | 'childProfiles'
   | 'dailyLogs'
@@ -87,6 +91,7 @@ export type EntityName =
   | 'experiments'
 
 export const ENTITY_NAMES: EntityName[] = [
+  'adventureRuns',
   'wishes',
   'childProfiles',
   'dailyLogs',
@@ -101,6 +106,7 @@ export const ENTITY_NAMES: EntityName[] = [
 ]
 
 export const ENTITY_LABELS: Record<EntityName, string> = {
+  adventureRuns: '小步冒险',
   wishes: '心愿礼物',
   childProfiles: '儿童档案',
   dailyLogs: '睡眠与身体记录',

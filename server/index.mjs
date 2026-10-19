@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url'
 import { networkInterfaces } from 'node:os'
 import {
   DB_PATH,
+  claimAdventure,
   ENTITIES,
   counts,
   deleteEverything,
@@ -121,6 +122,12 @@ async function handleApi(req, res, url) {
     return
   }
 
+  if (path === '/api/adventure' && method === 'POST') {
+    const body = await readBody(req)
+    sendJson(res, 200, { adventure: claimAdventure(body.childId, body.date, body.route) })
+    return
+  }
+
   if (path === '/api/sync' && method === 'POST') {
     const body = await readBody(req)
     const since = Number(body.since ?? 0)
@@ -154,6 +161,7 @@ async function handleApi(req, res, url) {
   const match = path.match(/^\/api\/([a-zA-Z]+)(?:\/(.+))?$/)
   if (match && ENTITIES.includes(match[1])) {
     const entity = match[1]
+    if (entity === 'adventureRuns' && method !== 'GET') return sendJson(res, 400, { error: '冒险奖励不能修改、删除或重新抽取' })
     const id = match[2] ? decodeURIComponent(match[2]) : null
     if (!id && method === 'GET') {
       sendJson(res, 200, { rows: listEntity(entity), seq: maxSeq(), serverTime: nowIso() })

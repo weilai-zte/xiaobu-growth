@@ -61,6 +61,7 @@ function stamp<T extends object>(input: T): T & Timestamped {
 }
 
 export function createRepo(database: GrowthDB) {
+  async function listAdventures(childId: ID) { return alive(await database.adventureRuns.where('childId').equals(childId).toArray()) }
   async function listWishes(childId: ID): Promise<Wish[]> {
     return alive(await database.wishes.where('childId').equals(childId).toArray())
   }
@@ -73,18 +74,18 @@ export function createRepo(database: GrowthDB) {
 
   async function changeWish(id: ID, action: 'approve' | 'request' | 'redeem' | 'cancel', cost?: number) {
     // 单设备内串行校验并写入，重复点击不会重复预留或兑换。
-    await database.transaction('rw', database.wishes, database.taskRecords, database.routineChecks, database.syncQueue, async () => {
+    await database.transaction('rw', database.wishes, database.taskRecords, database.routineChecks, database.adventureRuns, database.syncQueue, async () => {
       const old = await database.wishes.get(id)
       if (!old || old.deleted) throw new Error('找不到这个心愿')
       const next = { ...old, updatedAt: nowISO() }
       if (action === 'approve' && old.status === 'proposed') {
         next.cost = cost ?? null; next.status = 'approved'
       } else if (action === 'request' && old.status === 'approved') {
-        const balance = starBalance(await listTaskRecords(old.childId), await listChecks(old.childId), await listWishes(old.childId))
+        const balance = starBalance(await listTaskRecords(old.childId), await listChecks(old.childId), await listWishes(old.childId), await listAdventures(old.childId))
         if (balance.available < (old.cost ?? Infinity)) throw new Error('星星还没攒够，再做一点点就更近了')
         next.status = 'requested'
       } else if (action === 'redeem' && old.status === 'requested') {
-        const balance = starBalance(await listTaskRecords(old.childId), await listChecks(old.childId), await listWishes(old.childId))
+        const balance = starBalance(await listTaskRecords(old.childId), await listChecks(old.childId), await listWishes(old.childId), await listAdventures(old.childId))
         if (balance.earned - balance.spent < balance.reserved) throw new Error('记录有变动，当前星星不足，请先取消申请')
         next.status = 'redeemed'
       } else if (action === 'cancel' && old.status === 'requested') next.status = 'approved'
@@ -513,6 +514,7 @@ export function createRepo(database: GrowthDB) {
    * 这样「删除」本身才能同步到其他设备，也不会被别的设备重新同步回来。
    */
   async function deleteRecord(entity: EntityName, id: ID) {
+    if (entity === 'adventureRuns') throw new Error('冒险奖励由云端保存，不能单独撤回或重新领取')
     const existing = await tableOf(entity).get(id)
     if (!existing) return
     await write(entity, { ...existing, deleted: true, updatedAt: nowISO() })
@@ -610,6 +612,7 @@ export function createRepo(database: GrowthDB) {
   async function countAll(): Promise<Record<string, number>> {
     const out: Record<string, number> = {}
     for (const name of [
+      'adventureRuns',
       'wishes',
       'childProfiles',
       'dailyLogs',
@@ -629,6 +632,7 @@ export function createRepo(database: GrowthDB) {
   }
 
   return {
+    listAdventures,
     listWishes,
     proposeWish,
     changeWish,

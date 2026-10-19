@@ -1466,3 +1466,52 @@ legend {
   .trail-count { font-size: 10px; padding: 6px 7px; }
 }
 @media (prefers-reduced-motion: reduce) { .buddy-happy .bird-wing { animation: none; } .wish-goal-meter > span, .action-choice { transition: none; } }
+
+/* 每日小冒险：故事有终点，奖励先保存，成长不因休息倒退。 */
+.adventure-card, .bird-growth { border: 1px solid #ded6ec; border-radius: 25px; background: linear-gradient(130deg, #fffdf6, #f1edf9); padding: 24px; color: #514365; }
+.adventure-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.adventure-heading h2 { margin: 5px 0 10px; font-size: 22px; }
+.adventure-heading > .play-picture { width: 82px; height: 72px; flex: none; }
+.adventure-card p { line-height: 1.7; }
+.adventure-energy { height: 10px; background: #e4dced; border-radius: 10px; overflow: hidden; }
+.adventure-energy > span { display: block; height: 100%; background: #9d87bd; border-radius: inherit; }
+.adventure-routes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.adventure-routes button { font: inherit; border: 2px solid #ddd2ed; background: #fffefa; border-radius: 20px; padding: 12px; color: #514365; cursor: pointer; min-height: 130px; }
+.adventure-routes button:hover:not(:disabled) { background: #eae2f5; border-color: #9e83c0; }
+.adventure-routes .play-picture { display: block; width: 100%; height: 95px; }
+.adventure-card details { margin-top: 14px; font-size: 12px; color: #6e617e; }
+.adventure-card summary { min-height: 44px; display: list-item; padding-top: 12px; cursor: pointer; }
+.adventure-loot { display: flex; flex-wrap: wrap; gap: 10px; }
+.adventure-loot > span { display: inline-flex; align-items: center; gap: 7px; border-radius: 18px; padding: 7px 14px; background: #fcf2d4; color: #71551e; font-weight: 700; }
+.adventure-loot .play-picture { width: 40px; height: 36px; }
+.adventure-error { border-left: 3px solid #a77d35; background: #fff5df; padding: 12px; color: #705526; }
+.adventure-card .play-feedback:empty { display: none; }
+.growth-current { display: flex; align-items: center; gap: 24px; }
+.growth-current > .buddy-bird { width: 220px; flex: none; }
+.material-shelf { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 16px; }
+.material-shelf > span { display: flex; align-items: center; gap: 6px; background: #fffdf5; border-radius: 16px; padding: 6px 10px; }
+.material-shelf .play-picture { width: 42px; height: 38px; }
+.material-shelf small { font-size: 12px; }
+.adventure-album summary { min-height: 44px; cursor: pointer; padding: 12px 0; }
+.adventure-album ol { list-style: none; padding: 0; }
+.adventure-album li { display: flex; gap: 12px; border-top: 1px solid #ded6e9; padding: 12px 0; align-items: center; }
+.adventure-album .play-picture { width: 62px; height: 56px; flex: none; }
+.adventure-album p { margin: 4px 0; font-size: 13px; }
+.bird-timeline { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; padding: 0; margin: 20px 0; list-style: none; }
+.bird-timeline li { border-radius: 18px; background: #e9e6ed; padding: 6px 4px 12px; text-align: center; color: #6d6278; }
+.bird-timeline li.reached { background: #e5efdf; color: #466449; }
+.bird-timeline li[aria-current='step'] { outline: 2px solid #8b739f; outline-offset: 2px; }
+.bird-timeline strong, .bird-timeline small { display: block; font-size: 12px; overflow-wrap: anywhere; }
+.bird-timeline small { font-size: 10px; margin-top: 4px; }
+@media (max-width: 600px) {
+  .adventure-card, .bird-growth { padding: 18px 15px; }
+  .adventure-heading h2 { font-size: 20px; }
+  .adventure-heading > .play-picture { width: 62px; height: 60px; }
+  .adventure-routes { gap: 8px; }
+  .adventure-routes button { padding: 8px 4px; min-height: 110px; font-size: 14px; }
+  .adventure-routes .play-picture { height: 75px; }
+  .adventure-start { width: 100%; }
+  .growth-current { flex-direction: column; gap: 4px; text-align: center; }
+  .growth-current > .buddy-bird { width: 180px; }
+  .bird-timeline { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+}

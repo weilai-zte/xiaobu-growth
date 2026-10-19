@@ -207,7 +207,7 @@ describe('儿童视图与隐私', () => {
     await user.click(choose)
     expect(choose).toHaveAttribute('aria-pressed', 'true')
     expect(await repo.listChecks(child.id)).toHaveLength(0)
-    expect(await screen.findByRole('img', { name: '一直微笑着陪你的小鸟小步' })).toBeInTheDocument()
+    expect(await screen.findByRole('img', { name: '小步：一颗小蛋' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /垃圾放入垃圾桶，点一下完成/ }))
     await waitFor(async () => expect((await repo.listChecks(child.id)).filter(c => c.status === 'done')).toHaveLength(1))
   })

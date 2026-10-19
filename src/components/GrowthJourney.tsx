@@ -1,15 +1,22 @@
 import { Link } from 'react-router-dom'
-import type { RoutineCheck, TaskRecord, Wish } from '../db/types'
+import type { AdventureRun, RoutineCheck, TaskRecord, Wish } from '../db/types'
 import { PlayPicture, TinyStar } from './PlayCards'
 import { growthTrail } from '../lib/rewards'
 import { formatDay } from '../lib/date'
+import { BIRD_STAGES, birdStage, MATERIAL_NAMES, uniqueAdventures, adventureStory } from '../lib/adventure'
 
-export function BuddyBird({ earned, celebrating = false }: { earned: number; celebrating?: boolean }) {
-  return <svg className={`buddy-bird ${celebrating ? 'buddy-happy' : ''}`} viewBox="0 0 260 210" role="img" aria-label="一直微笑着陪你的小鸟小步">
-    <title>小鸟小步</title><desc>小步站在小岛上，张开翅膀陪你出发。攒下星星时会多一条围巾和一片小叶子。</desc>
+export function BuddyBird({ stage = 'egg', celebrating = false }: { stage?: string; celebrating?: boolean }) {
+  const egg = stage === 'egg' || stage === 'crack'
+  const grown = ['adult', 'nest', 'home'].includes(stage)
+  const name = BIRD_STAGES.find(s => s.key === stage)?.name ?? '一颗小蛋'
+  return <svg className={`buddy-bird ${celebrating ? 'buddy-happy' : ''}`} viewBox="0 0 260 210" role="img" aria-label={`小步：${name}`}>
+    <title>{name}</title><desc>小步从蛋到小鸟，再到拥有自己的家。成长不会因为休息或兑换礼物而倒退。</desc>
     <circle cx="130" cy="101" r="88" fill="#eee8f9" />
     <path d="M35 162q95-27 190 0l-10 16q-80 30-170 0Z" fill="#d4e7ce" />
     <ellipse cx="130" cy="174" rx="53" ry="7" fill="#b4c7ad" opacity=".5" />
+    {stage === 'home' && <g stroke="#806b55" strokeWidth="3" strokeLinejoin="round"><path d="M48 95h164v84H48Z" fill="#ead7b4"/><path d="m32 95 98-74 98 74Z" fill="#b4c9b1"/><path d="M91 180v-49a39 39 0 0 1 78 0v49" fill="#f9f1df"/></g>}
+    {egg ? <g stroke="#807294" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M88 125c0-37 22-78 42-78s42 41 42 78c0 30-17 44-42 44s-42-14-42-44Z" fill="#fff7e5"/><ellipse cx="112" cy="96" rx="6" ry="9" fill="#d5c7e8" stroke="none"/><ellipse cx="145" cy="125" rx="8" ry="5" fill="#d5c7e8" stroke="none"/>{stage === 'crack' && <path d="m129 49-7 22 13 12-12 16 12 10-7 17" fill="none"/>}<path d="M77 157q53 30 106 0m-96 14q43 17 86 0" stroke="#b69c76" fill="none"/></g> : <>
+    <g transform={stage === 'hatch' ? 'translate(39 52) scale(.7)' : stage === 'young' ? 'translate(20 25) scale(.85)' : stage === 'home' ? 'translate(39 46) scale(.7)' : undefined}>
     <g stroke="#554975" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
       <path className="bird-wing" d="M88 96q-42-6-37 27 19 5 38-11" fill="#ab9cd6" />
       <path className="bird-wing" d="M172 96q42-6 37 27-19 5-38-11" fill="#ab9cd6" />
@@ -19,12 +26,22 @@ export function BuddyBird({ earned, celebrating = false }: { earned: number; cel
       <path d="M100 85q6-9 12 0m36 0q6-9 12 0" fill="none" />
       <ellipse cx="97" cy="98" rx="10" ry="5" fill="#e7a6ac" stroke="none" /><ellipse cx="163" cy="98" rx="10" ry="5" fill="#e7a6ac" stroke="none" />
       <path d="m119 96 11-7 11 7-11 12Z" fill="#efc778" />
-      {earned >= 25 && <><path d="M87 116q43 16 86 0l-3 13q-40 15-80 0Z" fill="#92c6ae"/><path d="m154 129 10 24-15-4-3-20" fill="#92c6ae"/></>}
-      {earned >= 60 && <path d="M129 34q-17-24-29-12 2 17 29 12Zm1-1q8-25 24-22 5 20-24 22Z" fill="#a8d1a4" />}
+      {grown && <><path d="M87 116q43 16 86 0l-3 13q-40 15-80 0Z" fill="#92c6ae"/><path d="m154 129 10 24-15-4-3-20" fill="#92c6ae"/></>}
+      {stage !== 'hatch' && <path d="M129 34q-17-24-29-12 2 17 29 12Zm1-1q8-25 24-22 5 20-24 22Z" fill="#a8d1a4" />}
     </g>
+    </g>
+    {stage === 'hatch' && <path d="m90 153 12-9 13 11 13-9 13 10 17-10 13 7q-2 28-41 28t-40-28Z" fill="#fff7e5" stroke="#807294" strokeWidth="3"/>}
+    {['nest', 'home'].includes(stage) && <g stroke="#a78b66" fill="#d9bd95" strokeWidth="3"><path d="M73 153q57 31 114 0l-12 29q-45 17-90 0Z"/><path d="m85 168 89 10m-78 4 77-16"/></g>}
+    </>}
     <g fill="#c3a159"><path d="m39 57 3 8 8 3-8 3-3 8-3-8-8-3 8-3Z"/><path d="m218 42 2 6 7 2-7 3-2 6-2-6-7-3 7-2Z"/></g>
-    {earned >= 120 && <path d="m202 118 4 8 9 2-6 6 1 9-8-4-8 4 1-9-6-6 9-2Z" fill="#f0cf7b" />}
+    {stage === 'home' && <path d="m212 125 4 8 9 2-6 6 1 9-8-4-8 4 1-9-6-6 9-2Z" fill="#f0cf7b" />}
   </svg>
+}
+
+export function BirdGrowth({ count, runs = [] }: { count: number; runs?: AdventureRun[] }) {
+  const stage = birdStage(count)
+  const next = BIRD_STAGES.find(s => s.at > count)
+  return <section className="bird-growth"><div className="growth-current"><BuddyBird stage={stage.key} /><div><span className="journey-kicker">小步的成长故事 · 已一起冒险 {count} 次</span><h2>{stage.name}</h2><p>{stage.text}</p><p className="muted">{next ? `再一起冒险 ${next.at - count} 次，就到「${next.name}」。` : '家已经建好了。每次冒险仍会留下新故事。'}</p></div></div><div className="material-shelf" aria-label="一路带回的筑巢材料">{(['leaf', 'twig', 'pebble'] as const).map(material => <span key={material}><PlayPicture kind={material} /><small>{MATERIAL_NAMES[material]} × {uniqueAdventures(runs).filter(r => r.material === material).length}</small></span>)}</div><ol className="bird-timeline">{BIRD_STAGES.map(s => <li key={s.key} aria-current={stage.key === s.key ? 'step' : undefined} className={count >= s.at ? 'reached' : ''}><BuddyBird stage={s.key} /><strong>{s.name}</strong><small>{s.at === 0 ? '从这里开始' : `累计 ${s.at} 次冒险`}</small></li>)}</ol><p className="muted">不需要连续打卡。休息不会退回去，兑换礼物也不会让小步变小。</p>{runs.length > 0 && <details className="adventure-album"><summary>翻翻冒险相册</summary><ol>{uniqueAdventures(runs).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7).map(run => <li key={run.id}><PlayPicture kind={run.material} /><div><strong>{run.date.slice(5)} · +{run.bonusStars} 星</strong><p>{adventureStory(run)}</p></div></li>)}</ol></details>}</section>
 }
 
 export function WishGoal({ wish, available, compact = false }: { wish?: Wish; available: number; compact?: boolean }) {

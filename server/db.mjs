@@ -11,6 +11,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { randomInt } from 'node:crypto'
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
 export const DB_PATH = process.env.XB_DB ?? join(ROOT, 'data', 'sync.db')
@@ -18,6 +19,7 @@ export const DB_PATH = process.env.XB_DB ?? join(ROOT, 'data', 'sync.db')
 mkdirSync(dirname(DB_PATH), { recursive: true })
 
 export const ENTITIES = [
+  'adventureRuns',
   'wishes',
   'childProfiles',
   'dailyLogs',
@@ -115,6 +117,10 @@ export function upsertRecord(entity, input) {
   assertEntity(entity)
   if (!input?.id) throw new Error('缺少 id')
   const existing = getRecord(entity, input.id)
+  if (entity === 'adventureRuns') {
+    if (existing) return { row: existing, applied: false, reason: 'same' }
+    throw new Error('冒险奖励只能通过每日冒险领取')
+  }
   const clientUpdatedAt = input.updatedAt ?? input.updated_at ?? nowIso()
 
   if (existing && clientUpdatedAt < existing.updatedAt) {
@@ -141,7 +147,8 @@ export function upsertRecord(entity, input) {
         if (check.childId === input.childId && check.status === 'done') actions.add(`rule:${check.date}:${check.ruleId}`)
       }
       const committed = listEntity('wishes').filter(w => w.childId === input.childId && w.id !== input.id && ['requested', 'redeemed'].includes(w.status)).reduce((sum, w) => sum + w.cost, 0)
-      if (actions.size * 5 < committed + input.cost) throw new Error('星星余额不足，可能已在另一台设备申请礼物。请取消本次申请后重新同步。')
+      const bonus = listEntity('adventureRuns').filter(r => r.childId === input.childId).reduce((sum, r) => sum + r.bonusStars, 0)
+      if (actions.size * 5 + bonus < committed + input.cost) throw new Error('星星余额不足，可能已在另一台设备申请礼物。请取消本次申请后重新同步。')
     }
   }
 
@@ -182,6 +189,7 @@ export function listEntity(entity, { includeDeleted = false } = {}) {
 }
 
 export function softDelete(entity, id) {
+  if (entity === 'adventureRuns') throw new Error('冒险奖励不能单独删除或重抽')
   const existing = getRecord(entity, id)
   if (!existing) return null
   const { syncSeq, updatedAt, ...payload } = { ...existing, deleted: true }
@@ -189,6 +197,25 @@ export function softDelete(entity, id) {
     'UPDATE records SET payload = ?, deleted = 1, updated_at = ?, sync_seq = ? WHERE entity = ? AND id = ?',
   ).run(JSON.stringify(payload), nowIso(), nextSeq(), entity, id)
   return getRecord(entity, id)
+}
+
+/** 同步执行，无 await；每日固定主键使并发请求和响应丢失后的重试得到同一结果。 */
+export function claimAdventure(childId, date, route) {
+  if (typeof childId !== 'string' || !getRecord('childProfiles', childId) || getRecord('childProfiles', childId).deleted) throw new Error('请先建立儿童档案')
+  const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(new Date())
+  if (date !== today || !['meadow', 'stream', 'forest'].includes(route)) throw new Error('只能参加今天的冒险，请刷新页面后重试')
+  const id = `adventure:${childId}:${date}`
+  const existing = getRecord('adventureRuns', id)
+  if (existing) return existing
+  const actions = new Set()
+  for (const task of listEntity('taskRecords')) if (task.childId === childId && task.date === date && task.completion === 'independent') actions.add(`task:${task.templateId || task.name}`)
+  for (const check of listEntity('routineChecks')) if (check.childId === childId && check.date === date && check.status === 'done') actions.add(`rule:${check.ruleId}`)
+  if (actions.size * 5 < 15) throw new Error('今天完成任务获得满15颗星，再来出发吧')
+  const stamp = nowIso()
+  const seq = nextSeq()
+  const row = { id, childId, date, route, scene: randomInt(3), material: ['leaf', 'twig', 'pebble'][randomInt(3)], bonusStars: [2, 3, 5][randomInt(3)], createdAt: stamp, updatedAt: stamp, syncSeq: seq }
+  db.prepare('INSERT INTO records(entity,id,payload,updated_at,sync_seq,deleted) VALUES(?,?,?,?,?,0)').run('adventureRuns', id, JSON.stringify(row), stamp, seq)
+  return row
 }
 
 export function deleteEverything() {
