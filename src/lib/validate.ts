@@ -204,6 +204,8 @@ export function validateTaskRecord(draft: Draft<TaskRecord>): ValidationResult {
 
 export function validateRoutineRule(draft: Draft<RoutineRule>): ValidationResult {
   const errors: string[] = []
+  if (draft.description != null && (typeof draft.description !== 'string' || draft.description.length > 200)) errors.push('打卡说明最多200字')
+  if (draft.picture != null && !['slippers', 'shirt', 'meal', 'laundry', 'rope', 'bicycle', 'ball', 'book', 'paint', 'bag'].includes(draft.picture)) errors.push('请选择提供的打卡图片')
   if (draft.habitKey != null && !HABIT_PLAN.some(h => h.key === draft.habitKey)) errors.push('打卡项目标识无效')
   if (draft.rewardStars != null && ![1, 2].includes(draft.rewardStars)) errors.push('图卡星数只能为1或2')
   if (draft.category != null && !['life', 'sport', 'study'].includes(draft.category)) errors.push('打卡分类无效')

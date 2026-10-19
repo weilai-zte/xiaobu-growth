@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { PRAISE_AUDIO, preparePraise, setSoundEnabled } from '../src/lib/praise'
+import { PRAISE_AUDIO, preparePraise, setSoundEnabled, praiseText } from '../src/lib/praise'
 
 let audios: Array<{ muted: boolean; play: ReturnType<typeof vi.fn>; pause: ReturnType<typeof vi.fn>; currentTime: number; volume: number; preload: string }>
 beforeEach(() => {
@@ -14,6 +14,20 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllGlobals(); localStorage.clear() })
 
 describe('打卡语音', () => {
+  it('鼓励带名字和具体内容，连续两句不相同', () => {
+    const first = praiseText('全全', '穿好拖鞋')
+    expect(first).toContain('全全，你完成了穿好拖鞋')
+    expect(praiseText('全全', '穿好拖鞋')).not.toBe(first)
+  })
+  it('具名语音仅在成功回调调用后播放，并拒绝网络声音', async () => {
+    const speak = vi.fn()
+    vi.stubGlobal('speechSynthesis', { getVoices: () => [{ lang: 'zh-CN', localService: false }], speak, cancel: vi.fn() })
+    const play = preparePraise({ name: '全全', title: '跳绳' })
+    expect(speak).not.toHaveBeenCalled()
+    expect(await play()).toBe(false)
+    expect(speak).not.toHaveBeenCalled()
+    expect(play.text).toContain('跳绳')
+  })
   it('用户点击时只静音解锁，确认成功后才出声', async () => {
     const play = preparePraise()
     expect(Audio).toHaveBeenCalledWith(PRAISE_AUDIO)

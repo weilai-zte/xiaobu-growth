@@ -11,6 +11,22 @@ import { readFile } from 'node:fs/promises'
 
 beforeEach(async () => { await repo.clearAll(); vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(); vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {}) })
 describe('学习打卡', () => {
+  it('家长自建的学习图卡显示说明和步骤，不误跳到英语练习', async () => {
+    const child = await repo.createProfile({ name: '全全' })
+    await repo.ensureHabitPlan(child.id)
+    await repo.createRule({ childId: child.id, title: '画一只小鸟', category: 'study', picture: 'paint', description: '选三种颜色', rewardStars: 1, steps: ['准备画笔'], trigger: 'anytime' })
+    await repo.setSetting(SETTINGS_KEYS.childView, true)
+    window.location.hash = '#/child'
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(await screen.findByRole('button', { name: /学习打卡/ }))
+    await user.click(await screen.findByRole('button', { name: '画一只小鸟，查看步骤，完成得1星' }))
+    expect(screen.getByText('选三种颜色')).toBeInTheDocument()
+    await user.click(screen.getByRole('checkbox', { name: '准备画笔' }))
+    await user.click(screen.getByRole('button', { name: '我做到了，收下1星' }))
+    await waitFor(async () => expect((await repo.listChecks(child.id))[0]?.rewardStars).toBe(1))
+    expect(window.location.hash).toBe('#/child')
+  })
   it('三档题量和选项正确，题目不重复、答案不缺失，每个词有本地音频', async () => {
     for (const [level, count, choices] of [['easy', 4, 2], ['medium', 6, 3], ['hard', 8, 4]] as const) {
       const deck = wordDeck('2026-10-20', level)

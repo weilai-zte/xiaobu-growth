@@ -26,12 +26,18 @@ import {
 import { todayKey } from '../lib/date'
 import { ruleStatusFeedback } from '../lib/feedback'
 import { validateRoutineRule } from '../lib/validate'
+import { HABIT_CATEGORIES } from '../lib/habits'
+import { PlayPicture } from '../components/PlayCards'
 
 const STATUS_OPTIONS = (['done', 'partial', 'not_done', 'not_applicable'] as const).map(
   (value) => ({ value, label: LABELS.ruleStatus[value] }),
 )
 
 interface RuleDraft {
+  category: NonNullable<RoutineRule['category']>
+  picture: string
+  rewardStars: 1 | 2
+  description: string
   title: string
   trigger: RoutineRule['trigger']
   customTrigger: string
@@ -39,6 +45,7 @@ interface RuleDraft {
 }
 
 const EMPTY_RULE: RuleDraft = {
+  category: 'life', picture: 'book', rewardStars: 1, description: '',
   title: '',
   trigger: 'anytime',
   customTrigger: '',
@@ -125,6 +132,7 @@ function RuleCheckRow({ rule, date }: { rule: RoutineRule; date: string }) {
 }
 
 export function Rules() {
+  const [saving, setSaving] = useState(false)
   const { profile } = useApp()
   const childId = profile?.id
   const toast = useToastState()
@@ -142,8 +150,9 @@ export function Rules() {
   const activeRules = useMemo(() => (rules ?? []).filter((r) => r.active), [rules])
 
   async function saveRule() {
-    if (!childId) return
+    if (!childId || saving) return
     const payload = {
+      category: draft.category, picture: draft.picture, rewardStars: draft.rewardStars, description: draft.description,
       childId,
       title: draft.title,
       trigger: draft.trigger,
@@ -156,7 +165,8 @@ export function Rules() {
       setErrors(check.errors)
       return
     }
-    if (editing) {
+    setSaving(true)
+    try { if (editing) {
       await repo.updateRule(editing.id, payload)
       toast.show('规则已更新')
     } else {
@@ -167,6 +177,8 @@ export function Rules() {
     setDraft(EMPTY_RULE)
     setEditing(null)
     setShowForm(false)
+    } catch (error) { setErrors([error instanceof Error ? error.message : '没有保存成功，请重试']) }
+    finally { setSaving(false) }
   }
 
   return (
@@ -216,6 +228,10 @@ export function Rules() {
       >
         {showForm && (
           <div style={{ marginBottom: 16 }}>
+            <SelectField label="打卡分类" value={draft.category} options={HABIT_CATEGORIES.map(c => ({ value: c.key, label: c.label }))} onChange={category => category && setDraft({ ...draft, category })} />
+            <SelectField label="完成获得的星星" value={String(draft.rewardStars)} options={[{ value: '1', label: '1颗星' }, { value: '2', label: '2颗星' }]} onChange={value => setDraft({ ...draft, rewardStars: value === '2' ? 2 : 1 })} />
+            <fieldset><legend>选择打卡图片</legend><div className="row">{['slippers', 'shirt', 'meal', 'laundry', 'rope', 'bicycle', 'ball', 'book', 'paint', 'bag'].map((picture, i) => <button key={picture} type="button" className="btn" aria-label={`选择${['拖鞋', '衣服', '吃饭', '洗衣', '跳绳', '自行车', '运动', '学习', '绘画', '书包'][i]}图片`} aria-pressed={draft.picture === picture} onClick={() => setDraft({ ...draft, picture })} style={{ width: 100, border: draft.picture === picture ? '3px solid #75609b' : undefined }}><PlayPicture kind={picture} /></button>)}</div></fieldset>
+            <TextField label="打卡说明（可选）" value={draft.description} onChange={description => setDraft({ ...draft, description })} hint="用一句话说明怎样算完成，最多200字" />
             <TextField
               label="规则名称"
               value={draft.title}
@@ -248,7 +264,7 @@ export function Rules() {
               hint="每行一步，孩子可以照着一步步勾掉"
             />
             <div className="row">
-              <button type="button" className="btn btn-primary" onClick={saveRule}>
+              <button type="button" className="btn btn-primary" disabled={saving} onClick={saveRule}>
                 {editing ? '保存修改' : '添加规则'}
               </button>
               <button
@@ -301,6 +317,7 @@ export function Rules() {
                   onClick={() => {
                     setEditing(rule)
                     setDraft({
+                      category: rule.category ?? 'life', picture: rule.picture ?? 'book', rewardStars: rule.rewardStars ?? 1, description: rule.description ?? '',
                       title: rule.title,
                       trigger: rule.trigger,
                       customTrigger: rule.customTrigger ?? '',

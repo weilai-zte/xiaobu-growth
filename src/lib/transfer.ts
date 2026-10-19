@@ -287,6 +287,7 @@ export const CSV_COLUMNS: Record<string, Column[]> = {
     { key: 'updatedAt', label: '更新时间', kind: 'datetime' },
   ],
   routineRules: [
+    { key: 'picture', label: '图片' }, { key: 'description', label: '打卡说明' },
     { key: 'category', label: '打卡分类' }, { key: 'rewardStars', label: '星数', kind: 'number' },
     { key: 'id', label: 'ID' },
     { key: 'title', label: '规则' },

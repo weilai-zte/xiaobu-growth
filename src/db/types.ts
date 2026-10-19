@@ -188,6 +188,8 @@ export type HabitCategory = 'life' | 'sport' | 'study'
 export type HabitKey = 'body' | 'meal' | 'clothes' | 'rope' | 'cycle' | 'picture_words'
 
 export interface RoutineRule extends Base {
+  picture?: string
+  description?: string
   habitKey?: HabitKey
   category?: HabitCategory
   rewardStars?: 1 | 2
