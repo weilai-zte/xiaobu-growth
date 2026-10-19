@@ -7,7 +7,8 @@ import { BADGES, focusedWish, starBalance } from '../lib/rewards'
 import { Card } from '../components/ui'
 import { PlayPicture, Celebration, TinyStar } from '../components/PlayCards'
 import { BirdGrowth, GrowthTrail, WishGoal } from '../components/GrowthJourney'
-import { uniqueAdventures } from '../lib/adventure'
+import { uniqueAdventures, birdStage } from '../lib/adventure'
+import { BirdCompanion } from '../components/BirdCompanion'
 import { todayKey } from '../lib/date'
 
 const PICTURES = [{ key: 'gift', label: '礼物' }, { key: 'ball', label: '运动' }, { key: 'book', label: '图书' }, { key: 'paint', label: '画画' }, { key: 'picnic', label: '出游' }]
@@ -41,6 +42,7 @@ export function ChildProgress({ parent = false }: { parent?: boolean }) {
     <Celebration message={message} />
     {!data && <p role="status">正在打开星星盒子…</p>}
     {data && <BirdGrowth count={uniqueAdventures(data.adventures).length} runs={data.adventures} />}
+    {!parent && data && <BirdCompanion stage={birdStage(uniqueAdventures(data.adventures).length).key} runs={data.adventures} wardrobe />}
     {!parent && data && <WishGoal wish={focus} available={balance.available} />}
     {data && <GrowthTrail tasks={data.tasks} checks={data.checks} date={todayKey()} />}
     <Card title="我的成长花园"><div className="badge-garden">{BADGES.map(b => <div key={b.at} className={`growth-badge ${balance.earned >= b.at ? 'lit' : ''}`}><PlayPicture kind={b.picture} /><strong>{b.name}</strong><small>{balance.earned >= b.at ? '已点亮' : `${b.at} 颗星点亮`}</small></div>)}</div>

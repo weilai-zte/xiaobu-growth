@@ -28,6 +28,20 @@ describe('打卡语音', () => {
     expect(speak).not.toHaveBeenCalled()
     expect(play.text).toContain('跳绳')
   })
+  it('本机指定音色和明快语速生效，开始和结束通知小鸟', async () => {
+    const events: boolean[] = []
+    const listener = (event: Event) => events.push((event as CustomEvent).detail.speaking)
+    window.addEventListener('xiaobu:bird-speech', listener)
+    vi.stubGlobal('SpeechSynthesisUtterance', class { constructor(public text: string) {} })
+    const voice = { name: '本地中文', voiceURI: 'bird', lang: 'zh-CN', localService: true }
+    let utterance: SpeechSynthesisUtterance | undefined
+    vi.stubGlobal('speechSynthesis', { getVoices: () => [voice], cancel: vi.fn(), speak: vi.fn(u => { utterance = u; u.onstart(); u.onend() }) })
+    localStorage.setItem('xiaobu.bird.voice', JSON.stringify({ voiceURI: 'bird', rate: 1.2, pitch: 1.4 }))
+    expect(await preparePraise({ name: '全全', title: '慢慢吃饭' })()).toBe(true)
+    expect(utterance).toMatchObject({ voice, rate: 1.2, pitch: 1.4 })
+    expect(events).toEqual([true, false])
+    window.removeEventListener('xiaobu:bird-speech', listener)
+  })
   it('用户点击时只静音解锁，确认成功后才出声', async () => {
     const play = preparePraise()
     expect(Audio).toHaveBeenCalledWith(PRAISE_AUDIO)

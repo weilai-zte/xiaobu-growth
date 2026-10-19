@@ -62,6 +62,7 @@ export interface SyncStateRow {
 }
 
 export interface ChildProfile extends Base {
+  buddyAccessory?: string | null
   name: string
   /** 孩子选择优先攒的心愿，随档案跨设备同步。 */
   focusWishId?: ID | null

@@ -4,30 +4,36 @@ import { PlayPicture, TinyStar } from './PlayCards'
 import { growthTrail } from '../lib/rewards'
 import { formatDay } from '../lib/date'
 import { BIRD_STAGES, birdStage, MATERIAL_NAMES, uniqueAdventures, adventureStory } from '../lib/adventure'
+import { BirdItemShape } from './BirdItemPicture'
 
-export function BuddyBird({ stage = 'egg', celebrating = false }: { stage?: string; celebrating?: boolean }) {
+export function BuddyBird({ stage = 'egg', celebrating = false, accessory = '', speaking = false }: { stage?: string; celebrating?: boolean; accessory?: string; speaking?: boolean }) {
   const egg = stage === 'egg' || stage === 'crack'
-  const grown = ['adult', 'nest', 'home'].includes(stage)
   const name = BIRD_STAGES.find(s => s.key === stage)?.name ?? '一颗小蛋'
-  return <svg className={`buddy-bird ${celebrating ? 'buddy-happy' : ''}`} viewBox="0 0 260 210" role="img" aria-label={`小步：${name}`}>
-    <title>{name}</title><desc>小步从蛋到小鸟，再到拥有自己的家。成长不会因为休息或兑换礼物而倒退。</desc>
+  return <svg className={`buddy-bird ${celebrating ? 'buddy-happy' : ''} ${speaking ? 'budgie-speaking' : ''}`} viewBox="0 0 260 210" role="img" aria-label={`小步：${name}`}>
+    <title>{name}</title><desc>黄头绿身的虎皮鹦鹉小步，有黑色羽毛横纹、蓝紫脸颊、弯钩嘴和蓝色长尾。从蛋慢慢长大，休息或兑换礼物不会倒退。</desc>
     <circle cx="130" cy="101" r="88" fill="#eee8f9" />
     <path d="M35 162q95-27 190 0l-10 16q-80 30-170 0Z" fill="#d4e7ce" />
     <ellipse cx="130" cy="174" rx="53" ry="7" fill="#b4c7ad" opacity=".5" />
     {stage === 'home' && <g stroke="#806b55" strokeWidth="3" strokeLinejoin="round"><path d="M48 95h164v84H48Z" fill="#ead7b4"/><path d="m32 95 98-74 98 74Z" fill="#b4c9b1"/><path d="M91 180v-49a39 39 0 0 1 78 0v49" fill="#f9f1df"/></g>}
     {egg ? <g stroke="#807294" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M88 125c0-37 22-78 42-78s42 41 42 78c0 30-17 44-42 44s-42-14-42-44Z" fill="#fff7e5"/><ellipse cx="112" cy="96" rx="6" ry="9" fill="#d5c7e8" stroke="none"/><ellipse cx="145" cy="125" rx="8" ry="5" fill="#d5c7e8" stroke="none"/>{stage === 'crack' && <path d="m129 49-7 22 13 12-12 16 12 10-7 17" fill="none"/>}<path d="M77 157q53 30 106 0m-96 14q43 17 86 0" stroke="#b69c76" fill="none"/></g> : <>
     <g transform={stage === 'hatch' ? 'translate(39 52) scale(.7)' : stage === 'young' ? 'translate(20 25) scale(.85)' : stage === 'home' ? 'translate(39 46) scale(.7)' : undefined}>
-    <g stroke="#554975" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-      <path className="bird-wing" d="M88 96q-42-6-37 27 19 5 38-11" fill="#ab9cd6" />
-      <path className="bird-wing" d="M172 96q42-6 37 27-19 5-38-11" fill="#ab9cd6" />
+    <g stroke="#3c5439" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      {stage !== 'hatch' && <><path d="m116 146 12 53 9-40 14 35-7-51" fill="#5797a9"/><path d="m130 163-2 33" fill="none" stroke="#325e81"/></>}
+      {accessory === 'backpack' && <rect x="70" y="95" width="37" height="51" rx="12" fill="#b4ce7c" />}
       <path d="m111 164-3 13m43-13 3 13m-54 0h17m28 0h17" fill="none" stroke="#b38a49" />
-      <path d="M76 115c0-52 22-82 54-82s54 30 54 82c0 36-21 55-54 55s-54-19-54-55Z" fill="#c4b5e5" />
-      <ellipse cx="130" cy="126" rx="34" ry="34" fill="#faf6ed" stroke="none" />
-      <path d="M100 85q6-9 12 0m36 0q6-9 12 0" fill="none" />
-      <ellipse cx="97" cy="98" rx="10" ry="5" fill="#e7a6ac" stroke="none" /><ellipse cx="163" cy="98" rx="10" ry="5" fill="#e7a6ac" stroke="none" />
-      <path d="m119 96 11-7 11 7-11 12Z" fill="#efc778" />
-      {grown && <><path d="M87 116q43 16 86 0l-3 13q-40 15-80 0Z" fill="#92c6ae"/><path d="m154 129 10 24-15-4-3-20" fill="#92c6ae"/></>}
-      {stage !== 'hatch' && <path d="M129 34q-17-24-29-12 2 17 29 12Zm1-1q8-25 24-22 5 20-24 22Z" fill="#a8d1a4" />}
+      <path d="M76 115c0-52 22-82 54-82s54 30 54 82c0 36-21 55-54 55s-54-19-54-55Z" fill="#9acb63" />
+      <ellipse cx="130" cy="128" rx="32" ry="32" fill="#b9db79" stroke="none" />
+      <g className="bird-wing"><path d="M81 95q-9 23 4 55 26-18 20-45Z" fill="#d2df87"/><path d="m81 105 18 6m-18 6 18 6m-15 6 11 6m-9 4 5 4" fill="none" stroke="#465747"/></g>
+      <g className="bird-wing"><path d="M179 95q9 23-4 55-26-18-20-45Z" fill="#d2df87"/><path d="m179 105-18 6m18 6-18 6m15 6-11 6m9 4-5 4" fill="none" stroke="#465747"/></g>
+      <path d="M82 85q-2-53 48-53t48 53q-10 26-48 28-38-2-48-28Z" fill="#f4dd73"/>
+      <path d="m103 40 8 6m-16 2 10 6m-16 4 11 5m57-23-8 6m16 2-10 6m16 4-11 5" fill="none" stroke="#485345" strokeWidth="2.5"/>
+      <ellipse cx="105" cy="79" rx="6" ry="8" fill="#263d32" stroke="none"/><ellipse cx="155" cy="79" rx="6" ry="8" fill="#263d32" stroke="none"/>
+      <circle cx="107" cy="76" r="2" fill="white" stroke="none"/><circle cx="157" cy="76" r="2" fill="white" stroke="none"/>
+      <path d="m95 91 9 6-7 9-8-5Zm70 0-9 6 7 9 8-5Z" fill="#7582bb" stroke="none"/>
+      <g className="budgie-beak"><ellipse cx="130" cy="89" rx="9" ry="5" fill="#8aa3c0" stroke="none"/><path d="M121 92q18-6 18 6-1 10-9 17 2-12-9-23Z" fill="#d7a449" stroke="#876a32" strokeWidth="2"/></g>
+      <g fill="#485345" stroke="none"><circle cx="111" cy="107" r="2.5"/><circle cx="119" cy="111" r="2.5"/><circle cx="149" cy="107" r="2.5"/><circle cx="141" cy="111" r="2.5"/></g>
+      {accessory === 'scarf' && <><path d="M94 113q36 14 72 0v12q-36 14-72 0Z" fill="#e9a583"/><path d="m152 126 13 24-17-5-4-19" fill="#e9a583"/></>}
+      {accessory === 'pin' && <path d="m140 130 4 8 9 1-7 6 2 10-8-5-8 5 1-10-6-6 9-1Z" fill="#f3d06b" strokeWidth="2"/>}
     </g>
     </g>
     {stage === 'hatch' && <path d="m90 153 12-9 13 11 13-9 13 10 17-10 13 7q-2 28-41 28t-40-28Z" fill="#fff7e5" stroke="#807294" strokeWidth="3"/>}
@@ -35,6 +41,7 @@ export function BuddyBird({ stage = 'egg', celebrating = false }: { stage?: stri
     </>}
     <g fill="#c3a159"><path d="m39 57 3 8 8 3-8 3-3 8-3-8-8-3 8-3Z"/><path d="m218 42 2 6 7 2-7 3-2 6-2-6-7-3 7-2Z"/></g>
     {stage === 'home' && <path d="m212 125 4 8 9 2-6 6 1 9-8-4-8 4 1-9-6-6 9-2Z" fill="#f0cf7b" />}
+    {accessory && (egg || ['bell', 'ball', 'swing'].includes(accessory)) && <g transform="translate(182 130) scale(.62)"><BirdItemShape kind={accessory} /></g>}
   </svg>
 }
 

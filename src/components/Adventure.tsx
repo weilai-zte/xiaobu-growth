@@ -4,6 +4,8 @@ import type { AdventureRun, AdventureRoute, RoutineCheck, TaskRecord } from '../
 import { adventureDay, adventureStory, dailyActionStars, MATERIAL_NAMES, ROUTES, uniqueAdventures } from '../lib/adventure'
 import { Celebration, PlayPicture, TinyStar } from './PlayCards'
 import { preparePraise } from '../lib/praise'
+import { birdLoot } from '../lib/birdCompanion'
+import { BirdItemPicture } from './BirdItemPicture'
 
 export function useAdventureDay() {
   const [date, setDate] = useState(adventureDay)
@@ -11,7 +13,7 @@ export function useAdventureDay() {
   return date
 }
 
-export function Adventure({ childId, date, tasks, checks, runs }: { childId: string; date: string; tasks: TaskRecord[]; checks: RoutineCheck[]; runs: AdventureRun[] }) {
+export function Adventure({ childId, date, tasks, checks, runs, childName = '全全' }: { childId: string; date: string; tasks: TaskRecord[]; checks: RoutineCheck[]; runs: AdventureRun[]; childName?: string }) {
   const { engine } = useSync()
   const [choosing, setChoosing] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -23,19 +25,19 @@ export function Adventure({ childId, date, tasks, checks, runs }: { childId: str
   const stars = dailyActionStars(tasks, checks, date)
   const ready = stars >= 5
   async function travel(route: AdventureRoute) {
-    const play = preparePraise()
+    const play = preparePraise({ name: childName, title: '今天的冒险' })
     setBusy(true); setError('')
     try {
       const result = await engine.claimAdventure(childId, date, route)
       setReceived(result); setChoosing(false)
-      setFeedback(`冒险记好啦！带回 ${result.bonusStars} 颗星和一份${MATERIAL_NAMES[result.material]}。`)
+      setFeedback(`冒险记好啦！带回 ${result.bonusStars} 颗星、一份${MATERIAL_NAMES[result.material]}和${birdLoot(result).name}。`)
       void play()
     } catch (err) { setError(err instanceof Error ? err.message : '没有连上，请重试；不会重复领奖。') }
     finally { setBusy(false) }
   }
   return <section className="adventure-card" aria-labelledby="adventure-title">
     <div className="adventure-heading"><div><span className="journey-kicker">每天一小段故事 · 不花星星</span><h2 id="adventure-title">{current ? '今天的冒险收好啦' : history.length < 2 ? '带小蛋去看看世界' : '和小步去冒险'}</h2></div><PlayPicture kind={current?.material ?? 'map'} /></div>
-    {current ? <div className="adventure-result"><p>{adventureStory(current)}</p><div className="adventure-loot"><span><TinyStar /> +{current.bonusStars} 星</span><span><PlayPicture kind={current.material} /> {MATERIAL_NAMES[current.material]} × 1</span></div><p className="muted">已经保存，手机和电脑看的是同一段故事。今天可以歇一歇啦。</p></div> : <>
+    {current ? <div className="adventure-result"><p>{adventureStory(current)}</p><div className="adventure-loot"><span><TinyStar /> +{current.bonusStars} 星</span><span><PlayPicture kind={current.material} /> {MATERIAL_NAMES[current.material]} × 1</span></div><div className="adventure-toy"><BirdItemPicture kind={birdLoot(current).key} /><strong>还带回了：{birdLoot(current).name}</strong><a className="btn btn-sm" href="#/child/progress">去百宝箱换上它</a></div><p className="muted">已经保存，手机和电脑看的是同一段故事。今天可以歇一歇啦。</p></div> : <>
       <div className="adventure-energy" role="progressbar" aria-label="今日冒险准备进度" aria-valuemin={0} aria-valuemax={5} aria-valuenow={Math.min(stars, 5)}><span style={{ width: `${Math.min(stars / 5, 1) * 100}%` }} /></div>
       <p>{ready ? '小背包准备好啦！选一条路，带回今天的小发现。' : `今天任务已攒 ${stars} / 5 星，再攒 ${Math.max(0, 5 - stars)} 星就可以出发。`}</p>
       {!choosing ? <button className="btn btn-primary adventure-start" disabled={!ready} onClick={() => { setChoosing(true); setError('') }}>{ready ? '出发冒险' : '慢慢准备，不着急'}</button> : <div className="adventure-routes" role="group" aria-label="选择今天的冒险路线">{ROUTES.map(route => <button key={route.key} type="button" disabled={busy} onClick={() => void travel(route.key)}><PlayPicture kind={route.picture} /><strong>{route.name}</strong></button>)}</div>}

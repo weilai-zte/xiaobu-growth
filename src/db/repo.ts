@@ -20,6 +20,7 @@ import {
 import { nowISO } from '../lib/date'
 import { starBalance, validWish } from '../lib/rewards'
 import { HABIT_PLAN } from '../lib/habits'
+import { birdInventory } from '../lib/birdCompanion'
 import {
   validateChildProfile,
   validateConflictLog,
@@ -178,6 +179,7 @@ export function createRepo(database: GrowthDB) {
     if (!existing) throw new Error('找不到这条儿童档案')
     const next = { ...existing, ...patch, id: existing.id } as ChildProfile
     check(validateChildProfile(next))
+    if (patch.buddyAccessory && !birdInventory(await listAdventures(id)).some(item => item.key === patch.buddyAccessory)) throw new Error('这件装备还没有在冒险中发现')
     await write('childProfiles', { ...next, updatedAt: nowISO() })
   }
 

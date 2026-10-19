@@ -1,5 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import { preparePraise } from '../lib/praise'
+import { useApp } from '../app/AppProvider'
 
 export function pictureFor(text: string): string {
   if (/睡|书包/.test(text)) return 'bag'
@@ -55,12 +56,13 @@ export function PlayPicture({ kind, className = '' }: { kind: string; className?
 }
 
 export function ActionCard({ title, done, picture, stars = 5, onComplete }: { title: string; done: boolean; picture?: string; stars?: number; onComplete: () => Promise<boolean> }) {
+  const { profile } = useApp()
   const [busy, setBusy] = useState(false)
   return <button type="button" className={`action-tile ${done ? 'is-done' : ''}`} disabled={busy || done}
     aria-label={`${title}，${done ? '已完成' : `点一下完成，获得${stars}颗星`}`}
     onClick={async () => {
       setBusy(true)
-      const play = preparePraise()
+      const play = preparePraise({ name: profile?.nickname || profile?.name || '全全', title })
       try { if (await onComplete()) void play() } finally { setBusy(false) }
     }}>
     <span className="tile-reward">{done ? <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 6" stroke="currentColor" strokeWidth="3" fill="none" /></svg> : <>+{stars} <TinyStar /></>}</span>

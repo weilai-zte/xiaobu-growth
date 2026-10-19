@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { GrowthDB } from '../src/db/db'
 import { createRepo } from '../src/db/repo'
 import { createSyncEngine, type SyncEngine } from '../src/db/sync'
+import { birdLoot, birdInventory } from '../src/lib/birdCompanion'
 
 const PORT = 8799
 const BASE = `http://127.0.0.1:${PORT}`
@@ -79,6 +80,10 @@ describe('双向同步', () => {
       await a.repo.setCheck(child.id, rope.id, date, 'done', null, { minutes: 5 })
       const adventure = await a.engine.claimAdventure(child.id, date, 'meadow')
       await b.engine.syncNow()
+      expect(birdInventory(await a.repo.listAdventures(child.id))).toEqual(birdInventory(await b.repo.listAdventures(child.id)))
+      await a.repo.updateProfile(child.id, { buddyAccessory: birdLoot(adventure).key })
+      await a.engine.syncNow(); await b.engine.syncNow()
+      expect((await b.repo.listProfiles())[0].buddyAccessory).toBe(birdLoot(adventure).key)
       expect((await b.repo.listChecks(child.id)).map(c => c.rewardStars).sort()).toEqual([1, 1, 1, 2])
       await b.repo.ensureHabitPlan(child.id)
       expect((await b.repo.listRules(child.id)).filter(r => r.habitKey)).toHaveLength(6)

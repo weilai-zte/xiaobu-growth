@@ -106,6 +106,7 @@ function enumArray<T extends string>(
 }
 
 export function validateChildProfile(draft: Draft<ChildProfile>) {
+  if (draft.buddyAccessory != null && !['bell', 'ball', 'swing', 'scarf', 'backpack', 'pin'].includes(draft.buddyAccessory)) return finish(['小鸟装备无效'])
   const errors: string[] = []
   const wishErr = optionalText(draft.focusWishId, '心愿标识', 100)
   if (wishErr) errors.push(wishErr)

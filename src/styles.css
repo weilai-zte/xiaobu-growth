@@ -1587,3 +1587,33 @@ legend {
   .growth-current > .buddy-bird { width: 180px; }
   .bird-timeline { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 }
+.bird-companion { width: 100%; margin: 12px auto; }
+.bird-touch { display: block; width: min(100%, 290px); margin: auto; border: 2px solid transparent; border-radius: 32px; padding: 0 0 10px; background: transparent; color: #475444; cursor: pointer; font: inherit; }
+.bird-touch:hover { background: #edf4e6; }
+.bird-touch:focus-visible { outline: 3px solid #75609b; outline-offset: 3px; }
+.bird-touch > span { font-size: 13px; }
+.bird-chat { border-radius: 18px; background: #fff; border: 1px solid #d9e3d0; padding: 10px 14px; font-size: 14px; line-height: 1.6; color: #43533c; text-align: center; }
+.bird-touched .buddy-bird { animation: budgie-hop .65s ease-out; }
+.bird-motion { display: block; }
+.bird-action-2.bird-touched .bird-wing { transform-box: fill-box; transform-origin: center; animation: budgie-wave .8s ease-out; }
+.bird-action-0.bird-touched .buddy-bird { animation: budgie-tilt .8s ease-out; }
+.budgie-speaking .budgie-beak { transform-box: fill-box; transform-origin: center; animation: budgie-chatter .24s ease-in-out infinite alternate; }
+.bird-wardrobe { background: #f5f8ee; border: 1px solid #d8e1cc; border-radius: 24px; padding: 22px; }
+.bird-items { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+.bird-items button { border: 2px solid #d6dfca; border-radius: 18px; background: #fff; padding: 10px; display: grid; gap: 6px; justify-items: center; color: #43533c; cursor: pointer; min-height: 145px; font: inherit; }
+.bird-items button[aria-pressed="true"] { border-color: #71609a; background: #f0eaf8; }
+.bird-items button:disabled { opacity: .65; cursor: default; }
+.bird-item-picture { width: 74px; height: 74px; }
+.bird-items small { font-size: 12px; }
+.bird-speaker { position: fixed; bottom: calc(82px + env(safe-area-inset-bottom)); right: 18px; z-index: 40; width: min(420px, calc(100vw - 28px)); display: flex; align-items: center; background: #fffef7; border: 2px solid #d7dfbf; border-radius: 24px; padding: 12px; box-shadow: 0 8px 32px #353d3026; }
+.bird-speaker .buddy-bird { width: 96px; flex: none; }
+.bird-speaker p { margin: 4px 0 8px; font-size: 14px; line-height: 1.5; }
+.bird-voice-controls { display: grid; gap: 12px; margin: 14px 0; }
+.bird-voice-controls label { display: grid; gap: 7px; }
+.adventure-toy { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; background: #f3f6ec; border-radius: 18px; padding: 12px; margin: 12px 0; }
+@keyframes budgie-chatter { from { transform: scaleY(.75); } to { transform: scaleY(1.2); } }
+@keyframes budgie-hop { 0%, 100% { transform: translateY(0) rotate(0); } 35% { transform: translateY(-10px) rotate(-5deg); } 65% { transform: translateY(-4px) rotate(5deg); } }
+@keyframes budgie-wave { 30%, 70% { transform: rotate(-18deg); } 0%, 50%, 100% { transform: rotate(0); } }
+@keyframes budgie-tilt { 0%, 100% { transform: rotate(0); } 40% { transform: rotate(7deg); } 70% { transform: rotate(-4deg); } }
+@media (max-width: 600px) { .bird-items { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bird-wardrobe { padding: 14px; } .buddy-stage:has(.bird-companion) { width: min(260px, 100%); } .buddy-hero:has(.bird-companion) { flex-wrap: wrap; } .bird-speaker { right: 14px; } }
+@media (prefers-reduced-motion: reduce) { .bird-touched .buddy-bird, .bird-action-2.bird-touched .bird-wing, .budgie-speaking .budgie-beak { animation: none; } }

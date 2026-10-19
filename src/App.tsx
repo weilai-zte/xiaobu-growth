@@ -22,6 +22,7 @@ import { ChildProgress } from './pages/ChildProgress'
 import { ChildStudy } from './pages/ChildStudy'
 import { CloudConnect } from './pages/CloudConnect'
 import { IS_GITHUB_PAGES } from './db/sync'
+import { BirdSpeaker } from './components/BirdCompanion'
 
 function Shell() {
   const { loading, profile } = useApp()
@@ -60,6 +61,7 @@ function Shell() {
   return (
     <div className="app">
       <TopBar />
+      <BirdSpeaker />
       {/* 导航要排在内容之前：平板档它是吸顶的横向导航，排在后面就会掉到页面底部 */}
       <AppNav />
       <main className="app-main">
