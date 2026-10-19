@@ -1,0 +1,294 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { spawn, type ChildProcess } from 'node:child_process'
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { GrowthDB } from '../src/db/db'
+import { createRepo } from '../src/db/repo'
+import { createSyncEngine, type SyncEngine } from '../src/db/sync'
+
+const PORT = 8799
+const BASE = `http://127.0.0.1:${PORT}`
+const ENDPOINT = `${BASE}/api`
+
+let server: ChildProcess | undefined
+
+interface Device {
+  database: GrowthDB
+  repo: ReturnType<typeof createRepo>
+  engine: SyncEngine
+}
+
+async function waitForServer() {
+  for (let i = 0; i < 80; i += 1) {
+    try {
+      const res = await fetch(`${BASE}/api/health`)
+      if (res.ok) return
+    } catch {
+      /* 还没起来 */
+    }
+    await new Promise((resolve) => setTimeout(resolve, 150))
+  }
+  throw new Error('同步服务启动超时')
+}
+
+/** 每次都用一个新的库名，相当于一台全新的设备 */
+async function openDevice(endpoint = ENDPOINT): Promise<Device> {
+  const database = new GrowthDB(`sync-${Math.random().toString(16).slice(2)}`)
+  const deviceRepo = createRepo(database)
+  const engine = createSyncEngine({ repo: deviceRepo, endpoint, intervalMs: 600_000 })
+  await engine.start()
+  return { database, repo: deviceRepo, engine }
+}
+
+async function closeDevice(device: Device) {
+  device.engine.stop()
+  await device.database.delete()
+}
+
+beforeAll(async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'xb-sync-e2e-'))
+  server = spawn(process.execPath, ['server/index.mjs'], {
+    cwd: process.cwd(),
+    env: { ...process.env, PORT: String(PORT), XB_DB: join(dir, 'test.db') },
+    stdio: 'ignore',
+  })
+  await waitForServer()
+})
+
+afterAll(() => {
+  server?.kill('SIGTERM')
+})
+
+beforeEach(async () => {
+  await fetch(`${BASE}/api/clear-all`, { method: 'POST' })
+})
+
+describe('双向同步', () => {
+  it('孩子提出的心愿可由另一设备确认，兑换结果再同步回来', async () => {
+    const a = await openDevice()
+    const b = await openDevice()
+    try {
+      const child = await a.repo.createProfile({ name: '全全' })
+      const [rule] = await a.repo.listRules(child.id)
+      await a.repo.setCheck(child.id, rule.id, '2026-10-18', 'done')
+      const wish = await a.repo.proposeWish(child.id, '自己的积木', 'gift')
+      expect(await a.engine.syncNow()).toBe(true)
+      expect(await b.engine.syncNow()).toBe(true)
+      expect((await b.repo.listWishes(child.id))[0].name).toBe('自己的积木')
+      await b.repo.changeWish(wish.id, 'approve', 5)
+      expect(await b.engine.syncNow()).toBe(true)
+      expect(await a.engine.syncNow()).toBe(true)
+      await a.repo.changeWish(wish.id, 'request')
+      expect(await a.engine.syncNow()).toBe(true)
+      expect(await b.engine.syncNow()).toBe(true)
+      await b.repo.changeWish(wish.id, 'redeem')
+      expect(await b.engine.syncNow()).toBe(true)
+      expect(await a.engine.syncNow()).toBe(true)
+      expect((await a.repo.listWishes(child.id))[0].status).toBe('redeemed')
+    } finally { await closeDevice(a); await closeDevice(b) }
+  })
+  it('一台设备建的档案，另一台设备同步后能看到', async () => {
+    const a = await openDevice()
+    const b = await openDevice()
+    try {
+      await a.repo.createProfile({ name: '小满', nickname: '满满' })
+      expect(await a.engine.syncNow()).toBe(true)
+      expect(await b.engine.syncNow()).toBe(true)
+
+      const profiles = await b.repo.listProfiles()
+      expect(profiles).toHaveLength(1)
+      expect(profiles[0].name).toBe('小满')
+      // 内置规则要跟着档案一起过去，否则另一台设备上规则页是空的
+      expect((await b.repo.listRules(profiles[0].id)).length).toBeGreaterThanOrEqual(5)
+    } finally {
+      await closeDevice(a)
+      await closeDevice(b)
+    }
+  })
+
+  it('两边各自记录，互不覆盖，最后两边都齐全', async () => {
+    const a = await openDevice()
+    const b = await openDevice()
+    try {
+      const child = await a.repo.createProfile({ name: '小满' })
+      await a.engine.syncNow()
+      await b.engine.syncNow()
+
+      // 设备 A 记睡眠，设备 B 记优势事例
+      await a.repo.saveDailyLog({
+        childId: child.id,
+        date: '2026-10-16',
+        sleepTime: '22:10',
+        wakeTime: '06:40',
+      })
+      await b.repo.createStrength({
+        childId: child.id,
+        date: '2026-10-16',
+        category: 'care',
+        event: '弟弟摔倒',
+        childAction: '扶他起来',
+        outcome: '弟弟不哭了',
+      })
+
+      await a.engine.syncNow()
+      await b.engine.syncNow()
+      await a.engine.syncNow()
+      await b.engine.syncNow()
+
+      for (const device of [a, b]) {
+        expect(await device.repo.listDailyLogs(child.id)).toHaveLength(1)
+        expect(await device.repo.listStrengths(child.id)).toHaveLength(1)
+      }
+    } finally {
+      await closeDevice(a)
+      await closeDevice(b)
+    }
+  })
+
+  it('删除会同步到另一台设备，不会自己长回来', async () => {
+    const a = await openDevice()
+    const b = await openDevice()
+    try {
+      const child = await a.repo.createProfile({ name: '小满' })
+      const moment = await a.repo.createStrength({
+        childId: child.id,
+        date: '2026-10-16',
+        category: 'sport',
+        event: '自己骑车',
+        childAction: '扶稳车把骑了一圈',
+        outcome: '成功',
+      })
+      await a.engine.syncNow()
+      await b.engine.syncNow()
+      expect(await b.repo.listStrengths(child.id)).toHaveLength(1)
+
+      await a.repo.deleteRecord('strengthMoments', moment.id)
+      await a.engine.syncNow()
+      await b.engine.syncNow()
+      expect(await b.repo.listStrengths(child.id)).toHaveLength(0)
+
+      // 再同步几轮，墓碑生效后不会把删掉的记录又拉回来
+      await b.engine.syncNow()
+      await a.engine.syncNow()
+      expect(await a.repo.listStrengths(child.id)).toHaveLength(0)
+    } finally {
+      await closeDevice(a)
+      await closeDevice(b)
+    }
+  })
+
+  it('同一条记录两边都改，以较晚的改动为准', async () => {
+    const a = await openDevice()
+    const b = await openDevice()
+    try {
+      const child = await a.repo.createProfile({ name: '小满' })
+      await a.engine.syncNow()
+      await b.engine.syncNow()
+
+      const log = await a.repo.saveDailyLog({
+        childId: child.id,
+        date: '2026-10-16',
+        sleepTime: '22:00',
+      })
+      await a.engine.syncNow()
+      await b.engine.syncNow()
+
+      // 设备 B 把这条改成更晚的时间戳，设备 A 的旧改动不该盖掉它
+      await b.repo.saveDailyLog({
+        childId: child.id,
+        date: '2026-10-16',
+        sleepTime: '23:30',
+      })
+      const stale = await a.database.dailyLogs.get(log.id)
+      await a.database.dailyLogs.put({
+        ...stale!,
+        sleepTime: '21:00',
+        updatedAt: '2000-01-01T00:00:00.000Z',
+      })
+      await a.repo.enqueue('dailyLogs', {
+        ...(await a.database.dailyLogs.get(log.id))!,
+      })
+
+      await b.engine.syncNow()
+      await a.engine.syncNow()
+      await b.engine.syncNow()
+
+      const finalA = await a.repo.listDailyLogs(child.id)
+      const finalB = await b.repo.listDailyLogs(child.id)
+      expect(finalA[0].sleepTime).toBe('23:30')
+      expect(finalB[0].sleepTime).toBe('23:30')
+    } finally {
+      await closeDevice(a)
+      await closeDevice(b)
+    }
+  })
+
+  it('同步失败时改动留在本地队列，服务恢复后自动补传', async () => {
+    const broken = await openDevice('http://127.0.0.1:9/api')
+    try {
+      const child = await broken.repo.createProfile({ name: '小满' })
+      await broken.repo.createStrength({
+        childId: child.id,
+        date: '2026-10-16',
+        category: 'solve',
+        event: '自己修好了玩具',
+        childAction: '找到松动的地方拧紧',
+        outcome: '能玩了',
+      })
+
+      expect(await broken.engine.syncNow()).toBe(false)
+      // 关键：写不上去也不许丢，必须留在队列里等重试
+      expect(await broken.repo.outboxCount()).toBeGreaterThan(0)
+      expect(broken.engine.getSnapshot().status).toBe('error')
+      expect(broken.engine.getSnapshot().lastError).toBeTruthy()
+      // 本地照样能用
+      expect(await broken.repo.listStrengths(child.id)).toHaveLength(1)
+
+      await broken.engine.setEndpoint(ENDPOINT)
+      expect(broken.engine.getSnapshot().pending).toBe(0)
+
+      const other = await openDevice()
+      try {
+        await other.engine.syncNow()
+        expect(await other.repo.listProfiles()).toHaveLength(1)
+        expect(await other.repo.listStrengths(child.id)).toHaveLength(1)
+      } finally {
+        await closeDevice(other)
+      }
+    } finally {
+      await closeDevice(broken)
+    }
+  })
+
+  it('一台设备清空后，另一台同步时会跟着清空', async () => {
+    const a = await openDevice()
+    const b = await openDevice()
+    try {
+      const child = await a.repo.createProfile({ name: '小满' })
+      await a.repo.createStrength({
+        childId: child.id,
+        date: '2026-10-16',
+        category: 'care',
+        event: '帮妈妈拿东西',
+        childAction: '主动帮忙',
+        outcome: '妈妈很轻松',
+      })
+      await a.engine.syncNow()
+      await b.engine.syncNow()
+      expect(await b.repo.listProfiles()).toHaveLength(1)
+
+      await a.engine.clearEverything()
+      expect(await a.repo.listProfiles()).toHaveLength(0)
+
+      expect(await b.engine.syncNow()).toBe(true)
+      expect(await b.repo.listProfiles()).toHaveLength(0)
+      expect(await b.repo.countAll()).toEqual(
+        expect.objectContaining({ strengthMoments: 0, routineRules: 0 }),
+      )
+    } finally {
+      await closeDevice(a)
+      await closeDevice(b)
+    }
+  })
+})
