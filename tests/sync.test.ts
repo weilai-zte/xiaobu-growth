@@ -65,6 +65,33 @@ beforeEach(async () => {
 })
 
 describe('双向同步', () => {
+  it('每日冒险先验证任务，跨设备同时出发只获得同一份奖励且能用于兑换', async () => {
+    const a = await openDevice()
+    const b = await openDevice()
+    try {
+      const child = await a.repo.createProfile({ name: '全全' })
+      const date = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(new Date())
+      await expect(a.engine.claimAdventure(child.id, date, 'meadow')).rejects.toThrow('15')
+      for (const rule of (await a.repo.listRules(child.id)).slice(0, 3)) await a.repo.setCheck(child.id, rule.id, date, 'done')
+      await a.engine.syncNow(); await b.engine.syncNow()
+      const [first, second] = await Promise.all([a.engine.claimAdventure(child.id, date, 'meadow'), b.engine.claimAdventure(child.id, date, 'stream')])
+      expect(first.id).toBe(second.id)
+      expect(first.bonusStars).toBe(second.bonusStars)
+      expect(first.route).toBe(second.route)
+      expect([2, 3, 5]).toContain(first.bonusStars)
+      await a.engine.syncNow(); await b.engine.syncNow()
+      expect(await a.repo.listAdventures(child.id)).toHaveLength(1)
+      expect(await b.repo.listAdventures(child.id)).toHaveLength(1)
+      const wish = await a.repo.proposeWish(child.id, '一起骑车', 'bicycle')
+      await a.repo.changeWish(wish.id, 'approve', 15 + first.bonusStars)
+      await a.repo.changeWish(wish.id, 'request')
+      expect(await a.engine.syncNow()).toBe(true)
+      const forged = await fetch(`${ENDPOINT}/adventureRuns`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...first, bonusStars: 999, updatedAt: '2099-01-01T00:00:00Z' }) })
+      expect(forged.status).toBe(400)
+      expect((await b.engine.claimAdventure(child.id, date, 'forest')).bonusStars).toBe(first.bonusStars)
+      await expect(a.engine.claimAdventure(child.id, '2099-01-01', 'meadow')).rejects.toThrow()
+    } finally { await closeDevice(a); await closeDevice(b) }
+  })
   it('孩子提出的心愿可由另一设备确认，兑换结果再同步回来', async () => {
     const a = await openDevice()
     const b = await openDevice()
