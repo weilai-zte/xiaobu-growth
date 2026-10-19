@@ -61,7 +61,7 @@ export function ChildProgress({ parent = false }: { parent?: boolean }) {
     </Card>
     {(data?.wishes ?? []).some(w => w.status === 'redeemed') && <Card title="已经实现的心愿"><div className="wish-grid">{data!.wishes.filter(w => w.status === 'redeemed').map(w => <div className="wish-card" key={w.id}><PlayPicture kind={w.picture} /><strong>{w.name}</strong><p>已兑现 · {w.cost} 颗星</p></div>)}</div></Card>}
     {!!data?.strengths.length && <Card title="被记住的闪光时刻">{data.strengths.slice(0, 5).map(s => <article key={s.id}><p>{s.childAction}</p><p className="muted">{s.event}</p></article>)}</Card>}
-    <details className="play-steps"><summary>星星怎么攒？</summary><p>每项学习任务或生活图卡完成得 5 颗星；同一任务当天只算一次。历史有效记录和补记也参与计算。漏做不扣星，不要求连续打卡。撤回或删除完成记录后，对应星星也会撤回。每日冒险获得的奖励星星另计，不计入当天15星出发门槛。</p><p>累计获得 5、25、60、120 颗星时，依次点亮小芽、小花、小树和火箭。礼物由孩子提出、家长确定星数；申请后先留住星星，家长送出后正式兑换。</p></details>
+    <details className="play-steps"><summary>星星怎么攒？</summary><p>生活图卡整组完成得1星，运动和学习完成得2星；旧版记录保留原有5星；同一任务当天只算一次。历史有效记录和补记也参与计算。漏做不扣星，不要求连续打卡。撤回或删除完成记录后，对应星星也会撤回。每日冒险获得的奖励星星另计，不计入当天5星出发门槛。</p><p>累计获得 5、25、60、120 颗星时，依次点亮小芽、小花、小树和火箭。礼物由孩子提出、家长确定星数；申请后先留住星星，家长送出后正式兑换。</p></details>
     {!parent && <Link className="btn" to="/rewards">请家长一起看心愿</Link>}
   </div>
 }

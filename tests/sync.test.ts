@@ -65,13 +65,38 @@ beforeEach(async () => {
 })
 
 describe('双向同步', () => {
+  it('三类新打卡按1/2星跨设备同步，5星可冒险，兑换使用相同余额', async () => {
+    const a = await openDevice()
+    const b = await openDevice()
+    try {
+      const child = await a.repo.createProfile({ name: '全全' })
+      await a.repo.ensureHabitPlan(child.id)
+      const date = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(new Date())
+      const rules = await a.repo.listRules(child.id)
+      for (const life of rules.filter(r => r.category === 'life')) await a.repo.setCheck(child.id, life.id, date, 'done')
+      await expect(a.engine.claimAdventure(child.id, date, 'meadow')).rejects.toThrow('5')
+      const rope = rules.find(r => r.habitKey === 'rope')!
+      await a.repo.setCheck(child.id, rope.id, date, 'done', null, { minutes: 5 })
+      const adventure = await a.engine.claimAdventure(child.id, date, 'meadow')
+      await b.engine.syncNow()
+      expect((await b.repo.listChecks(child.id)).map(c => c.rewardStars).sort()).toEqual([1, 1, 1, 2])
+      await b.repo.ensureHabitPlan(child.id)
+      expect((await b.repo.listRules(child.id)).filter(r => r.habitKey)).toHaveLength(6)
+      const wish = await b.repo.proposeWish(child.id, '一起去公园', 'picnic')
+      await b.repo.changeWish(wish.id, 'approve', 5 + adventure.bonusStars)
+      await b.repo.changeWish(wish.id, 'request')
+      expect(await b.engine.syncNow()).toBe(true)
+      await a.engine.syncNow()
+      expect((await a.repo.listWishes(child.id))[0].status).toBe('requested')
+    } finally { await closeDevice(a); await closeDevice(b) }
+  })
   it('每日冒险先验证任务，跨设备同时出发只获得同一份奖励且能用于兑换', async () => {
     const a = await openDevice()
     const b = await openDevice()
     try {
       const child = await a.repo.createProfile({ name: '全全' })
       const date = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(new Date())
-      await expect(a.engine.claimAdventure(child.id, date, 'meadow')).rejects.toThrow('15')
+      await expect(a.engine.claimAdventure(child.id, date, 'meadow')).rejects.toThrow('5')
       for (const rule of (await a.repo.listRules(child.id)).slice(0, 3)) await a.repo.setCheck(child.id, rule.id, date, 'done')
       await a.engine.syncNow(); await b.engine.syncNow()
       const [first, second] = await Promise.all([a.engine.claimAdventure(child.id, date, 'meadow'), b.engine.claimAdventure(child.id, date, 'stream')])

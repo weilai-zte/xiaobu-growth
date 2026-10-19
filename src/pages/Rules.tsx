@@ -59,11 +59,13 @@ function RuleCheckRow({ rule, date }: { rule: RoutineRule; date: string }) {
   )
   const [status, setStatus] = useState<RuleStatus | null>(null)
   const [note, setNote] = useState('')
+  const [minutes, setMinutes] = useState(String(rule.minMinutes ?? ''))
   const [saved, setSaved] = useState<RuleStatus | null>(null)
 
   useEffect(() => {
     setSaved(check?.status ?? null)
     setNote(check?.parentNote ?? '')
+    setMinutes(String(check?.minutes ?? rule.minMinutes ?? ''))
     setStatus(check?.status ?? null)
   }, [check?.updatedAt, check?.status, check?.parentNote])
 
@@ -99,6 +101,7 @@ function RuleCheckRow({ rule, date }: { rule: RoutineRule; date: string }) {
           onChange={setNote}
           hint="记下是在哪一步卡住的，比记「没做到」有用"
         />
+        {rule.minMinutes && <label>实际运动分钟数<input type="number" min="0" max="600" value={minutes} onChange={e => setMinutes(e.target.value)} /></label>}
         <button
           type="button"
           className="btn btn-sm btn-primary"
@@ -107,9 +110,11 @@ function RuleCheckRow({ rule, date }: { rule: RoutineRule; date: string }) {
               toast.show('先选一下今天的情况再保存')
               return
             }
-            await repo.setCheck(childId, rule.id, date, status, note || null)
-            setSaved(status)
-            toast.show('今天的执行情况已记录')
+            try {
+              await repo.setCheck(childId, rule.id, date, status, note || null, rule.minMinutes ? { minutes: Number(minutes) } : {})
+              setSaved(status)
+              toast.show('今天的执行情况已记录')
+            } catch (error) { toast.show(error instanceof Error ? error.message : '没有保存成功，请重试') }
           }}
         >
           {saved ? '更新今天的记录' : '保存今天的记录'}

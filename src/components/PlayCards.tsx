@@ -26,6 +26,7 @@ export function TinyStar() {
 }
 
 export function PlayPicture({ kind, className = '' }: { kind: string; className?: string }) {
+  if (['slippers', 'laundry', 'rope'].includes(kind)) return <svg viewBox="0 0 180 150" className={`play-picture ${className}`} aria-hidden="true" focusable="false"><circle cx="90" cy="75" r="60" fill="#edf0e8"/><g stroke="#554568" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">{kind === 'slippers' ? <><path d="M43 35q28-12 32 18v58q-15 22-35 0Z" fill="#b5a6d7"/><path d="M99 35q28-12 32 18v58q-15 22-35 0Z" fill="#b5a6d7"/><path d="M42 66q17-15 33 0v28q-17-10-34 0Zm56 0q17-15 33 0v28q-17-10-34 0Z" fill="#d9cced"/></> : kind === 'laundry' ? <><path d="m32 76 12 53h58l12-53Z" fill="#d6ba9a"/><path d="m39 73 6-25 17 6 16-14 22 19 6 18" fill="#c4b3df"/><path d="M117 85h38v14h-38Zm-5 15h43v15h-43Zm-5 16h48v14h-48Z" fill="#afcfba"/><path d="M54 86v29m20-29v29m20-29v29"/></> : <><circle cx="91" cy="40" r="14" fill="#e5c4a7"/><path d="M77 58h28v43H77Z" fill="#b9a8d9"/><path d="m78 101-9 25m34-25 10 25M77 64 57 82m48-18 20 18" fill="none"/><path d="M57 82q-52-80-35 22 12 48 68 38 64 10 68-38 17-102-33-22" stroke="#a8c9b3" fill="none"/></>}</g></svg>
   if (['map', 'stream', 'leaf', 'twig', 'pebble'].includes(kind)) return <svg viewBox="0 0 180 150" className={`play-picture ${className}`} aria-hidden="true" focusable="false"><circle cx="90" cy="75" r="60" fill="#eef1e7" /><g stroke="#625275" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
     {kind === 'map' ? <><path d="m30 40 40-13 40 13 40-13v90l-40 13-40-13-40 13Z" fill="#f1dfb9"/><path d="M70 27v90m40-77v90M49 84q50-68 83-14" fill="none" strokeDasharray="5 6"/><path d="m125 62 14 14m0-14-14 14" stroke="#8a70ad"/></> : kind === 'stream' ? <><path d="M26 60q50-35 128 0v45q-50-25-128 0Z" fill="#c6dfed"/><path d="M40 75q33-10 59-1m-34 17q30-6 67-1" fill="none" stroke="#7cabbf"/><path d="M43 53V26m0 9-14 9m14-3 17-10" fill="none" stroke="#7b9e7b"/><ellipse cx="140" cy="108" rx="16" ry="10" fill="#c7bcce"/></> : kind === 'leaf' ? <><path d="M48 118Q26 34 139 28q15 90-91 90Z" fill="#b5d5b2"/><path d="m48 118 65-67m-43 44 39 1M89 75V48" fill="none" stroke="#6f966e"/></> : kind === 'twig' ? <><path d="m47 120 72-90 11 8-72 90Z" fill="#ccb08c"/><path d="m85 76-27-4m48-20 30 2m-57 44 30 3" fill="none" stroke="#9c805f"/></> : <><path d="M37 99Q39 58 85 42q51-14 61 42 9 42-57 42-54 0-52-27Z" fill="#cbc1d4"/><path d="M63 77q25-19 49-10" fill="none" stroke="#f7f1fa"/></>}
   </g></svg>
@@ -53,16 +54,16 @@ export function PlayPicture({ kind, className = '' }: { kind: string; className?
   </svg>
 }
 
-export function ActionCard({ title, done, picture, onComplete }: { title: string; done: boolean; picture?: string; onComplete: () => Promise<boolean> }) {
+export function ActionCard({ title, done, picture, stars = 5, onComplete }: { title: string; done: boolean; picture?: string; stars?: number; onComplete: () => Promise<boolean> }) {
   const [busy, setBusy] = useState(false)
   return <button type="button" className={`action-tile ${done ? 'is-done' : ''}`} disabled={busy || done}
-    aria-label={`${title}，${done ? '已完成' : '点一下完成，获得5颗星'}`}
+    aria-label={`${title}，${done ? '已完成' : `点一下完成，获得${stars}颗星`}`}
     onClick={async () => {
       setBusy(true)
       const play = preparePraise()
       try { if (await onComplete()) void play() } finally { setBusy(false) }
     }}>
-    <span className="tile-reward">{done ? <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 6" stroke="currentColor" strokeWidth="3" fill="none" /></svg> : <>+5 <TinyStar /></>}</span>
+    <span className="tile-reward">{done ? <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 6" stroke="currentColor" strokeWidth="3" fill="none" /></svg> : <>+{stars} <TinyStar /></>}</span>
     <PlayPicture kind={picture ?? pictureFor(title)} />
     <strong>{shortTitle(title)}</strong><span className="tile-caption">{busy ? '正在记…' : done ? '做到了！' : '做完点这里'}</span>
   </button>

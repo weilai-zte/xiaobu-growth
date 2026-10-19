@@ -37,6 +37,7 @@ const PORT = Number(process.env.PORT ?? 8788)
 const HOST = process.env.HOST ?? '0.0.0.0'
 
 const MIME = {
+  '.mp3': 'audio/mpeg',
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.mjs': 'text/javascript; charset=utf-8',
@@ -133,7 +134,8 @@ async function handleApi(req, res, url) {
     const since = Number(body.since ?? 0)
     const applied = { created: 0, updated: 0, stale: 0, same: 0 }
     // 先保存完成记录，最后处理心愿，余额检查才能包含本次刚打卡的星星。
-    for (const [entity, rows] of Object.entries(body.changes ?? {}).sort(([a], [b]) => Number(a === 'wishes') - Number(b === 'wishes'))) {
+    const priority = entity => entity === 'routineRules' ? 0 : entity === 'wishes' ? 2 : 1
+    for (const [entity, rows] of Object.entries(body.changes ?? {}).sort(([a], [b]) => priority(a) - priority(b))) {
       if (!ENTITIES.includes(entity) || !Array.isArray(rows)) continue
       for (const row of rows) {
         const result = upsertRecord(entity, row)

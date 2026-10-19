@@ -117,6 +117,14 @@ export function upsertRecord(entity, input) {
   assertEntity(entity)
   if (!input?.id) throw new Error('缺少 id')
   const existing = getRecord(entity, input.id)
+  if (['taskRecords', 'routineChecks'].includes(entity)) {
+    if (input.rewardStars != null && ![1, 2].includes(input.rewardStars)) throw new Error('新打卡星数只能为1或2')
+    if (entity === 'routineChecks') {
+      const rule = getRecord('routineRules', input.ruleId)
+      if (!existing && rule?.rewardStars) input = { ...input, rewardStars: rule.rewardStars }
+      if (!input.deleted && input.status === 'done' && rule?.minMinutes && (!Number.isFinite(input.minutes) || input.minutes < rule.minMinutes || input.minutes > 600)) throw new Error(`请确认运动至少${rule.minMinutes}分钟`)
+    }
+  }
   if (entity === 'adventureRuns') {
     if (existing) return { row: existing, applied: false, reason: 'same' }
     throw new Error('冒险奖励只能通过每日冒险领取')
@@ -139,16 +147,16 @@ export function upsertRecord(entity, input) {
       throw new Error('心愿内容或兑换星数无效')
     }
     if (input.status === 'requested' || input.status === 'redeemed') {
-      const actions = new Set()
+      const actions = new Map()
       for (const task of listEntity('taskRecords')) {
-        if (task.childId === input.childId && task.completion === 'independent') actions.add(`task:${task.date}:${task.templateId || task.name}`)
+        if (task.childId === input.childId && task.completion === 'independent') { const key = `task:${task.date}:${task.templateId || task.name}`; actions.set(key, Math.max(actions.get(key) ?? 0, actionStars(task))) }
       }
       for (const check of listEntity('routineChecks')) {
-        if (check.childId === input.childId && check.status === 'done') actions.add(`rule:${check.date}:${check.ruleId}`)
+        if (check.childId === input.childId && check.status === 'done') { const key = `rule:${check.date}:${check.ruleId}`; actions.set(key, Math.max(actions.get(key) ?? 0, actionStars(check))) }
       }
       const committed = listEntity('wishes').filter(w => w.childId === input.childId && w.id !== input.id && ['requested', 'redeemed'].includes(w.status)).reduce((sum, w) => sum + w.cost, 0)
       const bonus = listEntity('adventureRuns').filter(r => r.childId === input.childId).reduce((sum, r) => sum + r.bonusStars, 0)
-      if (actions.size * 5 + bonus < committed + input.cost) throw new Error('星星余额不足，可能已在另一台设备申请礼物。请取消本次申请后重新同步。')
+      if ([...actions.values()].reduce((sum, stars) => sum + stars, 0) + bonus < committed + input.cost) throw new Error('星星余额不足，可能已在另一台设备申请礼物。请取消本次申请后重新同步。')
     }
   }
 
@@ -207,16 +215,18 @@ export function claimAdventure(childId, date, route) {
   const id = `adventure:${childId}:${date}`
   const existing = getRecord('adventureRuns', id)
   if (existing) return existing
-  const actions = new Set()
-  for (const task of listEntity('taskRecords')) if (task.childId === childId && task.date === date && task.completion === 'independent') actions.add(`task:${task.templateId || task.name}`)
-  for (const check of listEntity('routineChecks')) if (check.childId === childId && check.date === date && check.status === 'done') actions.add(`rule:${check.ruleId}`)
-  if (actions.size * 5 < 15) throw new Error('今天完成任务获得满15颗星，再来出发吧')
+  const actions = new Map()
+  for (const task of listEntity('taskRecords')) if (task.childId === childId && task.date === date && task.completion === 'independent') { const key = `task:${task.templateId || task.name}`; actions.set(key, Math.max(actions.get(key) ?? 0, actionStars(task))) }
+  for (const check of listEntity('routineChecks')) if (check.childId === childId && check.date === date && check.status === 'done') { const key = `rule:${check.ruleId}`; actions.set(key, Math.max(actions.get(key) ?? 0, actionStars(check))) }
+  if ([...actions.values()].reduce((sum, stars) => sum + stars, 0) < 5) throw new Error('今天完成任务获得满5颗星，再来出发吧')
   const stamp = nowIso()
   const seq = nextSeq()
   const row = { id, childId, date, route, scene: randomInt(3), material: ['leaf', 'twig', 'pebble'][randomInt(3)], bonusStars: [2, 3, 5][randomInt(3)], createdAt: stamp, updatedAt: stamp, syncSeq: seq }
   db.prepare('INSERT INTO records(entity,id,payload,updated_at,sync_seq,deleted) VALUES(?,?,?,?,?,0)').run('adventureRuns', id, JSON.stringify(row), stamp, seq)
   return row
 }
+
+function actionStars(row) { return row.rewardStars === 1 || row.rewardStars === 2 ? row.rewardStars : 5 }
 
 export function deleteEverything() {
   const result = db.prepare('DELETE FROM records').run()

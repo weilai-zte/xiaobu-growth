@@ -2,7 +2,7 @@ import type { AdventureRun, RoutineCheck, TaskRecord } from '../db/types'
 import { isDayKey } from './date'
 import { starBalance } from './rewards'
 
-export const ADVENTURE_THRESHOLD = 15
+export const ADVENTURE_THRESHOLD = 5
 export const BIRD_STAGES = [
   { key: 'egg', name: '一颗小蛋', at: 0, text: '里面住着谁呢？陪小蛋一起去看看世界。' },
   { key: 'crack', name: '蛋壳有动静啦', at: 1, text: '轻轻的，听到里面的声音了吗？' },

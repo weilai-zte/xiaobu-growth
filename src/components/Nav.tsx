@@ -31,7 +31,7 @@ const PARENT_ITEMS: NavItem[] = [
 
 const CHILD_ITEMS: NavItem[] = [
   { to: '/child', label: '我的任务', icon: IconCheckCircle },
-  { to: '/child/rules', label: '生活清单', icon: IconChecklist },
+  { to: '/child/rules', label: '打卡清单', icon: IconChecklist },
   { to: '/child/progress', label: '心愿小屋', icon: IconSprout },
   { to: '/settings', label: '家长模式', icon: IconLock },
 ]

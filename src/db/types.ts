@@ -147,6 +147,8 @@ export interface TaskTimer {
 }
 
 export interface TaskRecord extends Base {
+  /** 缺省为旧版每项5星；新学习任务为2星。 */
+  rewardStars?: 1 | 2
   childId: ID
   templateId: ID | null
   date: DayKey
@@ -182,8 +184,14 @@ export const RULE_STATUS = ['done', 'partial', 'not_done', 'not_applicable'] as 
 
 export type RuleTrigger = (typeof RULE_TRIGGER)[number]
 export type RuleStatus = (typeof RULE_STATUS)[number]
+export type HabitCategory = 'life' | 'sport' | 'study'
+export type HabitKey = 'body' | 'meal' | 'clothes' | 'rope' | 'cycle' | 'picture_words'
 
 export interface RoutineRule extends Base {
+  habitKey?: HabitKey
+  category?: HabitCategory
+  rewardStars?: 1 | 2
+  minMinutes?: number
   childId: ID
   /** 内置规则的稳定 key（自定义规则为 null） */
   builtinKey: string | null
@@ -197,6 +205,11 @@ export interface RoutineRule extends Base {
 
 /** 每天每条规则一条执行记录（childId + ruleId + date 唯一） */
 export interface RoutineCheck extends Base {
+  rewardStars?: 1 | 2
+  minutes?: number
+  studyLevel?: Difficulty
+  studyWords?: string[]
+  stepsDone?: string[]
   childId: ID
   ruleId: ID
   date: DayKey

@@ -19,12 +19,14 @@ import {
 } from './types'
 import { nowISO } from '../lib/date'
 import { starBalance, validWish } from '../lib/rewards'
+import { HABIT_PLAN } from '../lib/habits'
 import {
   validateChildProfile,
   validateConflictLog,
   validateDailyLog,
   validateExperiment,
   validateRoutineRule,
+  validateRoutineCheck,
   validateStrengthMoment,
   validateTaskRecord,
   validateTaskTemplate,
@@ -61,6 +63,19 @@ function stamp<T extends object>(input: T): T & Timestamped {
 }
 
 export function createRepo(database: GrowthDB) {
+  async function ensureHabitPlan(childId: ID) {
+    // ID由孩子和项目决定，跨设备重复升级不会重复创建；旧记录不动。
+    await database.transaction('rw', database.routineRules, database.syncQueue, database.settings, async () => {
+      const existing = await listRules(childId)
+      for (const [order, habit] of HABIT_PLAN.entries()) {
+        const id = `habit-v2:${childId}:${habit.key}`
+        if (await database.routineRules.get(id)) continue
+        await write('routineRules', stamp({ id, childId, builtinKey: `habit_v2_${habit.key}`, habitKey: habit.key, category: habit.category, rewardStars: habit.stars, minMinutes: habit.minutes, title: habit.title, steps: habit.steps.slice(), trigger: habit.key === 'meal' ? 'mealtime' : 'anytime', active: true, order }))
+      }
+      if (!existing.some(r => r.habitKey)) for (const rule of existing) if (rule.active && BUILTIN_RULES.some(b => b.builtinKey === rule.builtinKey)) await write('routineRules', { ...rule, active: false, updatedAt: nowISO() })
+      for (const rule of existing) if (!rule.builtinKey && rule.rewardStars === undefined) await write('routineRules', { ...rule, category: 'life', rewardStars: 1, updatedAt: nowISO() })
+    })
+  }
   async function listAdventures(childId: ID) { return alive(await database.adventureRuns.where('childId').equals(childId).toArray()) }
   async function listWishes(childId: ID): Promise<Wish[]> {
     return alive(await database.wishes.where('childId').equals(childId).toArray())
@@ -268,6 +283,7 @@ export function createRepo(database: GrowthDB) {
       status: (draft.status as TaskRecord['status']) ?? 'planned',
       timer: (draft.timer as TaskRecord['timer']) ?? null,
       childFeeling: (draft.childFeeling as string) ?? null,
+      rewardStars: 2,
     })
     await write('taskRecords', row)
     return row
@@ -315,6 +331,8 @@ export function createRepo(database: GrowthDB) {
       id: newId(),
       childId: draft.childId as ID,
       builtinKey: null,
+      category: 'life',
+      rewardStars: 1,
       title: `${draft.title}`.trim(),
       steps: ((draft.steps as string[]) ?? []).map((s) => s.trim()).filter(Boolean),
       trigger: draft.trigger as RoutineRule['trigger'],
@@ -346,13 +364,18 @@ export function createRepo(database: GrowthDB) {
     date: DayKey,
     status: RuleStatus,
     parentNote?: string | null,
+    details: Pick<RoutineCheck, 'minutes' | 'studyLevel' | 'studyWords' | 'stepsDone'> = {},
   ) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('日期格式不正确')
+    const rule = await database.routineRules.get(ruleId)
+    if (!rule || rule.childId !== childId) throw new Error('找不到这张打卡图卡')
+    if (status === 'done' && rule.minMinutes && (!Number.isFinite(details.minutes) || Number(details.minutes) < rule.minMinutes || Number(details.minutes) > 600)) throw new Error(`请确认累计运动至少${rule.minMinutes}分钟，可以分段休息`)
     const existing = await database.routineChecks
       .where('[ruleId+date]')
       .equals([ruleId, date])
       .first()
     const row: RoutineCheck = {
-      id: existing?.id ?? newId(),
+      id: existing?.id ?? `check:${childId}:${ruleId}:${date}`,
       createdAt: existing?.createdAt ?? nowISO(),
       updatedAt: nowISO(),
       childId,
@@ -360,7 +383,14 @@ export function createRepo(database: GrowthDB) {
       date,
       status,
       parentNote: parentNote ?? existing?.parentNote ?? null,
+      rewardStars: existing ? existing.rewardStars : rule.rewardStars,
+      minutes: existing?.minutes,
+      studyLevel: existing?.studyLevel,
+      studyWords: existing?.studyWords,
+      stepsDone: existing?.stepsDone,
+      ...details,
     }
+    check(validateRoutineCheck(row))
     await write('routineChecks', row)
     return row
   }
@@ -632,6 +662,7 @@ export function createRepo(database: GrowthDB) {
   }
 
   return {
+    ensureHabitPlan,
     listAdventures,
     listWishes,
     proposeWish,

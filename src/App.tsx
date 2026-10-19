@@ -19,6 +19,7 @@ import { Settings } from './pages/Settings'
 import { ChildToday } from './pages/ChildToday'
 import { ChildRules } from './pages/ChildRules'
 import { ChildProgress } from './pages/ChildProgress'
+import { ChildStudy } from './pages/ChildStudy'
 import { CloudConnect } from './pages/CloudConnect'
 import { IS_GITHUB_PAGES } from './db/sync'
 
@@ -127,6 +128,7 @@ function Shell() {
           />
           <Route path="/child" element={<ChildToday />} />
           <Route path="/child/rules" element={<ChildRules />} />
+          <Route path="/child/study" element={<ChildStudy />} />
           <Route path="/child/progress" element={<ChildProgress />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

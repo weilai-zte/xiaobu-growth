@@ -9,6 +9,7 @@ import {
   validateDailyLog,
   validateExperiment,
   validateRoutineRule,
+  validateRoutineCheck,
   validateStrengthMoment,
   validateTaskRecord,
   validateTaskTemplate,
@@ -38,6 +39,7 @@ const NATURAL_KEYS: Partial<Record<EntityName, string[]>> = {
 }
 
 const VALIDATORS: Partial<Record<EntityName, (row: Draft<never>) => ValidationResult>> = {
+  routineChecks: validateRoutineCheck as never,
   adventureRuns: (row) => validAdventure(row) ? { ok: true, errors: [] } : { ok: false, errors: ['冒险记录无效'] },
   wishes: (row) => validWish(row) ? { ok: true, errors: [] } : { ok: false, errors: ['心愿内容或星数无效'] },
   childProfiles: validateChildProfile as never,
@@ -269,6 +271,7 @@ export const CSV_COLUMNS: Record<string, Column[]> = {
     { key: 'archived', label: '已归档', kind: 'bool' },
   ],
   taskRecords: [
+    { key: 'rewardStars', label: '完成星数（空为旧版5星）', kind: 'number' },
     { key: 'id', label: 'ID' },
     { key: 'date', label: '日期', kind: 'day' },
     { key: 'name', label: '任务名称' },
@@ -284,6 +287,7 @@ export const CSV_COLUMNS: Record<string, Column[]> = {
     { key: 'updatedAt', label: '更新时间', kind: 'datetime' },
   ],
   routineRules: [
+    { key: 'category', label: '打卡分类' }, { key: 'rewardStars', label: '星数', kind: 'number' },
     { key: 'id', label: 'ID' },
     { key: 'title', label: '规则' },
     { key: 'steps', label: '步骤', kind: 'array' },
@@ -292,6 +296,9 @@ export const CSV_COLUMNS: Record<string, Column[]> = {
     { key: 'active', label: '启用中', kind: 'bool' },
   ],
   routineChecks: [
+    { key: 'rewardStars', label: '完成星数（空为旧版5星）', kind: 'number' },
+    { key: 'minutes', label: '运动分钟数', kind: 'number' }, { key: 'studyLevel', label: '学习难度' },
+    { key: 'studyWords', label: '练习单词', kind: 'array' }, { key: 'stepsDone', label: '完成步骤', kind: 'array' },
     { key: 'id', label: 'ID' },
     { key: 'ruleId', label: '规则 ID' },
     { key: 'date', label: '日期', kind: 'day' },

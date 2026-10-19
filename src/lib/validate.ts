@@ -1,4 +1,5 @@
 import { isClockTime, isDayKey, dayKeyToDate, diffDays } from './date'
+import { HABIT_PLAN } from './habits'
 import {
   BARRIERS,
   type ChildProfile,
@@ -16,6 +17,7 @@ import {
   type DailyLog,
   type Experiment,
   type RoutineRule,
+  type RoutineCheck,
   type StrengthMoment,
   type TaskRecord,
   type TaskTemplate,
@@ -177,6 +179,7 @@ export function validateTaskTemplate(draft: Draft<TaskTemplate>): ValidationResu
 
 export function validateTaskRecord(draft: Draft<TaskRecord>): ValidationResult {
   const errors: string[] = []
+  if (draft.rewardStars != null && ![1, 2].includes(draft.rewardStars)) errors.push('新打卡星数只能为1或2')
   const nameErr = requiredText(draft.name, '任务名称', 40)
   if (nameErr) errors.push(nameErr)
   const subjectErr = requiredText(draft.subject, '学科或任务领域', 20)
@@ -201,6 +204,11 @@ export function validateTaskRecord(draft: Draft<TaskRecord>): ValidationResult {
 
 export function validateRoutineRule(draft: Draft<RoutineRule>): ValidationResult {
   const errors: string[] = []
+  if (draft.habitKey != null && !HABIT_PLAN.some(h => h.key === draft.habitKey)) errors.push('打卡项目标识无效')
+  if (draft.rewardStars != null && ![1, 2].includes(draft.rewardStars)) errors.push('图卡星数只能为1或2')
+  if (draft.category != null && !['life', 'sport', 'study'].includes(draft.category)) errors.push('打卡分类无效')
+  const minErr = optionalNumber(draft.minMinutes, '运动分钟数', 1, 600)
+  if (minErr) errors.push(minErr)
   const titleErr = requiredText(draft.title, '规则名称', 40)
   if (titleErr) errors.push(titleErr)
   const triggerErr = enumValue(draft.trigger, RULE_TRIGGER, '触发时机')
@@ -211,6 +219,22 @@ export function validateRoutineRule(draft: Draft<RoutineRule>): ValidationResult
   }
   const stepsErr = textSteps(draft.steps, '执行步骤')
   if (stepsErr) errors.push(stepsErr)
+  return finish(errors)
+}
+
+export function validateRoutineCheck(draft: Draft<RoutineCheck>): ValidationResult {
+  const errors: string[] = []
+  if (!isDayKey(draft.date)) errors.push('记录日期格式不正确')
+  for (const [value, label] of [[draft.childId, '儿童标识'], [draft.ruleId, '图卡标识']]) { const err = requiredText(value, String(label), 200); if (err) errors.push(err) }
+  const status = enumValue(draft.status, RULE_STATUS, '执行情况')
+  if (status) errors.push(status)
+  if (draft.rewardStars != null && ![1, 2].includes(draft.rewardStars)) errors.push('新打卡星数只能为1或2')
+  const minutes = optionalNumber(draft.minutes, '运动分钟数', 0, 600)
+  if (minutes) errors.push(minutes)
+  if (draft.studyLevel != null && !DIFFICULTY.includes(draft.studyLevel)) errors.push('学习难度无效')
+  if (draft.studyWords != null && (!Array.isArray(draft.studyWords) || draft.studyWords.length > 8 || draft.studyWords.some(w => typeof w !== 'string' || !/^[a-z]{2,15}$/.test(w)) || new Set(draft.studyWords).size !== draft.studyWords.length)) errors.push('学习单词记录无效')
+  const steps = textSteps(draft.stepsDone, '完成步骤')
+  if (steps) errors.push(steps)
   return finish(errors)
 }
 

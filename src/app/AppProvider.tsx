@@ -2,11 +2,13 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useSync } from './SyncProvider'
 import { repo } from '../db/repo'
 import type { ChildProfile } from '../db/types'
 import {
@@ -17,6 +19,9 @@ import {
 } from '../lib/settings'
 
 interface AppContextValue {
+  habitPlanReady: boolean
+  habitPlanError: string
+  retryHabitPlan: () => void
   loading: boolean
   profile: ChildProfile | undefined
   refreshProfile: () => void
@@ -32,12 +37,23 @@ interface AppContextValue {
 const AppContext = createContext<AppContextValue | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { bootstrapped } = useSync()
+  const [planChild, setPlanChild] = useState('')
+  const [habitPlanError, setPlanError] = useState('')
+  const [planRetry, setPlanRetry] = useState(0)
   const [version, setVersion] = useState(0)
   const refreshProfile = useCallback(() => setVersion((v) => v + 1), [])
   // 默认锁上：家长模式下不生效，儿童视图下需要先通过家长门锁
   const [parentUnlocked, setParentUnlocked] = useState(false)
 
   const profile = useLiveQuery(() => repo.getPrimaryProfile(), [version])
+  useEffect(() => {
+    if (!profile?.id || !bootstrapped) return
+    let cancelled = false
+    setPlanError('')
+    void repo.ensureHabitPlan(profile.id).then(() => { if (!cancelled) setPlanChild(profile.id) }).catch(() => { if (!cancelled) setPlanError('打卡图卡没有准备好，请重试。原记录仍然保留。') })
+    return () => { cancelled = true }
+  }, [profile?.id, bootstrapped, planRetry])
   const settings = useLiveQuery(
     async () => ({
       childView: await repo.getSetting<boolean>(SETTINGS_KEYS.childView, false),
@@ -72,6 +88,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppContextValue>(
     () => ({
+      habitPlanReady: planChild === profile?.id,
+      habitPlanError,
+      retryHabitPlan: () => setPlanRetry(v => v + 1),
       loading: profile === undefined && settings === undefined,
       profile: profile ?? undefined,
       refreshProfile,
@@ -84,6 +103,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       lockParent: () => setParentUnlocked(false),
     }),
     [
+      planChild,
+      habitPlanError,
       profile,
       settings,
       refreshProfile,
