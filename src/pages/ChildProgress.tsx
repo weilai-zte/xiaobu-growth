@@ -10,6 +10,7 @@ import { BirdGrowth, GrowthTrail, WishGoal } from '../components/GrowthJourney'
 import { uniqueAdventures, birdStage } from '../lib/adventure'
 import { BirdCompanion } from '../components/BirdCompanion'
 import { todayKey } from '../lib/date'
+import { CheckinHeatmap } from '../components/CheckinHeatmap'
 
 const PICTURES = [{ key: 'gift', label: '礼物' }, { key: 'ball', label: '运动' }, { key: 'book', label: '图书' }, { key: 'paint', label: '画画' }, { key: 'picnic', label: '出游' }]
 const WISH_IDEAS = [
@@ -45,6 +46,7 @@ export function ChildProgress({ parent = false }: { parent?: boolean }) {
     {!parent && data && <BirdCompanion stage={birdStage(uniqueAdventures(data.adventures).length).key} runs={data.adventures} wardrobe />}
     {!parent && data && <WishGoal wish={focus} available={balance.available} />}
     {data && <GrowthTrail tasks={data.tasks} checks={data.checks} date={todayKey()} />}
+    {data && <CheckinHeatmap checks={data.checks} date={todayKey()} />}
     <Card title="我的成长花园"><div className="badge-garden">{BADGES.map(b => <div key={b.at} className={`growth-badge ${balance.earned >= b.at ? 'lit' : ''}`}><PlayPicture kind={b.picture} /><strong>{b.name}</strong><small>{balance.earned >= b.at ? '已点亮' : `${b.at} 颗星点亮`}</small></div>)}</div>
       <p className="muted">{nextBadge ? `再攒 ${nextBadge.at - balance.earned} 颗星，就能点亮${nextBadge.name}。` : '花园里的图标都点亮了！'}兑换礼物不会熄灭图标。</p>
     </Card>

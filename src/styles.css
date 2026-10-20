@@ -1617,3 +1617,13 @@ legend {
 @keyframes budgie-tilt { 0%, 100% { transform: rotate(0); } 40% { transform: rotate(7deg); } 70% { transform: rotate(-4deg); } }
 @media (max-width: 600px) { .bird-items { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bird-wardrobe { padding: 14px; } .buddy-stage:has(.bird-companion) { width: min(260px, 100%); } .buddy-hero:has(.bird-companion) { flex-wrap: wrap; } .bird-speaker { right: 14px; } }
 @media (prefers-reduced-motion: reduce) { .bird-touched .buddy-bird, .bird-action-2.bird-touched .bird-wing, .budgie-speaking .budgie-beak { animation: none; } }
+.checkin-heatmap { background: linear-gradient(145deg, #fff, #f1ddf733); border-radius: 20px; padding: 12px; }
+.checkin-heatmap svg { display: block; width: 100%; max-width: 350px; margin: 16px auto; overflow: visible; }
+.checkin-heatmap svg text { font-size: 14px; font-weight: 600; }
+.checkin-heatmap rect { cursor: pointer; stroke: #80728f; stroke-width: 1; }
+.checkin-heatmap rect:focus-visible, .checkin-heatmap rect[aria-selected="true"] { outline: none; stroke: #352452; stroke-width: 3; }
+.checkin-heatmap .heatmap-future { opacity: .45; }
+.heatmap-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.heatmap-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.heatmap-legend i { width: 18px; height: 18px; border: 1px solid #80728f; border-radius: 5px; }
+.checkin-heatmap table { width: 100%; }
