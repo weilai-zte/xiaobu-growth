@@ -29,7 +29,8 @@ describe.skipIf(process.env.XB_CLOUD_VERIFY !== '1')('线上首次连接界面',
       expect(await screen.findByRole('heading', { name: /全全.*出发/ }, { timeout: 20000 })).toBeInTheDocument()
       expect(await repo.listProfiles()).toHaveLength(1)
       expect(await repo.getSetting('ui.childView', false)).toBe(true)
-      expect(screen.getByRole('button', { name: '试听鼓励' })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: '试听鼓励' })).not.toBeInTheDocument()
+      expect(screen.getByRole('link', { name: '家长' })).toBeInTheDocument()
       expect(screen.queryByText('先建立孩子档案')).not.toBeInTheDocument()
     } finally { view.unmount(); await repo.clearAll() }
   }, 60000)

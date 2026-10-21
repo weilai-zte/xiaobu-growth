@@ -1,3 +1,4 @@
+import { achievementBonus } from './star-achievements.mjs'
 /**
  * 「小步成长」的在线数据层。
  *
@@ -11,6 +12,8 @@ import { DatabaseSync } from 'node:sqlite'
 import { mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { FAMILY_ENTITIES, validateFamilyRecord } from './family.mjs'
+import { bankChange, bankWalletDelta, bankToday, newBankAccount } from './bank.mjs'
 import { randomInt } from 'node:crypto'
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
@@ -19,6 +22,8 @@ export const DB_PATH = process.env.XB_DB ?? join(ROOT, 'data', 'sync.db')
 mkdirSync(dirname(DB_PATH), { recursive: true })
 
 export const ENTITIES = [
+  'bankAccounts', 'bankEntries',
+  ...FAMILY_ENTITIES,
   'adventureRuns',
   'wishes',
   'childProfiles',
@@ -117,6 +122,10 @@ export function upsertRecord(entity, input) {
   assertEntity(entity)
   if (!input?.id) throw new Error('缺少 id')
   const existing = getRecord(entity, input.id)
+  if (entity === 'bankAccounts' || entity === 'bankEntries') {
+    if (existing) return { row: existing, applied: false, reason: 'same' }
+    throw new Error('银行记录只能通过存取与周息接口生成')
+  }
   if (['taskRecords', 'routineChecks'].includes(entity)) {
     if (input.rewardStars != null && ![1, 2].includes(input.rewardStars)) throw new Error('新打卡星数只能为1或2')
     if (entity === 'routineChecks') {
@@ -129,6 +138,14 @@ export function upsertRecord(entity, input) {
     if (existing) return { row: existing, applied: false, reason: 'same' }
     throw new Error('冒险奖励只能通过每日冒险领取')
   }
+  // 荣誉和星星是永久收藏；跨版本或跨设备更新采用并集。
+  if (entity === 'childProfiles' && existing) {
+    const claims = {...existing.starClaims, ...input.starClaims}
+    const honors = {...existing.honorClaims, ...input.honorClaims}
+    const added = Object.keys(claims).some(key => !existing.starClaims?.[key]) || Object.keys(honors).some(key => !existing.honorClaims?.[key])
+    const stale = (input.updatedAt ?? '') <= existing.updatedAt
+    input = stale && added ? {...existing, starClaims:claims, honorClaims:honors, updatedAt:nowIso()} : {...input, starClaims:claims, honorClaims:honors}
+  }
   const clientUpdatedAt = input.updatedAt ?? input.updated_at ?? nowIso()
 
   if (existing && clientUpdatedAt < existing.updatedAt) {
@@ -138,7 +155,10 @@ export function upsertRecord(entity, input) {
     return { row: existing, applied: false, reason: 'same' }
   }
 
+  validateFamilyRecord(entity, input, existing, getRecord, listEntity)
+
   if (entity === 'wishes') {
+    if(existing?.status==='requested'&&(input.cost!==existing.cost||input.name!==existing.name||input.picture!==existing.picture))throw new Error('已申请的奖励不能修改价格或内容，请先取消申请')
     if (existing?.status === 'redeemed' && !input.deleted) return { row: existing, applied: false, reason: 'stale' }
     if (typeof input.name !== 'string' || !input.name.trim() || input.name.length > 80 ||
         typeof input.childId !== 'string' || !input.childId ||
@@ -156,7 +176,7 @@ export function upsertRecord(entity, input) {
       }
       const committed = listEntity('wishes').filter(w => w.childId === input.childId && w.id !== input.id && ['requested', 'redeemed'].includes(w.status)).reduce((sum, w) => sum + w.cost, 0)
       const bonus = listEntity('adventureRuns').filter(r => r.childId === input.childId).reduce((sum, r) => sum + r.bonusStars, 0)
-      if ([...actions.values()].reduce((sum, stars) => sum + stars, 0) + bonus < committed + input.cost) throw new Error('星星余额不足，可能已在另一台设备申请礼物。请取消本次申请后重新同步。')
+      if ([...actions.values()].reduce((sum, stars) => sum + stars, 0) + bonus + achievementBonus(getRecord('childProfiles',input.childId)?.starClaims) + bankWalletDelta(listEntity('bankEntries').filter(e => e.childId === input.childId)) < committed + input.cost) throw new Error('星星余额不足，可能已在另一台设备申请礼物。请取消本次申请后重新同步。')
     }
   }
 
@@ -197,6 +217,8 @@ export function listEntity(entity, { includeDeleted = false } = {}) {
 }
 
 export function softDelete(entity, id) {
+  if (entity === 'bankAccounts' || entity === 'bankEntries') throw new Error('银行记录不能直接删除')
+  if (FAMILY_ENTITIES.includes(entity)) throw new Error('请收起公约，保留签订和打卡记录')
   if (entity === 'adventureRuns') throw new Error('冒险奖励不能单独删除或重抽')
   const existing = getRecord(entity, id)
   if (!existing) return null
@@ -262,4 +284,32 @@ export function getMeta(key, fallback = null) {
   } catch {
     return fallback
   }
+}
+
+/** 银行操作与周息在同一个SQLite事务中提交。请求ID使超时重试不重复划转。 */
+export function bankOperation(input) {
+  const { childId, action, requestId } = input
+  if (typeof childId !== 'string' || !getRecord('childProfiles',childId) || getRecord('childProfiles',childId).deleted) throw new Error('请先建立孩子档案')
+  if (typeof requestId !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(requestId)) throw new Error('银行请求编号无效，请重试')
+  const stamp = nowIso(), today = bankToday(), receiptId = `bank-action:${childId}:${requestId}`
+  db.exec('BEGIN IMMEDIATE')
+  try {
+    const old = getRecord('bankAccounts',`bank:${childId}`) ?? { ...newBankAccount(childId,today), createdAt: stamp, updatedAt: stamp }
+    const receipt = getRecord('bankEntries',receiptId)
+    if (receipt) { db.exec('COMMIT'); return old }
+    const actions = new Map()
+    for (const t of listEntity('taskRecords')) if (t.childId === childId && t.completion === 'independent') { const key=`task:${t.date}:${t.templateId || t.name}`; actions.set(key,Math.max(actions.get(key)??0,actionStars(t))) }
+    for (const c of listEntity('routineChecks')) if (c.childId === childId && c.status === 'done') { const key=`rule:${c.date}:${c.ruleId}`; actions.set(key,Math.max(actions.get(key)??0,actionStars(c))) }
+    const earned=achievementBonus(getRecord('childProfiles',childId)?.starClaims)+[...actions.values()].reduce((a,b)=>a+b,0)+listEntity('adventureRuns').filter(r=>r.childId===childId).reduce((s,r)=>s+r.bonusStars,0)
+    const committed=listEntity('wishes').filter(w=>w.childId===childId&&['requested','redeemed'].includes(w.status)).reduce((s,w)=>s+w.cost,0)
+    const available=earned+bankWalletDelta(listEntity('bankEntries').filter(e=>e.childId===childId))-committed
+    const result=bankChange(old,action,input,available,today)
+    const save=(entity,row)=>{
+      db.prepare('INSERT INTO records(entity,id,payload,updated_at,sync_seq,deleted) VALUES(?,?,?,?,?,0) ON CONFLICT(entity,id) DO UPDATE SET payload=excluded.payload,updated_at=excluded.updated_at,sync_seq=excluded.sync_seq').run(entity,row.id,JSON.stringify({...row,createdAt:row.createdAt??stamp,updatedAt:stamp}),stamp,nextSeq())
+    }
+    for(const entry of result.entries) save('bankEntries',entry)
+    if(action !== 'settle') save('bankEntries',{id:receiptId,childId,kind:action,amount:['deposit','withdraw'].includes(action)?input.amount:0,date:today,rateBps:result.account.configuredRateBps})
+    save('bankAccounts',result.account)
+    db.exec('COMMIT'); return getRecord('bankAccounts',old.id)
+  } catch(error) { db.exec('ROLLBACK'); seqCache=null; throw error }
 }

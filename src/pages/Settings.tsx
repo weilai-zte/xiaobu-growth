@@ -1,3 +1,4 @@
+import { FeedbackSound } from '../components/FeedbackSound'
 import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ENTITY_LABELS, ENTITY_NAMES, type EntityName } from '../db/db'
@@ -170,6 +171,7 @@ export function Settings() {
       />
       <Errors errors={errors} />
 
+      <Card title="小步的声音"><FeedbackSound /></Card>
       <Card title="在线同步">
         <div className="row-between">
           <div>
@@ -294,7 +296,7 @@ export function Settings() {
           <div>
             <strong>儿童视图</strong>
             <p className="muted">
-              打开后只显示任务、生活清单和进步，睡眠记录、冲突复盘、数据设置都会被隐藏。
+              默认打开儿童端，提供打卡、星空和心愿。所有定制设置在家长端。
             </p>
           </div>
           <button
@@ -305,7 +307,7 @@ export function Settings() {
               toast.show(childView ? '已回到家长模式' : '已切换到儿童视图')
             }}
           >
-            {childView ? '儿童视图已开启' : '儿童视图已关闭'}
+            返回儿童端并锁定设置
           </button>
         </div>
 

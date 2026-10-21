@@ -1,3 +1,4 @@
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   createContext,
   useCallback,
@@ -29,6 +30,8 @@ interface AppContextValue {
   setChildView: (value: boolean) => Promise<void>
   pin: PinSetting
   setPin: (value: PinSetting) => Promise<void>
+  signingPactId: string | null
+  startSigning: (pactId: string) => void
   parentUnlocked: boolean
   unlockParent: (pin: string) => boolean
   lockParent: () => void
@@ -38,13 +41,20 @@ const AppContext = createContext<AppContextValue | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { bootstrapped } = useSync()
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const childView = !pathname.startsWith('/parent') && !pathname.startsWith('/sign/')
+  useEffect(() => { if (childView) setParentUnlocked(false) }, [childView])
   const [planChild, setPlanChild] = useState('')
   const [habitPlanError, setPlanError] = useState('')
   const [planRetry, setPlanRetry] = useState(0)
   const [version, setVersion] = useState(0)
   const refreshProfile = useCallback(() => setVersion((v) => v + 1), [])
-  // 默认锁上：家长模式下不生效，儿童视图下需要先通过家长门锁
+  // 家长解锁只存在当前页面会话；签订页面使用范围更小的单份公约授权。
   const [parentUnlocked, setParentUnlocked] = useState(false)
+  const [signingPactId,setSigningPactId]=useState<string|null>(null)
+  useEffect(()=>{if(!pathname.startsWith('/sign/'))setSigningPactId(null)},[pathname])
+  const startSigning=useCallback((id:string)=>{if(!parentUnlocked)return;setSigningPactId(id);setParentUnlocked(false);navigate(`/sign/${id}`)},[parentUnlocked,navigate])
 
   const profile = useLiveQuery(() => repo.getPrimaryProfile(), [version])
   useEffect(() => {
@@ -56,16 +66,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [profile?.id, bootstrapped, planRetry])
   const settings = useLiveQuery(
     async () => ({
-      childView: await repo.getSetting<boolean>(SETTINGS_KEYS.childView, false),
       pin: await repo.getSetting<PinSetting>(SETTINGS_KEYS.pin, DEFAULT_PIN_SETTING),
     }),
     [],
   )
 
   const setChildView = useCallback(async (value: boolean) => {
-    await repo.setSetting(SETTINGS_KEYS.childView, value)
-    setParentUnlocked(!value)
-  }, [])
+    if (value) setParentUnlocked(false)
+    navigate(value ? '/child' : '/parent')
+  }, [navigate])
 
   const setPin = useCallback(async (value: PinSetting) => {
     await repo.setSetting(SETTINGS_KEYS.pin, value)
@@ -76,14 +85,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const unlockParent = useCallback(
     (input: string) => {
       if (!pin.enabled) {
-        setParentUnlocked(true)
+        if(pathname.startsWith('/sign/'))setSigningPactId(decodeURIComponent(pathname.slice(6)));else setParentUnlocked(true)
         return true
       }
       const ok = hashPin(input, pin.salt) === pin.hash
-      if (ok) setParentUnlocked(true)
+      if (ok) {if(pathname.startsWith('/sign/'))setSigningPactId(decodeURIComponent(pathname.slice(6)));else setParentUnlocked(true)}
       return ok
     },
-    [pin],
+    [pin,pathname],
   )
 
   const value = useMemo<AppContextValue>(
@@ -91,18 +100,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       habitPlanReady: planChild === profile?.id,
       habitPlanError,
       retryHabitPlan: () => setPlanRetry(v => v + 1),
-      loading: profile === undefined && settings === undefined,
+      loading: settings === undefined,
       profile: profile ?? undefined,
       refreshProfile,
-      childView: settings?.childView ?? false,
+      childView,
       setChildView,
       pin,
       setPin,
+      signingPactId, startSigning,
       parentUnlocked,
       unlockParent,
       lockParent: () => setParentUnlocked(false),
     }),
     [
+      childView,
       planChild,
       habitPlanError,
       profile,
@@ -111,6 +122,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setChildView,
       pin,
       setPin,
+      signingPactId,startSigning,
       parentUnlocked,
       unlockParent,
     ],

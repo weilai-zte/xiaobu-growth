@@ -22,6 +22,18 @@ export interface AdventureRun extends Base {
   bonusStars: number
 }
 
+export const BUDDY_CARE_ACTIONS = ['feed', 'play', 'groom', 'sleep'] as const
+export type BuddyCareAction = (typeof BUDDY_CARE_ACTIONS)[number]
+export type BuddyActivity = 'idle' | BuddyCareAction | 'adventure'
+
+/** 每日陪伴动作；只累计正向亲密值，不设饥饿或连续签到惩罚。 */
+export interface BuddyCareState {
+  date: DayKey
+  completed: BuddyCareAction[]
+  xp: number
+  sleepingSince: ISOTime | null
+}
+
 export interface Base {
   id: ID
   createdAt: ISOTime
@@ -34,6 +46,25 @@ export interface Base {
   deleted?: boolean
   /** 服务端分配的同步序号；本地刚写入、还没同步时为空 */
   syncSeq?: number
+}
+
+export interface BankAccount extends Base {
+  childId: ID
+  balance: number
+  eligibleBalance: number
+  remainder: number
+  enabled: boolean
+  weeklyRateBps: number
+  configuredRateBps: number
+  nextInterestDate: DayKey
+}
+export interface BankEntry extends Base {
+  childId: ID
+  kind: 'deposit' | 'withdraw' | 'interest' | 'configure'
+  amount: number
+  date: DayKey
+  rateBps?: number
+  eligibleBalance?: number
 }
 
 export interface Wish extends Base {
@@ -62,7 +93,16 @@ export interface SyncStateRow {
 }
 
 export interface ChildProfile extends Base {
+  honorClaims?: Record<string, string>
+  honorsSeenAt?: string
+
+  /** 已手动领取的星座成就，键为星座标识，值为点亮时间。 */
+  starClaims?: Record<string, string>
   buddyAccessory?: string | null
+  /** 小步的每日照料与累计亲密值，随儿童档案同步。 */
+  buddyCare?: BuddyCareState | null
+  /** 孩子选中的小屋摆件；只保存标识，物品本身由冒险记录派生。 */
+  buddyHomeDecor?: string | null
   name: string
   /** 孩子选择优先攒的心愿，随档案跨设备同步。 */
   focusWishId?: ID | null
@@ -460,3 +500,39 @@ export const BUILTIN_RULES: Array<{
     trigger: 'screen',
   },
 ]
+
+/* ---------- 家庭共同成长（v5，旧记录不改写） ---------- */
+export interface FamilyMember extends Base {
+  childId: ID
+  name: string
+  role: 'parent' | 'child'
+}
+export interface GrowthPact extends Base {
+  replacesPactId?: ID
+  ruleIds?: ID[]
+  childId: ID
+  title: string
+  clauses: { memberId: ID; text: string }[]
+  authorId: ID
+  sealed: boolean
+  archived: boolean
+  /** 心愿仍是兑换奖励；这里只引用已有打卡，不另建计星记录。旧公约没有此字段。 */
+  wishPlan?: { wishId: ID; ruleIds: ID[]; rewardName: string; rewardCost: number | null }
+}
+export interface PactSignature extends Base {
+  childId: ID
+  pactId: ID
+  memberId: ID
+}
+export interface FamilyCheck extends Base {
+  childId: ID
+  pactId: ID
+  clause: number
+  memberId: ID
+  date: DayKey
+}
+export interface FamilyReaction extends Base {
+  childId: ID
+  checkId: ID
+  memberId: ID
+}

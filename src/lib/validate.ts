@@ -1,7 +1,9 @@
-import { isClockTime, isDayKey, dayKeyToDate, diffDays } from './date'
+import { isClockTime, isDayKey, dayKeyToDate, diffDays, isValidISOTime } from './date'
 import { HABIT_PLAN } from './habits'
+import { isHomeTreasureKey } from './birdCompanion'
 import {
   BARRIERS,
+  BUDDY_CARE_ACTIONS,
   type ChildProfile,
   CONFLICT_TRIGGER,
   DIFFICULTY,
@@ -107,7 +109,24 @@ function enumArray<T extends string>(
 
 export function validateChildProfile(draft: Draft<ChildProfile>) {
   if (draft.buddyAccessory != null && !['bell', 'ball', 'swing', 'scarf', 'backpack', 'pin'].includes(draft.buddyAccessory)) return finish(['小鸟装备无效'])
+  if (draft.buddyHomeDecor != null && !isHomeTreasureKey(draft.buddyHomeDecor)) return finish(['小屋摆件无效'])
   const errors: string[] = []
+  if (draft.buddyCare != null) {
+    const care = draft.buddyCare
+    if (!isDayKey(care.date)) errors.push('小步照料日期格式不正确')
+    const completed = care.completed as unknown
+    if (!Array.isArray(completed)
+      || completed.some(action => !BUDDY_CARE_ACTIONS.includes(action))
+      || new Set(completed).size !== completed.length) {
+      errors.push('小步照料记录无效')
+    }
+    if (!Number.isSafeInteger(care.xp) || care.xp < 0 || care.xp > 1_000_000) {
+      errors.push('小步亲密值无效')
+    }
+    if (care.sleepingSince !== null && !isValidISOTime(care.sleepingSince)) {
+      errors.push('小步入睡时间格式不正确')
+    }
+  }
   const wishErr = optionalText(draft.focusWishId, '心愿标识', 100)
   if (wishErr) errors.push(wishErr)
   const nameErr = requiredText(draft.name, '孩子名字', 20)

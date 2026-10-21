@@ -14,6 +14,12 @@ beforeEach(async () => {
   window.location.hash = '#/'
 })
 
+async function renderApp() {
+  render(<App />)
+  const path=window.location.hash
+  if(path!=='#/'&&!path.startsWith('#/child')) await userEvent.setup().click(await screen.findByRole('button',{name:'进入家长模式'}))
+}
+
 async function makeChild(name = '小满') {
   return repo.createProfile({ name, nickname: name })
 }
@@ -21,7 +27,7 @@ async function makeChild(name = '小满') {
 describe('引导与档案', () => {
   it('第一次打开时引导建立档案，建好后进入今日首页', async () => {
     const user = userEvent.setup()
-    render(<App />)
+    await renderApp()
     expect(await screen.findByText('先建立孩子档案')).toBeInTheDocument()
 
     await user.type(screen.getByLabelText('名字或称呼'), '小满')
@@ -29,8 +35,9 @@ describe('引导与档案', () => {
 
     await waitFor(() => {
       const titles = screen.getAllByRole('heading', { level: 1 })
-      expect(titles.some((node) => node.textContent?.includes('小满'))).toBe(true)
+      expect(titles.some((node) => node.textContent?.includes('每日打卡'))).toBe(true)
     })
+    expect(screen.getAllByText(/小满/).length).toBeGreaterThan(0)
     const profiles = await repo.listProfiles()
     expect(profiles).toHaveLength(1)
     expect(profiles[0].isPrimary).toBe(true)
@@ -38,7 +45,7 @@ describe('引导与档案', () => {
 
   it('档案名字为空时会给出中文提示，不会写入', async () => {
     const user = userEvent.setup()
-    render(<App />)
+    await renderApp()
     await screen.findByText('先建立孩子档案')
     await user.click(screen.getByRole('button', { name: '建好档案，开始使用' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('孩子名字不能为空')
@@ -59,7 +66,8 @@ describe('今日首页', () => {
         status: 'planned',
       })
     }
-    render(<App />)
+    window.location.hash='#/parent/today'
+    await renderApp()
     expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('小满')
     await waitFor(() => {
       const shown = screen
@@ -87,7 +95,8 @@ describe('今日首页', () => {
       status: 'planned',
     })
     const user = userEvent.setup()
-    render(<App />)
+    window.location.hash='#/parent/today'
+    await renderApp()
 
     await user.click(await screen.findByRole('button', { name: '记完成情况' }))
     await user.click(screen.getByLabelText('一次提醒'))
@@ -112,7 +121,7 @@ describe('睡眠记录', () => {
     const child = await makeChild()
     window.location.hash = '#/sleep'
     const user = userEvent.setup()
-    render(<App />)
+    await renderApp()
     await screen.findByText('身体与睡眠记录')
     for (const [group, label] of [
       ['夜间鼻塞', '没有'], ['夜间咳嗽', '没有'], ['打鼾或张口呼吸（可选）', '没有'],
@@ -134,7 +143,7 @@ describe('睡眠记录', () => {
     const child = await makeChild()
     await repo.saveDailyLog({ childId: child.id, date: defaultLogDate(), nightCough: 'several', morningState: 'tired' })
     window.location.hash = '#/sleep'
-    render(<App />)
+    await renderApp()
     await screen.findByRole('button', { name: '保存修改' })
     await waitFor(() => expect(within(screen.getByRole('group', { name: '夜间咳嗽' })).getByRole('radio', { name: '2-3 次' })).toBeChecked())
     expect(within(screen.getByRole('group', { name: '晨起精神状态' })).getByRole('radio', { name: '有点累' })).toBeChecked()
@@ -145,7 +154,7 @@ describe('睡眠记录', () => {
     const child = await makeChild()
     window.location.hash = '#/sleep'
     const user = userEvent.setup()
-    render(<App />)
+    await renderApp()
     await screen.findByText('身体与睡眠记录')
 
     await user.type(screen.getByLabelText('入睡时间'), '22:10')
@@ -186,7 +195,7 @@ describe('睡眠记录', () => {
     const child = await makeChild()
     window.location.hash = '#/sleep'
     const user = userEvent.setup()
-    render(<App />)
+    await renderApp()
     await screen.findByText('身体与睡眠记录')
 
     await user.clear(screen.getByLabelText('记录日期'))
@@ -202,34 +211,43 @@ describe('儿童视图与隐私', () => {
     await repo.setSetting(SETTINGS_KEYS.childView, true)
     window.location.hash = '#/child'
     const user = userEvent.setup()
-    render(<App />)
+    await renderApp()
     const choose = await screen.findByRole('button', { name: /我先做：穿好拖鞋和衣裤/ })
     await user.click(choose)
     expect(choose).toHaveAttribute('aria-pressed', 'true')
     expect(await repo.listChecks(child.id)).toHaveLength(0)
-    expect(await screen.findByRole('img', { name: '小步：一颗小蛋' })).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: '小步：一颗小蛋' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('link', { name: '小步乐园' }))
+    const home = await screen.findByRole('region', { name: '小步的家' })
+    expect(await within(home).findByRole('button', { name: '轻轻和小蛋打招呼' })).toBeVisible()
+    await user.click(screen.getByRole('link', { name: '每日打卡' }))
     await user.click(screen.getByRole('button', { name: /穿好拖鞋和衣裤，查看步骤/ }))
     for (const box of screen.getAllByRole('checkbox')) await user.click(box)
     await user.click(screen.getByRole('button', { name: '我做到了，收下1星' }))
     await waitFor(async () => expect((await repo.listChecks(child.id)).filter(c => c.status === 'done')).toHaveLength(1))
   })
-  it('图片心愿可一键选填，选择优先心愿后首页显示同一个目标', async () => {
+  it('图片心愿可一键选填，选择优先心愿后只在心愿页显示目标', async () => {
     const child = await makeChild('全全')
     await repo.setSetting(SETTINGS_KEYS.childView, true)
     window.location.hash = '#/child/progress'
     const user = userEvent.setup()
-    render(<App />)
+    await renderApp()
+    await user.click(await screen.findByText('许一个新心愿'))
     await user.click(await screen.findByRole('button', { name: '一起做小饼干' }))
     expect(screen.getByRole('textbox', { name: '我想要…' })).toHaveValue('一起做小饼干')
     expect(await repo.listWishes(child.id)).toHaveLength(0)
+    await waitFor(()=>expect(screen.getByRole('button', { name: '放进心愿小屋' })).toBeEnabled())
     await user.click(screen.getByRole('button', { name: '放进心愿小屋' }))
     const focusButton = await screen.findByRole('button', { name: '优先攒：一起做小饼干' })
     await waitFor(() => expect(focusButton).toBeEnabled())
     await user.click(focusButton)
     const wishes = await repo.listWishes(child.id)
     await waitFor(async () => expect((await repo.getPrimaryProfile())?.focusWishId).toBe(wishes[0].id))
-    await user.click(screen.getByRole('link', { name: '我的任务' }))
-    expect(await screen.findByText('一起做小饼干')).toBeInTheDocument()
+    await user.click(screen.getByRole('link', { name: '每日打卡' }))
+    expect(screen.queryByText('我在攒的心愿')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('link', {name:'小小心愿'}))
+    await user.click(await screen.findByText('我在攒的心愿'))
+    expect(within(screen.getByText('我在攒的心愿').closest('details')!).getByText('一起做小饼干')).toBeInTheDocument()
     expect(screen.getByText('和爸爸妈妈一起约定星数')).toBeInTheDocument()
   })
   it('儿童图卡点击即可记录，随后心愿小屋显示星星并保存自选礼物', async () => {
@@ -237,7 +255,7 @@ describe('儿童视图与隐私', () => {
     const user = userEvent.setup()
     await repo.setSetting(SETTINGS_KEYS.childView, true)
     window.location.hash = '#/child/rules'
-    render(<App />)
+    await renderApp()
     const card = await screen.findByRole('button', { name: /衣物各回各的家，查看步骤/ })
     await user.click(card)
     for (const box of screen.getAllByRole('checkbox')) await user.click(box)
@@ -245,11 +263,13 @@ describe('儿童视图与隐私', () => {
     expect(await screen.findByRole('button', { name: /衣物各回各的家，已完成/ })).toBeDisabled()
     const checks = await repo.listChecks(child.id)
     expect(checks.filter(c => c.status === 'done')).toHaveLength(1)
-    await user.click(screen.getByRole('link', { name: '心愿小屋' }))
+    await user.click(screen.getByRole('link', { name: '小小心愿' }))
     expect(await screen.findByText('全全的心愿小屋')).toBeInTheDocument()
+    await user.click(screen.getByText('许一个新心愿'))
     await user.type(screen.getByRole('textbox', { name: '我想要…' }), '一盒积木')
+    await waitFor(()=>expect(screen.getByRole('button', { name: '放进心愿小屋' })).toBeEnabled())
     await user.click(screen.getByRole('button', { name: '放进心愿小屋' }))
-    expect(await screen.findByRole('heading', { name: '一盒积木' })).toBeInTheDocument()
+    expect(await screen.findByRole('rowheader', { name: /一盒积木/ })).toBeInTheDocument()
     expect((await repo.listWishes(child.id))[0].status).toBe('proposed')
     expect(screen.queryByRole('button', { name: '确认心愿' })).not.toBeInTheDocument()
   })
@@ -280,7 +300,7 @@ describe('数据与隐私设置', () => {
     })
     window.location.hash = '#/settings'
     const user = userEvent.setup()
-    render(<App />)
+    await renderApp()
     await screen.findByText('数据与隐私设置')
 
     await user.click(screen.getByRole('button', { name: '清空全部数据' }))
@@ -303,7 +323,7 @@ describe('数据与隐私设置', () => {
     await makeChild()
     window.location.hash = '#/settings'
     const user = userEvent.setup()
-    render(<App />)
+    await renderApp()
     await screen.findByText('数据与隐私设置')
 
     await user.type(screen.getByLabelText('设置或修改家长密码（4 位数字）'), '12')
@@ -320,7 +340,7 @@ describe('数据与隐私设置', () => {
     })
 
     // 切到儿童视图后，敏感页面需要密码
-    await user.click(screen.getByRole('button', { name: '儿童视图已关闭' }))
+    await user.click(screen.getByRole('button', { name: '返回儿童端并锁定设置' }))
     window.location.hash = '#/weekly'
     expect(await screen.findByLabelText('家长密码')).toBeInTheDocument()
   })

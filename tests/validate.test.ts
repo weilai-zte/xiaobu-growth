@@ -19,6 +19,32 @@ describe('数据校验', () => {
     expect(validateChildProfile({ name: '小满', birthDate: '2018-05-01' }).ok).toBe(true)
   })
 
+  it('小步照料数据只接受当天动作、非负整数亲密值和合法入睡时间', () => {
+    expect(validateChildProfile({
+      name: '小满',
+      buddyCare: {
+        date: '2026-10-20',
+        completed: ['feed', 'sleep'],
+        xp: 2,
+        sleepingSince: '2026-10-20T21:30:00+08:00',
+      },
+    }).ok).toBe(true)
+    expect(validateChildProfile({
+      name: '小满',
+      buddyCare: {
+        date: '2026-13-20',
+        completed: ['feed', 'feed'],
+        xp: -1,
+        sleepingSince: '昨晚',
+      },
+    }).errors).toEqual(expect.arrayContaining([
+      '小步照料日期格式不正确',
+      '小步照料记录无效',
+      '小步亲密值无效',
+      '小步入睡时间格式不正确',
+    ]))
+  })
+
   it('睡眠记录：时刻格式、枚举与空记录', () => {
     expect(
       validateDailyLog({ date: '2026-10-16', sleepTime: '25:00', morningState: 'ok' }).ok,

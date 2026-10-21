@@ -1,12 +1,12 @@
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { useApp } from '../app/AppProvider'
 import {
   IconBook,
+  IconBird,
   IconCheckCircle,
   IconChecklist,
   IconHome,
-  IconLock,
   IconMoon,
   IconMore,
   IconSprout,
@@ -22,18 +22,19 @@ interface NavItem {
 }
 
 const PARENT_ITEMS: NavItem[] = [
-  { to: '/', label: '今日', icon: IconHome },
-  { to: '/sleep', label: '睡眠', icon: IconMoon },
-  { to: '/study', label: '学习', icon: IconBook },
-  { to: '/rules', label: '规则', icon: IconChecklist },
-  { to: '/more', label: '更多', icon: IconMore },
+  { to: '/parent', label: '管理首页', icon: IconHome },
+  { to: '/parent/checkins', label: '打卡设置', icon: IconChecklist },
+  { to: '/parent/family', label: '家庭公约', icon: IconChecklist },
+  { to: '/parent/rewards', label: '心愿奖励', icon: IconSprout },
+  { to: '/parent/bank', label: '银行设置', icon: IconBook },
+  { to: '/parent/more', label: '更多', icon: IconMore },
 ]
 
 const CHILD_ITEMS: NavItem[] = [
-  { to: '/child', label: '我的任务', icon: IconCheckCircle },
-  { to: '/child/rules', label: '打卡清单', icon: IconChecklist },
-  { to: '/child/progress', label: '心愿小屋', icon: IconSprout },
-  { to: '/settings', label: '家长模式', icon: IconLock },
+  { to: '/child', label: '每日打卡', icon: IconCheckCircle },
+  { to: '/child/growth', label: '梦幻星空', icon: IconMoon },
+  { to: '/child/buddy', label: '小步乐园', icon: IconBird },
+  { to: '/child/progress', label: '小小心愿', icon: IconSprout },
 ]
 
 /**
@@ -50,7 +51,7 @@ export function AppNav() {
           const Icon = item.icon
           return (
             <li key={item.to}>
-              <NavLink to={item.to} end={item.to === '/' || item.to === '/child'} className="nav-link">
+              <NavLink to={item.to} end={item.to === '/parent' || item.to === '/child'} className="nav-link">
                 <Icon />
                 <span>{item.label}</span>
               </NavLink>
@@ -63,7 +64,7 @@ export function AppNav() {
 }
 
 export function TopBar() {
-  const { profile, childView, parentUnlocked, setChildView } = useApp()
+  const { profile, childView, setChildView } = useApp()
   return (
     <header className="topbar">
       <div className="topbar-inner">
@@ -79,15 +80,7 @@ export function TopBar() {
             </small>
           </span>
         </div>
-        {(!childView || parentUnlocked) && (
-          <button
-            type="button"
-            className="btn btn-sm"
-            onClick={() => setChildView(!childView)}
-          >
-            {childView ? '回到家长模式' : '切到儿童视图'}
-          </button>
-        )}
+        {childView ? <Link className="parent-entry" to="/parent">家长</Link> : <button type="button" className="btn btn-sm" onClick={() => void setChildView(true)}>返回儿童端</button>}
       </div>
     </header>
   )

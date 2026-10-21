@@ -10,7 +10,9 @@ export const BIRD_STAGES = [
   { key: 'young', name: '练习飞的小鸟', at: 5, text: '翅膀长大了一点，来认识新朋友。' },
   { key: 'adult', name: '长大的小步', at: 9, text: '可以飞得更远了，也想有个自己的家。' },
   { key: 'nest', name: '有一个小窝啦', at: 14, text: '一路带回的小材料，变成了柔软的小窝。' },
-  { key: 'home', name: '温暖的小家', at: 21, text: '小家建好了，明天还可以一起发现新故事。' },
+  { key: 'home', name: '温暖的小家', at: 21, text: '小家建好了，接下来一起种出蝴蝶花园。' },
+  { key: 'garden', name: '蝴蝶花园', at: 28, text: '花园开花啦，跟着蝴蝶练习飞行。' },
+  { key: 'pool', name: '星光泳池', at: 35, text: '泳池也建好了，小布的森林乐园越来越热闹。' },
 ] as const
 export function birdStage(count: number) { return [...BIRD_STAGES].reverse().find(s => count >= s.at) ?? BIRD_STAGES[0] }
 export function adventureDay(now = new Date()) { return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(now) }
@@ -27,7 +29,11 @@ export function uniqueAdventures(runs: AdventureRun[]) {
   return [...new Map(runs.filter(r => !r.deleted && validAdventure(r)).map(r => [r.id, r])).values()]
 }
 export const MATERIAL_NAMES = { leaf: '柔软叶子', twig: '小树枝', pebble: '圆圆石头' }
-export const ROUTES = [{ key: 'meadow', name: '花草原', picture: 'flower' }, { key: 'stream', name: '小溪边', picture: 'stream' }, { key: 'forest', name: '小树林', picture: 'tree' }] as const
+export const ROUTES = [
+  { key: 'meadow', name: '花草原', picture: 'flower', preview: '花香、莓果和宝石' },
+  { key: 'stream', name: '小溪边', picture: 'stream', preview: '贝壳、水花和小惊喜' },
+  { key: 'forest', name: '小树林', picture: 'tree', preview: '橡果、蘑菇和风铃' },
+] as const
 export function adventureStory(run: AdventureRun) {
   const stories = {
     meadow: ['蝴蝶带路，找到了藏在花丛里的小礼物。', '帮蜗牛找到阴凉地，它送来一份谢礼。', '风吹过草地，一份小礼物轻轻落下来。'],

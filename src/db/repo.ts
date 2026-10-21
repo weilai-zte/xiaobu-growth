@@ -1,5 +1,7 @@
+import { evaluateHonors, buildHonorSky } from '../lib/honors'
+import { evaluateStars } from '../lib/starAchievements'
 import type { Table } from 'dexie'
-import { db, type EntityName, type GrowthDB } from './db'
+import { db, ENTITY_NAMES, type EntityName, type GrowthDB } from './db'
 import {
   BUILTIN_RULES,
   type ChildProfile,
@@ -18,9 +20,15 @@ import {
   type Wish,
 } from './types'
 import { nowISO } from '../lib/date'
+import { toDayKey } from '../lib/date'
 import { starBalance, validWish } from '../lib/rewards'
 import { HABIT_PLAN } from '../lib/habits'
-import { birdInventory } from '../lib/birdCompanion'
+import {
+  birdInventory,
+  changeBuddyCare,
+  homeTreasureInventory,
+  type BuddyCareCommand,
+} from '../lib/birdCompanion'
 import {
   validateChildProfile,
   validateConflictLog,
@@ -77,32 +85,79 @@ export function createRepo(database: GrowthDB) {
       for (const rule of existing) if (!rule.builtinKey && rule.rewardStars === undefined) await write('routineRules', { ...rule, category: 'life', rewardStars: 1, updatedAt: nowISO() })
     })
   }
+  const honorTables = [database.childProfiles, database.taskRecords, database.routineChecks, database.routineRules, database.adventureRuns, database.syncQueue]
+  async function refreshHonors(childId: ID) {
+    return database.transaction('rw', honorTables, async () => {
+      const profile = await database.childProfiles.get(childId)
+      if (!profile || profile.deleted) return []
+      const honors = evaluateHonors(childId, await listTaskRecords(childId), await listChecks(childId), await listAdventures(childId), profile.buddyCare, await listRules(childId), profile.honorClaims)
+      const added = honors.filter(h => h.eligible && !h.earned)
+      if (added.length) await write('childProfiles', {...profile, honorClaims:{...profile.honorClaims,...Object.fromEntries(added.map(h=>[h.id,nowISO()]))}, updatedAt:nowISO()})
+      return added
+    })
+  }
+  async function lightHonorStar(childId: ID, starId: string) {
+    return database.transaction('rw', honorTables, async () => {
+      await refreshHonors(childId)
+      const profile = await database.childProfiles.get(childId)
+      if (!profile || profile.deleted) throw new Error('找不到儿童档案')
+      const star = buildHonorSky(profile.honorClaims, profile.starClaims).find(s=>s.id===starId)
+      if (!star) throw new Error('找不到这颗星')
+      if (star.lit) return
+      if (!star.revealed) throw new Error('这颗星还没有被勋章唤醒')
+      await write('childProfiles', {...profile, starClaims:{...profile.starClaims,[starId]:nowISO()}, updatedAt:nowISO()})
+    })
+  }
+  async function lightStar(childId: ID, key: string) {
+    return database.transaction('rw', [database.childProfiles, database.taskRecords, database.routineChecks, database.adventureRuns, database.syncQueue], async () => {
+      const profile = await database.childProfiles.get(childId)
+      if (!profile || profile.deleted) throw new Error('找不到儿童档案')
+      const star = evaluateStars(childId, await listTaskRecords(childId), await listChecks(childId), await listAdventures(childId), profile.buddyCare, profile.starClaims).find(s => s.key === key)
+      if (!star) throw new Error('找不到这颗星')
+      if (star.lit) return
+      if (!star.eligible) throw new Error('还没有达到这颗星的条件')
+      await write('childProfiles', {...profile, starClaims: {...profile.starClaims, [key]: nowISO()}, updatedAt: nowISO()})
+    })
+  }
+  async function listBankEntries(childId: ID) { return alive(await database.bankEntries.where('childId').equals(childId).toArray()) }
+  async function getBankAccount(childId: ID) { return database.bankAccounts.get(`bank:${childId}`) }
   async function listAdventures(childId: ID) { return alive(await database.adventureRuns.where('childId').equals(childId).toArray()) }
   async function listWishes(childId: ID): Promise<Wish[]> {
     return alive(await database.wishes.where('childId').equals(childId).toArray())
   }
 
-  async function proposeWish(childId: ID, name: string, picture: string): Promise<Wish> {
-    const row: Wish = stamp({ id: newId(), childId, name: name.trim(), picture, cost: null, status: 'proposed' as const })
-    if (!validWish(row)) throw new Error('请填写 1–80 字的心愿名称')
+  async function proposeWish(childId: ID, name: string, picture: string, approvedCost?: number): Promise<Wish> {
+    // 家长上架将奖励和价格一起保存，不留下已创建却未定价的中间记录。
+    const row: Wish = stamp({ id: newId(), childId, name: name.trim(), picture, cost: approvedCost ?? null, status: approvedCost === undefined ? 'proposed' : 'approved' })
+    if (!validWish(row)) throw new Error('请填写 1–80 字的心愿名称，上架星数须为正整数')
     return write('wishes', row)
+  }
+
+  async function editWish(id: ID, name: string, picture: string, cost: number) {
+    await database.transaction('rw', [database.wishes,database.syncQueue], async () => {
+      const old=await database.wishes.get(id)
+      if(!old || old.deleted || !['proposed','approved'].includes(old.status)) throw new Error('已申请或已兑现的奖励不能修改，请先取消申请')
+      const next={...old,name:name.trim(),picture,cost,status:'approved' as const,updatedAt:nowISO()}
+      if(!validWish(next))throw new Error('请填写心愿名称和正整数星数')
+      await write('wishes',next)
+    })
   }
 
   async function changeWish(id: ID, action: 'approve' | 'request' | 'redeem' | 'cancel', cost?: number) {
     // 单设备内串行校验并写入，重复点击不会重复预留或兑换。
-    await database.transaction('rw', database.wishes, database.taskRecords, database.routineChecks, database.adventureRuns, database.syncQueue, async () => {
+    await database.transaction('rw', [database.wishes, database.childProfiles, database.taskRecords, database.routineChecks, database.adventureRuns, database.bankEntries, database.syncQueue], async () => {
       const old = await database.wishes.get(id)
       if (!old || old.deleted) throw new Error('找不到这个心愿')
       const next = { ...old, updatedAt: nowISO() }
       if (action === 'approve' && old.status === 'proposed') {
         next.cost = cost ?? null; next.status = 'approved'
       } else if (action === 'request' && old.status === 'approved') {
-        const balance = starBalance(await listTaskRecords(old.childId), await listChecks(old.childId), await listWishes(old.childId), await listAdventures(old.childId))
+        const balance = starBalance(await listTaskRecords(old.childId), await listChecks(old.childId), await listWishes(old.childId), await listAdventures(old.childId), await listBankEntries(old.childId), (await database.childProfiles.get(old.childId))?.starClaims)
         if (balance.available < (old.cost ?? Infinity)) throw new Error('星星还没攒够，再做一点点就更近了')
         next.status = 'requested'
       } else if (action === 'redeem' && old.status === 'requested') {
-        const balance = starBalance(await listTaskRecords(old.childId), await listChecks(old.childId), await listWishes(old.childId), await listAdventures(old.childId))
-        if (balance.earned - balance.spent < balance.reserved) throw new Error('记录有变动，当前星星不足，请先取消申请')
+        const balance = starBalance(await listTaskRecords(old.childId), await listChecks(old.childId), await listWishes(old.childId), await listAdventures(old.childId), await listBankEntries(old.childId), (await database.childProfiles.get(old.childId))?.starClaims)
+        if (balance.earned + balance.bankTransfer - balance.spent < balance.reserved) throw new Error('记录有变动，当前星星不足，请先取消申请')
         next.status = 'redeemed'
       } else if (action === 'cancel' && old.status === 'requested') next.status = 'approved'
       else throw new Error('心愿状态已变化，请刷新后查看')
@@ -175,12 +230,28 @@ export function createRepo(database: GrowthDB) {
     id: ID,
     patch: Draft<ChildProfile>,
   ): Promise<void> {
-    const existing = await database.childProfiles.get(id)
-    if (!existing) throw new Error('找不到这条儿童档案')
-    const next = { ...existing, ...patch, id: existing.id } as ChildProfile
-    check(validateChildProfile(next))
-    if (patch.buddyAccessory && !birdInventory(await listAdventures(id)).some(item => item.key === patch.buddyAccessory)) throw new Error('这件装备还没有在冒险中发现')
-    await write('childProfiles', { ...next, updatedAt: nowISO() })
+    await database.transaction('rw', [database.childProfiles,database.adventureRuns,database.syncQueue], async () => {
+      const existing = await database.childProfiles.get(id)
+      if (!existing) throw new Error('找不到这条儿童档案')
+      const next = { ...existing, ...patch, starClaims: existing.starClaims, honorClaims: existing.honorClaims, id: existing.id } as ChildProfile
+      check(validateChildProfile(next))
+      if (patch.buddyAccessory && !birdInventory(await listAdventures(id)).some(item => item.key === patch.buddyAccessory)) throw new Error('这件装备还没有在冒险中发现')
+      if (patch.buddyHomeDecor && !homeTreasureInventory(await listAdventures(id)).some(item => item.key === patch.buddyHomeDecor)) throw new Error('这件小屋摆件还没有在冒险中发现')
+      await write('childProfiles', { ...next, updatedAt: nowISO() })
+    })
+  }
+
+  /** 小步照料走独立入口，避免页面拼一份不完整的儿童档案覆盖其他字段。 */
+  async function recordBuddyCare(id: ID, command: BuddyCareCommand, at = nowISO()) {
+    return database.transaction('rw', [database.childProfiles,database.syncQueue], async () => {
+      const existing = await database.childProfiles.get(id)
+      if (!existing || existing.deleted) throw new Error('找不到这条儿童档案')
+      const care = changeBuddyCare(existing.buddyCare, command, at, toDayKey(new Date(at)))
+      const next = { ...existing, buddyCare: care, updatedAt: nowISO() }
+      check(validateChildProfile(next))
+      await write('childProfiles', next)
+      return care
+    })
   }
 
   /* ---------- 每日睡眠与身体记录 ---------- */
@@ -548,6 +619,8 @@ export function createRepo(database: GrowthDB) {
    * 这样「删除」本身才能同步到其他设备，也不会被别的设备重新同步回来。
    */
   async function deleteRecord(entity: EntityName, id: ID) {
+    if (['familyMembers', 'growthPacts', 'pactSignatures', 'familyChecks', 'familyReactions'].includes(entity)) throw new Error('请在家庭公约中管理，保留签订和打卡记录')
+    if (entity === 'bankAccounts' || entity === 'bankEntries') throw new Error('银行记录只能通过银行操作，不能直接删除')
     if (entity === 'adventureRuns') throw new Error('冒险奖励由云端保存，不能单独撤回或重新领取')
     const existing = await tableOf(entity).get(id)
     if (!existing) return
@@ -557,20 +630,7 @@ export function createRepo(database: GrowthDB) {
   /** 清掉这台设备上的本地数据（含待同步队列）。服务端由同步层另行清空。 */
   async function clearAll() {
     await database.transaction('rw', database.tables, async () => {
-      for (const name of [
-        'wishes',
-        'childProfiles',
-        'dailyLogs',
-        'taskTemplates',
-        'taskRecords',
-        'routineRules',
-        'routineChecks',
-        'conflictLogs',
-        'strengthMoments',
-        'weeklyReviews',
-        'experiments',
-        'settings',
-      ] as const) {
+      for (const name of [...ENTITY_NAMES, 'settings'] as const) {
         await database[name].clear()
       }
       await database.syncQueue.clear()
@@ -622,8 +682,9 @@ export function createRepo(database: GrowthDB) {
       const id = String(row.id ?? '')
       if (!id || pending.has(id)) continue
       const existing = await table.get(id)
-      if (existing && String(existing.updatedAt ?? '') >= String(row.updatedAt ?? '')) continue
-      await table.put(row)
+      if (existing && (String(existing.updatedAt ?? '') > String(row.updatedAt ?? '') || (String(existing.updatedAt ?? '') === String(row.updatedAt ?? '') && Number(existing.syncSeq ?? 0) >= Number(row.syncSeq ?? 0)))) continue
+      const next = entity === 'childProfiles' && existing ? {...row, honorClaims: {...(existing.honorClaims as Record<string,string> | undefined), ...(row.honorClaims as Record<string,string> | undefined)}, starClaims: {...(existing.starClaims as Record<string,string> | undefined), ...(row.starClaims as Record<string,string> | undefined)}} : row
+      await table.put(next)
       applied += 1
     }
     return applied
@@ -645,20 +706,7 @@ export function createRepo(database: GrowthDB) {
 
   async function countAll(): Promise<Record<string, number>> {
     const out: Record<string, number> = {}
-    for (const name of [
-      'adventureRuns',
-      'wishes',
-      'childProfiles',
-      'dailyLogs',
-      'taskTemplates',
-      'taskRecords',
-      'routineRules',
-      'routineChecks',
-      'conflictLogs',
-      'strengthMoments',
-      'weeklyReviews',
-      'experiments',
-    ] as const) {
+    for (const name of ENTITY_NAMES) {
       const rows = await database[name].toArray()
       out[name] = rows.filter((row) => !row.deleted).length
     }
@@ -666,10 +714,13 @@ export function createRepo(database: GrowthDB) {
   }
 
   return {
+    refreshHonors, lightHonorStar,
+    lightStar,
+    listBankEntries, getBankAccount,
     ensureHabitPlan,
     listAdventures,
     listWishes,
-    proposeWish,
+    proposeWish, editWish,
     changeWish,
     db: database,
     setWriteHook,
@@ -677,6 +728,7 @@ export function createRepo(database: GrowthDB) {
     getPrimaryProfile,
     createProfile,
     updateProfile,
+    recordBuddyCare,
     saveDailyLog,
     getDailyLog,
     listDailyLogs,

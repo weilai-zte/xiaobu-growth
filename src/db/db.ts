@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie'
 import type {
-  AdventureRun,
+  AdventureRun, BankAccount, BankEntry,
+  FamilyMember, GrowthPact, PactSignature, FamilyCheck, FamilyReaction,
   ChildProfile,
   ConflictLog,
   DailyLog,
@@ -18,6 +19,13 @@ import type {
 } from './types'
 
 export class GrowthDB extends Dexie {
+  bankAccounts!: Table<BankAccount, string>
+  bankEntries!: Table<BankEntry, string>
+  familyMembers!: Table<FamilyMember, string>
+  growthPacts!: Table<GrowthPact, string>
+  pactSignatures!: Table<PactSignature, string>
+  familyChecks!: Table<FamilyCheck, string>
+  familyReactions!: Table<FamilyReaction, string>
   adventureRuns!: Table<AdventureRun, string>
   wishes!: Table<Wish, string>
   childProfiles!: Table<ChildProfile, string>
@@ -70,6 +78,14 @@ export class GrowthDB extends Dexie {
     })
     this.version(3).stores({ wishes: 'id, childId, status' })
     this.version(4).stores({ adventureRuns: 'id, childId, date, &[childId+date]' })
+    this.version(6).stores({ bankAccounts: 'id, childId', bankEntries: 'id, childId, date' })
+    this.version(5).stores({
+      familyMembers: 'id, childId, role',
+      growthPacts: 'id, childId',
+      pactSignatures: 'id, childId, pactId',
+      familyChecks: 'id, childId, pactId, date',
+      familyReactions: 'id, childId, checkId',
+    })
   }
 }
 
@@ -77,6 +93,8 @@ export const DB_NAME = 'xiaobu-growth'
 export const db = new GrowthDB()
 
 export type EntityName =
+  | 'bankAccounts' | 'bankEntries'
+  | 'familyMembers' | 'growthPacts' | 'pactSignatures' | 'familyChecks' | 'familyReactions'
   | 'adventureRuns'
   | 'wishes'
   | 'childProfiles'
@@ -91,6 +109,8 @@ export type EntityName =
   | 'experiments'
 
 export const ENTITY_NAMES: EntityName[] = [
+  'bankAccounts', 'bankEntries',
+  'familyMembers', 'growthPacts', 'pactSignatures', 'familyChecks', 'familyReactions',
   'adventureRuns',
   'wishes',
   'childProfiles',
@@ -106,6 +126,8 @@ export const ENTITY_NAMES: EntityName[] = [
 ]
 
 export const ENTITY_LABELS: Record<EntityName, string> = {
+  bankAccounts: '星星银行账户', bankEntries: '银行存取与周息',
+  familyMembers: '家庭成员', growthPacts: '成长公约', pactSignatures: '公约签订', familyChecks: '家庭打卡', familyReactions: '家庭鼓励',
   adventureRuns: '小步冒险',
   wishes: '心愿礼物',
   childProfiles: '儿童档案',

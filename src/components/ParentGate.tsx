@@ -1,14 +1,16 @@
+import { useParams } from 'react-router-dom'
 import { useState, type ReactNode } from 'react'
 import { useApp } from '../app/AppProvider'
 import { Card, Errors, TextField } from './ui'
 
 /** 儿童视图下挡住健康、冲突、复盘、数据设置等敏感内容 */
 export function ParentGate({ children }: { children: ReactNode }) {
-  const { childView, parentUnlocked, unlockParent, pin } = useApp()
+  const { parentUnlocked, signingPactId, unlockParent, pin } = useApp()
+  const {pactId}=useParams()
   const [input, setInput] = useState('')
   const [errors, setErrors] = useState<string[]>([])
 
-  if (!childView || parentUnlocked) return <>{children}</>
+  if (parentUnlocked || (pactId && signingPactId === pactId)) return <>{children}</>
 
   return (
     <Card title="这部分需要家长查看">

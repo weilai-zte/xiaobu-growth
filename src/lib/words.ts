@@ -1,3 +1,4 @@
+import {stopPraise} from './praise'
 import type { Difficulty } from '../db/types'
 
 // 选自用户英语打卡项目 data/content.json 的具象基础词；orange 在此取水果义。
@@ -29,7 +30,8 @@ let playing: HTMLAudioElement | null = null
 export function stopWord() { playing?.pause(); playing = null; if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel() }
 export async function speakWord(word: string): Promise<boolean> {
   if (!WORDS.some(w => w.word === word)) return false
-  stopWord()
+  stopWord(); stopPraise()
+  window.dispatchEvent(new Event('xiaobu:study-audio'))
   try { const audio = new Audio(`${import.meta.env.BASE_URL}audio/words/${word}.mp3`); playing = audio; await audio.play(); return true }
   catch { return false }
 }

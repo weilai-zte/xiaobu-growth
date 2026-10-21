@@ -10,7 +10,7 @@
  * 删除以墓碑形式同步，别的设备也能看到删除结果。
  */
 import { ENTITY_NAMES, type EntityName } from './db'
-import type { AdventureRoute, AdventureRun } from './types'
+import type { AdventureRoute, AdventureRun, BankAccount } from './types'
 import { validAdventure } from '../lib/adventure'
 import type { Repo } from './repo'
 
@@ -51,6 +51,7 @@ export interface SyncEngineOptions {
 }
 
 export interface SyncEngine {
+  bankOperation: (input: {childId: string; action: 'settle' | 'configure' | 'deposit' | 'withdraw'; requestId: string; amount?:number; rateBps?:number; enabled?:boolean}) => Promise<BankAccount>
   claimAdventure: (childId: string, date: string, route: AdventureRoute) => Promise<AdventureRun>
   getSnapshot: () => SyncSnapshot
   subscribe: (listener: () => void) => () => void
@@ -67,6 +68,7 @@ export interface SyncEngine {
 }
 
 interface SyncResponse {
+  account?: BankAccount
   adventure?: AdventureRun
   serverTime?: string
   seq?: number
@@ -91,6 +93,7 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
   }
   const listeners = new Set<() => void>()
   let inFlight: Promise<boolean> | null = null
+  let clearing = false
   let timer: ReturnType<typeof setInterval> | null = null
   let scheduled: ReturnType<typeof setTimeout> | null = null
   let started = false
@@ -127,7 +130,7 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     const headers: Record<string, string> = {}
     if (body !== undefined) headers['content-type'] = 'application/json'
     if (familyKey) headers['x-family-key'] = familyKey
-    const controller = path === '/adventure' ? new AbortController() : undefined
+    const controller = ['/adventure','/bank'].includes(path) ? new AbortController() : undefined
     const timeout = controller ? setTimeout(() => controller.abort(), 20000) : undefined
     let res: Response
     try {
@@ -150,7 +153,7 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
       } catch {
         detail = ''
       }
-      throw new Error(detail || `服务端返回 ${res.status}`)
+      throw Object.assign(new Error(detail || `服务端返回 ${res.status}`), { definitive: true })
     }
     return (await res.json()) as SyncResponse
   }
@@ -269,6 +272,7 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
   }
 
   async function syncNow(): Promise<boolean> {
+    if (clearing) return false
     if (inFlight) return inFlight
     inFlight = run().finally(() => {
       inFlight = null
@@ -301,6 +305,13 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
   }
 
   return {
+    async bankOperation(input) {
+      if (!await syncNow()) throw new Error('银行需要连接家庭服务，请联网后重试；打卡仍可离线使用')
+      const response = await request('POST', '/bank', { ...input, since: 0 })
+      await applyTables(response.tables)
+      if (!response.account) throw new Error('银行服务没有返回账户，请保留本次操作后重试')
+      return response.account
+    },
     async claimAdventure(childId, date, route) {
       if (!await syncNow()) throw new Error('先连上网络，把今天的小任务保存好，再来出发吧。')
       // 正在同步的一轮可能早于最新写入，再确认队列已排空。
@@ -385,15 +396,20 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     },
 
     async clearEverything() {
-      // 先清服务端：服务端失败就整体不动，免得本地清空后又被云端数据拉回来
-      await request('POST', '/clear-all')
-      const head = await request('GET', '/sync?since=0')
-      await clearMirror()
-      await repo.setSetting(SYNC_KEYS.seq, Number(head.seq ?? 0))
-      await repo.setSetting(SYNC_KEYS.resetSeq, Number(head.resetSeq ?? 0))
-      await repo.setSetting(SYNC_KEYS.lastSyncAt, new Date().toISOString())
-      update({ status: 'idle', lastError: null })
-      await refreshCounters()
+      if (clearing) throw new Error('正在清空数据，请稍候')
+      clearing = true
+      try {
+        // Drain an older push before resetting, and block polling until mirrors agree.
+        if (inFlight) await inFlight
+        await request('POST', '/clear-all')
+        const head = await request('GET', '/sync?since=0')
+        await clearMirror()
+        await repo.setSetting(SYNC_KEYS.seq, Number(head.seq ?? 0))
+        await repo.setSetting(SYNC_KEYS.resetSeq, Number(head.resetSeq ?? 0))
+        await repo.setSetting(SYNC_KEYS.lastSyncAt, new Date().toISOString())
+        update({ status: 'idle', lastError: null })
+        await refreshCounters()
+      } finally { clearing = false }
     },
 
     async pullEverything() {

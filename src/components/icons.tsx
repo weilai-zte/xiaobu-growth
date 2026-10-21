@@ -98,6 +98,17 @@ export function IconSprout(props: IconProps) {
   )
 }
 
+export function IconBird(props: IconProps) {
+  return (
+    <Glyph {...props}>
+      <path d="M5 12.5c0-4.3 3.4-7.5 7.8-7.5h1.8c3.3 0 5.9 2.3 5.9 5.2 0 1.2-.4 2.3-1.2 3.2l2.2 2.4h-3.7L15 18.5H9.2a4.2 4.2 0 0 1-4.2-4.2Z" />
+      <path d="M9.2 12.8 5.5 10v5.4M17.2 10.8l2.2-.8v2" />
+      <circle cx="16.6" cy="9.4" r=".7" fill="currentColor" stroke="none" />
+      <path d="m14.4 13.2 2.1 1.2-2.2.8" />
+    </Glyph>
+  )
+}
+
 export function IconLock(props: IconProps) {
   return (
     <Glyph {...props}>

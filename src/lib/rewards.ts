@@ -1,4 +1,5 @@
-import type { TaskRecord, RoutineCheck, Wish, AdventureRun } from '../db/types'
+import { achievementBonus, type StarClaims } from './starAchievements'
+import type { TaskRecord, RoutineCheck, Wish, AdventureRun, BankEntry } from '../db/types'
 import { addDays } from './date'
 import { recordStars } from './habits'
 
@@ -27,7 +28,7 @@ export const BADGES = [
 ]
 
 // 星星直接由有效记录计算，重复点击、删除和跨设备合并都不会产生额外流水。
-export function starBalance(tasks: TaskRecord[], checks: RoutineCheck[], wishes: Wish[], adventures: AdventureRun[] = []) {
+export function starBalance(tasks: TaskRecord[], checks: RoutineCheck[], wishes: Wish[], adventures: AdventureRun[] = [], bankEntries: BankEntry[] = [], starClaims: StarClaims = {}) {
   const actions = new Map<string, number>()
   for (const task of tasks) {
     if (!task.deleted && task.completion === 'independent') {
@@ -39,10 +40,11 @@ export function starBalance(tasks: TaskRecord[], checks: RoutineCheck[], wishes:
     if (!check.deleted && check.status === 'done') { const key = `rule:${check.date}:${check.ruleId}`; actions.set(key, Math.max(actions.get(key) ?? 0, recordStars(check))) }
   }
   const bonus = [...new Map(adventures.filter(r => !r.deleted).map(r => [r.id, r])).values()].reduce((sum, r) => sum + r.bonusStars, 0)
-  const earned = [...actions.values()].reduce((sum, stars) => sum + stars, 0) + bonus
+  const earned = [...actions.values()].reduce((sum, stars) => sum + stars, 0) + bonus + achievementBonus(starClaims)
   const spent = wishes.filter(w => !w.deleted && w.status === 'redeemed').reduce((sum, w) => sum + (w.cost ?? 0), 0)
   const reserved = wishes.filter(w => !w.deleted && w.status === 'requested').reduce((sum, w) => sum + (w.cost ?? 0), 0)
-  return { earned, bonus, spent, reserved, available: Math.max(0, earned - spent - reserved) }
+  const bankTransfer = [...new Map(bankEntries.filter(e => !e.deleted).map(e => [e.id,e])).values()].reduce((sum,e) => sum + (e.kind === 'deposit' ? -e.amount : e.kind === 'withdraw' ? e.amount : 0),0)
+  return { earned, bonus, spent, reserved, bankTransfer, available: Math.max(0, earned + bankTransfer - spent - reserved) }
 }
 
 export function validWish(row: Partial<Wish>): boolean {

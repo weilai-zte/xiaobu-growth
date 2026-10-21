@@ -24,7 +24,8 @@ export async function handle(req: Request): Promise<Response> {
   const path = url.pathname.replace(/\/+$/, '')
   const clear = path.endsWith('/clear-all')
   const adventure = path.endsWith('/adventure')
-  if (!(path.endsWith('/sync') || clear || adventure) || !['GET','POST'].includes(req.method) || ((clear || adventure) && req.method !== 'POST')) return json({ error: '未知接口' }, 404)
+  const bank = path.endsWith('/bank')
+  if (!(path.endsWith('/sync') || clear || adventure || bank) || !['GET','POST'].includes(req.method) || ((clear || adventure || bank) && req.method !== 'POST')) return json({ error: '未知接口' }, 404)
   try {
     if (Number(req.headers.get('content-length') ?? 0) > 4_000_000) return json({ error: '同步内容过大' }, 413)
     const text = req.method === 'POST' ? await req.text() : ''
@@ -33,9 +34,9 @@ export async function handle(req: Request): Promise<Response> {
     const since = Number(req.method === 'GET' ? url.searchParams.get('since') ?? 0 : body.since ?? 0)
     if (!Number.isSafeInteger(since) || since < 0) return json({ error: '同步水位线无效' }, 400)
     const secret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const result = await fetch(`${Deno.env.get('SUPABASE_URL')}/rest/v1/rpc/${adventure ? 'xiaobu_adventure' : 'xiaobu_exchange'}`, {
+    const result = await fetch(`${Deno.env.get('SUPABASE_URL')}/rest/v1/rpc/${bank ? 'xiaobu_bank' : adventure ? 'xiaobu_adventure' : 'xiaobu_exchange'}`, {
       method: 'POST', headers: { 'Content-Type':'application/json', apikey: secret, Authorization: `Bearer ${secret}` },
-      body: JSON.stringify(adventure ? { p_child_id: body.childId, p_date: body.date, p_route: body.route } : { p_action: clear ? 'clear' : 'sync', p_since: since, p_changes: body.changes ?? {} }),
+      body: JSON.stringify(bank ? { p_child_id: body.childId, p_action: body.action, p_request_id: body.requestId, p_input: { amount: body.amount, enabled: body.enabled, rateBps: body.rateBps }, p_since: since } : adventure ? { p_child_id: body.childId, p_date: body.date, p_route: body.route } : { p_action: clear ? 'clear' : 'sync', p_since: since, p_changes: body.changes ?? {} }),
     })
     const data = await result.json()
     if (!result.ok) return json({ error: data.message ?? '云端保存失败，请重试' }, 400)

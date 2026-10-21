@@ -1422,7 +1422,7 @@ legend {
 .trail-stamp { display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; margin: 0 auto 7px; background: #efeee8; border: 1px dashed #d1d0c5; border-radius: 50%; color: #9c9a90; }
 .has-footprint .trail-stamp { background: #e7f1e3; border: 1px solid #c3d9be; }
 .trail-stamp svg { width: 34px; height: 34px; }
-.growth-trail small { font-size: 12px; }
+.growth-trail small { font-size: 12px; color: #565b50; }
 .trail-section > p { font-size: 13px; color: #68785f; margin-bottom: 0; }
 .wish-card.focused-wish { border-color: #a991c7; background: #f8f4ff; }
 .wish-focus-button { font: inherit; font-size: 13px; min-height: 44px; padding: 8px 12px; border: 1px solid #d4c6e7; color: #6a518d; background: #fff; border-radius: 14px; cursor: pointer; }
@@ -1627,3 +1627,1057 @@ legend {
 .heatmap-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .heatmap-legend i { width: 18px; height: 18px; border: 1px solid #80728f; border-radius: 5px; }
 .checkin-heatmap table { width: 100%; }
+
+/* 家庭共同成长：沿用原有图卡与本地优先数据流。 */
+.family-status { min-height: 1.5em; margin: 0; color: #365e43; font-weight: 600; }
+.family-hero { background: linear-gradient(125deg, #eef3e5, #fff8e8 65%, #eee9f5); gap: 1.5rem; }
+.family-hero .bird-companion { max-width: 240px; }
+.family-shortcuts, .family-actions { display: flex; flex-wrap: wrap; gap: .65rem; align-items: center; }
+.family-shortcuts a { padding: .65rem .85rem; border-radius: 999px; background: #fffdf6; color: #355240; border: 1px solid #a4b39a; font-weight: 600; }
+.family-world label { display: grid; gap: .4rem; font-weight: 600; }
+.family-world input, .family-world select { min-height: 44px; width: 100%; min-width: 0; }
+.family-world fieldset { margin: .8rem 0; border: 1px solid #a7b49c; border-radius: 14px; padding: 1rem; display: grid; grid-template-columns: 1fr 2fr auto; gap: .8rem; align-items: end; }
+.family-member-list { padding: 0; list-style: none; }
+.family-member-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #d9dfd0; }
+.family-member-list small { display: block; color: #52604e; margin-top: .3rem; }
+.family-member-list form { display: flex; align-items: end; gap: .6rem; margin-left: auto; }
+.family-avatar { display: grid; place-items: center; flex: 0 0 46px; height: 46px; border-radius: 50%; font-size: 1.6rem; color: #71501a; background: #f8e4b9; }
+.family-avatar.child { background: #d8e6d2; color: #35533c; }
+.family-inline-form { display: grid; grid-template-columns: 2fr 1fr auto; align-items: end; gap: .8rem; margin-top: 1.5rem; }
+.pact-composer { margin-top: 1.2rem; background: #f4f6ef; padding: 1rem; border-radius: 18px; }
+.pact-list { display: grid; gap: 1.2rem; margin-top: 1.5rem; }
+.pact-paper { background: linear-gradient(160deg, #fffaf0, #fffef9); border: 1px solid #d7c5a6; border-radius: 22px; padding: clamp(1rem, 4vw, 2rem); box-shadow: 0 8px 24px #695c3910; }
+.pact-paper h3 { font-size: 1.35rem; margin: .65rem 0 1rem; }
+.pact-paper li { padding: .45rem 0; line-height: 1.7; overflow-wrap: anywhere; }
+.pact-state { color: #665033; font-size: .85rem; font-weight: 600; }
+.pact-stamps { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1.25rem 0; }
+.pact-stamps > span { display: grid; place-items: center; border: 2px dashed #8e8572; border-radius: 50%; min-width: 90px; min-height: 90px; padding: .8rem; color: #635e51; font-size: .78rem; }
+.pact-stamps strong { font-size: 1rem; max-width: 10rem; overflow-wrap: anywhere; }
+.pact-stamps .signed { border: 3px double #a9563f; color: #91462f; background: #faede5; transform: rotate(-7deg); }
+.family-check-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.family-check-card { border: 1px solid #d2dacb; border-radius: 20px; padding: 1.3rem; display: flex; flex-direction: column; align-items: start; gap: .5rem; background: #fffdf8; }
+.family-check-card.done { background: #edf4e9; border-color: #99af91; }
+.family-check-card > span { color: #4c6544; font-size: .9rem; }
+.family-check-card h3 { margin: .2rem 0; font-size: 1.12rem; overflow-wrap: anywhere; }
+.family-check-card small { color: #5d6658; }
+.family-check-card .btn { margin-top: auto; }
+.family-entry { display: flex; gap: 1rem; align-items: center; padding: 1.1rem 1.3rem; color: #36533f; border: 1px solid #b0bf9e; border-radius: 22px; background: #f2f4e8; text-decoration: none; }
+.family-entry > span:first-child { font-size: 2rem; color: #816426; }
+.family-entry > span:last-child { margin-left: auto; }
+.family-entry small { display: block; margin-top: .4rem; color: #506248; }
+.family-history { list-style: none; padding: 0; }
+.family-history li { display: flex; gap: 1rem; padding: .6rem 0; border-bottom: 1px solid #e1e4d9; overflow-wrap: anywhere; }
+.family-history time { flex-shrink: 0; color: #5c6656; }
+.family-world section[id] { scroll-margin-top: 100px; }
+.constellation-map { padding: clamp(1.2rem, 4vw, 2rem); border-radius: 28px; background: radial-gradient(ellipse at 80% 0, #4b496b, #202f45 70%); color: #f9f3e4; box-shadow: 0 10px 30px #26324918; }
+.constellation-heading { display: flex; flex-wrap: wrap; gap: .8rem; justify-content: space-between; align-items: center; }
+.constellation-map .journey-kicker { color: #ded8eb; }
+.constellation-map h2 { color: #fff9eb; margin: .4rem 0; }
+.constellation-grid { list-style: none; padding: 0; margin: 1.5rem 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.constellation-grid li { border: 1px solid #778194; border-radius: 20px; padding: 1rem .7rem; text-align: center; background: #ffffff08; }
+.constellation-grid .constellation-complete { border-color: #e4c884; background: #dfc38c12; }
+.constellation-grid svg { display: block; width: 100%; max-height: 160px; }
+.constellation-grid svg line { stroke: #8993a5; stroke-width: 1; stroke-dasharray: 2 3; }
+.constellation-grid svg line.lit { stroke: #efcf8a; stroke-dasharray: none; }
+.constellation-grid svg circle { fill: #929bad; }
+.constellation-grid svg g.lit circle { fill: #ffe6a0; filter: drop-shadow(0 0 3px #ffdd76); }
+.constellation-grid svg path { stroke: #ffdf95; stroke-width: .8; }
+.constellation-grid h3 { margin: .5rem 0; color: #fff4d9; font-size: 1rem; }
+.constellation-grid p { color: #e1e5ed; font-size: .85rem; }
+.constellation-note { color: #dce2eb; font-size: .85rem; line-height: 1.7; }
+.buddy-bird .bird-rendered { transform-origin: 50% 70%; animation: bird-breathe-3d 4.5s ease-in-out infinite; }
+.buddy-bird.budgie-speaking .bird-rendered { animation: bird-greet-3d .8s ease-in-out infinite alternate; }
+@keyframes bird-breathe-3d { 0%, 100% { translate: 0 0; } 50% { translate: 0 -3px; } }
+@keyframes bird-greet-3d { from { rotate: -2deg; } to { rotate: 2deg; } }
+@media (max-width: 650px) {
+  .family-hero { display: flex; flex-direction: column-reverse; align-items: stretch; }
+  .family-hero .bird-companion { align-self: center; max-width: 180px; }
+  .family-hero .bird-chat { display: none; }
+  .family-shortcuts a { font-size: .85rem; }
+  .family-check-grid { grid-template-columns: 1fr; }
+  .family-inline-form, .family-world fieldset { grid-template-columns: 1fr; }
+  .family-member-list form { margin-left: 0; width: 100%; }
+  .family-member-list form label { flex: 1; }
+  .constellation-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
+  .family-history li { flex-direction: column; gap: .3rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .buddy-bird .bird-rendered, .buddy-bird.budgie-speaking .bird-rendered { animation: none; }
+}
+@media (forced-colors: active) {
+  .constellation-map { border: 1px solid CanvasText; }
+  .constellation-map, .constellation-map h2, .constellation-grid h3, .constellation-grid p, .constellation-note, .constellation-map .journey-kicker { color: CanvasText; }
+  .constellation-grid svg line, .constellation-grid svg path { stroke: CanvasText; }
+  .constellation-grid svg circle { fill: CanvasText; }
+  .constellation-grid svg g.lit circle, .constellation-grid svg line.lit { fill: Highlight; stroke: Highlight; }
+}
+.shop-ledger { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: .6rem; }
+.shop-ledger > div { display: grid; gap: .3rem; padding: 1rem .6rem; background: #f4f0e7; border: 1px solid #d9ccaf; border-radius: 18px; text-align: center; }
+.shop-ledger strong { font-size: 1.5rem; color: #4d6345; }
+.shop-ledger span { font-size: .85rem; color: #65593e; }
+.constellation-detail > summary { display: block; cursor: pointer; list-style: none; border-radius: 10px; }
+.constellation-detail > summary::-webkit-details-marker { display: none; }
+.constellation-detail > summary:focus-visible { outline: 3px solid #ffe6a0; outline-offset: 5px; }
+.constellation-open-label { display: inline-block; padding: .55rem .3rem; color: #ffe6a0; font-size: .85rem; text-decoration: underline; text-underline-offset: 3px; }
+.constellation-description { margin-top: .8rem; padding-top: .8rem; border-top: 1px solid #8791a2; text-align: left; overflow-wrap: anywhere; }
+.constellation-description p { line-height: 1.7; }
+.constellation-detail[open] .constellation-open-label { color: #fff6d5; }
+/* 儿童版：三个主入口，次要内容按需展开。 */
+.parent-entry { color: var(--ink-soft, #605870); font-size: .85rem; padding: .6rem; text-underline-offset: 3px; }
+.child-fold { background: var(--surface, #fff); border: 1px solid var(--line, #ded8e8); border-radius: 18px; padding: 1rem 1.2rem; }
+.child-fold > summary, .child-wish-compose > summary { cursor: pointer; font-weight: 600; padding: .3rem 0; min-height: 32px; }
+.child-fold[open] > summary { margin-bottom: 1rem; }
+.child-fold .bird-growth, .child-fold .bird-companion { margin-top: 1rem; }
+.family-inline .pact-paper { margin-top: 1rem; }
+.family-inline .pact-paper h3 { margin-top: 0; }
+.family-inline .family-status:empty { display: none; }
+.child-home .buddy-hero { min-height: 0; padding: 1.4rem; }
+.child-home .buddy-intro h1 { font-size: clamp(1.4rem, 4vw, 2rem); }
+.child-home .buddy-stage { max-width: 190px; }
+.child-home .buddy-speech { display: none; }
+.child-home .star-wallet { display: inline-flex; }
+.child-home .buddy-hero .play-eyebrow { display: none; }
+.child-home .habit-category-picker { margin-top: 0; }
+@media (max-width: 650px) {
+  .child-home .buddy-hero { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: .6rem; align-items: center; }
+  .child-home .buddy-intro { min-width: 0; }
+  .child-home .buddy-intro p { font-size: .85rem; line-height: 1.5; }
+  .child-home .buddy-stage { width: 120px; max-width: 100%; }
+  .child-home .buddy-stage .bird-chat { display: none; }
+  .child-home .buddy-stage .bird-touch > span:last-child { font-size: .7rem; }
+  .child-home .star-wallet { padding: .5rem .65rem; gap: .35rem; }
+  .child-home .star-wallet strong { font-size: 1.3rem; }
+  .child-home .star-wallet span { font-size: .75rem; }
+  .child-home .buddy-hero .buddy-bird { width: 120px; }
+}
+
+/* 心愿内完成选择与签订，沿用原有三个儿童入口。 */
+.wish-agreement { margin-top: 1rem; border-top: 1px solid #d5c9b6; padding-top: .75rem; text-align: left; }
+.wish-agreement > summary { color: #465531; font-weight: 700; cursor: pointer; padding: .5rem 0; min-height: 44px; }
+.wish-agreement fieldset { min-width: 0; padding: .6rem; border: 1px solid #d5c9b6; border-radius: 12px; }
+.wish-rule-group { margin: .6rem 0; }
+.wish-rule-choice { display: flex; align-items: center; gap: .65rem; padding: .6rem .2rem; min-height: 44px; }
+.wish-rule-choice input { flex: 0 0 20px; width: 20px; height: 20px; }
+.wish-rule-choice small { display: block; color: #655e50; }
+.wish-pact-paper { margin-top: 1rem; padding: .85rem; background: #fff9e9; border: 1px solid #d5c9b6; border-radius: 14px; }
+.wish-pact-paper ol { padding-left: 1.3rem; }
+.wish-pact-paper li { margin: .6rem 0; overflow-wrap: anywhere; }
+.wish-missing-rule, .fingerprint-alternative { margin: .7rem 0; font-size: .85rem; }
+.wish-missing-rule summary, .fingerprint-alternative summary { cursor: pointer; padding: .5rem 0; min-height: 44px; }
+.fingerprint-sign { margin: 1rem 0; text-align: center; }
+.fingerprint-button { display: inline-flex; flex-direction: column; align-items: center; gap: .25rem; border: 2px solid #79712f; background: #fff8dc; color: #4a4d28; border-radius: 24px; padding: .8rem 1rem; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.fingerprint-button svg { width: 100px; height: 100px; }
+.fingerprint-track, .fingerprint-ring { fill: none; stroke-width: 4; }
+.fingerprint-track { stroke: #e1d7b9; }
+.fingerprint-ring { stroke: #6a7431; stroke-dasharray: 277; stroke-dashoffset: 277; transform: rotate(-90deg); transform-origin: center; }
+.fingerprint-button.holding .fingerprint-ring { animation: fingerprint-fill 1s linear forwards; }
+.fingerprint-button:focus-visible { outline: 3px solid #345e90; outline-offset: 4px; }
+.fingerprint-button:disabled { opacity: .6; cursor: default; }
+@keyframes fingerprint-fill { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .fingerprint-button.holding .fingerprint-ring { animation: none; stroke-dashoffset: 0; } }
+
+.home-pacts { border: 1px solid #d8cbe7; border-radius: 20px; background: #fffdf7; padding: 16px; }
+.home-pacts > h2 { margin: 0 0 .4rem; }
+.home-pacts > p { margin-top: 0; color: #625573; }
+.home-pacts .pact-paper { margin-top: 12px; }
+
+.shop-table-wrap { width: 100%; }
+.wish-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: .9rem; }
+.wish-table caption { text-align: left; }
+.wish-table th, .wish-table td { padding: .5rem .4rem; border-bottom: 1px solid #ddd4e8; text-align: left; vertical-align: middle; overflow-wrap: anywhere; }
+.wish-table thead th { color: #52415f; background: #f3edf8; }
+.wish-table th:first-child { width: 40%; }
+.wish-table th:nth-child(2) { width: 13%; }
+.wish-table th:nth-child(3) { width: 21%; }
+.wish-table th:nth-child(4) { width: 26%; }
+.wish-table tbody th { font-weight: 600; }
+.shop-item { display: flex; gap: .4rem; align-items: center; }
+.shop-item .play-picture { width: 32px; height: 32px; min-width: 32px; margin: 0; }
+.shop-focused { background: #faf6e8; }
+.shop-focus { min-height: 36px; padding: .2rem .35rem; margin-top: .15rem; color: #60457a; background: transparent; border: 1px solid #d0c0df; border-radius: 8px; font-size: .75rem; cursor: pointer; }
+.shop-actions .btn { font-size: .8rem; padding: .4rem .35rem; min-height: 44px; width: 100%; margin: .15rem 0; }
+.shop-actions input { width: 100%; min-width: 0; padding: .4rem; }
+.shop-previous-pact { margin-top: 1rem; }
+@media (max-width: 480px) {
+ .wish-table { font-size: .8rem; }
+ .wish-table th, .wish-table td { padding: .45rem .25rem; }
+ .shop-item .play-picture { width: 24px; height: 24px; min-width: 24px; }
+ .shop-actions .btn { font-size: .75rem; }
+}
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.pact-ongoing { padding: 12px; }
+.pact-ongoing h3 { margin-top: 0; }
+.pact-ongoing .pact-stamps { margin: .5rem 0; gap: .4rem; }
+.pact-ongoing .pact-stamps > span { padding: .25rem .5rem; min-width: 0; min-height: 0; border-radius: 8px; transform: none; border-width: 1px; font-size: .8rem; }
+.pact-content > summary, .past-wish-pacts > summary, .pact-adjust > summary { padding: .5rem 0; cursor: pointer; min-height: 44px; }
+.past-wish-pacts { margin-top: .75rem; }
+.shop-compact-hero { min-height: 0; padding: 16px; gap: 12px; }
+.shop-compact-hero h1 { margin: .3rem 0; }
+.shop-compact-hero p { margin: .4rem 0; }
+.shop-compact-hero > .play-picture { width: 64px; height: 64px; min-width: 64px; }
+.shop-compact-hero .star-total { font-size: 1.7rem; margin-top: .5rem; }
+.shop-compact-hero .star-total small { font-size: .8rem; }
+
+/* 十二星座：原生 SVG 插画、轻量星卡，无额外运行时依赖。 */
+.zodiac-map { background: radial-gradient(ellipse at 90% 0, #303459 0, #11162e 60%); color: #f4f6ff; overflow: hidden; }
+.zodiac-map .constellation-heading { align-items: flex-start; }
+.zodiac-map h2, .zodiac-map h3 { color: #f4f6ff; }
+.zodiac-map .zodiac-intro { color: #c1cce3; margin: .35rem 0; }
+.zodiac-totals { display: grid; gap: .35rem; color: #e4eaff; font-size: .9rem; }
+.zodiac-totals strong { color: #fff0bc; }
+.zodiac-journey { margin-top: 1rem; padding: .85rem 1rem; border: 1px solid #6d7c9d; border-radius: 14px; background: #151d36; font-size: .9rem; }
+.zodiac-journey progress { display: block; width: 100%; height: 8px; accent-color: #d6c0ff; margin-top: .6rem; }
+.zodiac-showcase { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 1.25rem; align-items: center; margin: 1.2rem 0; padding: 1rem; border-radius: 22px; border: 1px solid #69779a; background: #131b35; }
+.zodiac-feature-art { position: relative; min-width: 0; }
+.zodiac-art { display: block; width: 100%; height: auto; max-height: 250px; color: var(--sign-color, #e2d0ff); }
+.zodiac-orbit { fill: none; stroke: #7786a9; stroke-width: .7; stroke-dasharray: 3 6; }
+.zodiac-motif { fill: none; stroke: #aabbdc; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
+.zodiac-motif.lit { stroke: var(--sign-color, #e2d0ff); stroke-width: 2.1; opacity: 1; filter: drop-shadow(0 0 4px var(--sign-color)); }
+.zodiac-line { stroke: #7c8cab; stroke-width: 1; stroke-dasharray: 3 4; }
+.zodiac-line.lit { stroke: #f7e7b4; stroke-width: 1.3; stroke-dasharray: none; }
+.zodiac-point circle { fill: #90a4ca; }
+.zodiac-point.lit circle { fill: #fff3c0; filter: drop-shadow(0 0 4px #f0cb72); }
+.zodiac-point path, .zodiac-sparks path { stroke: #fff0bf; stroke-width: 1.2; }
+.zodiac-sparks circle { fill: #fff0bf; }
+.zodiac-feature-symbol { position: absolute; bottom: 0; right: .5rem; font-size: 2rem; color: var(--sign-color); }
+.zodiac-edition { color: #c9c0e8; font-size: .75rem; letter-spacing: .12em; }
+.zodiac-feature-copy { min-width: 0; }
+.zodiac-feature-copy h3 { margin: .5rem 0; font-size: 1.3rem; }
+.zodiac-feature-copy p { color: #c8d2e8; font-size: .9rem; line-height: 1.65; }
+.zodiac-reveal { display: inline-block; border: 1px solid #e1caff; border-radius: 12px; padding: .75rem 1rem; min-height: 44px; background: #e2d2ff; color: #231738; font: inherit; font-size: .9rem; font-weight: 700; cursor: pointer; box-shadow: 0 3px 15px #ab78e332; }
+.zodiac-reveal:disabled { background: #2b3553; color: #c0cae1; border-color: #6b7b9e; cursor: default; box-shadow: none; }
+.zodiac-album-title { margin: 1.2rem 0 .7rem; font-size: 1rem; }
+.zodiac-album-title small { display: inline-block; color: #c1cce3; font-size: .75rem; font-weight: 400; margin-left: .5rem; }
+.zodiac-grid { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: .6rem; list-style: none; padding: 0; margin: 0; }
+.zodiac-grid li { min-width: 0; }
+.zodiac-tile { display: grid; gap: .3rem; justify-items: center; width: 100%; min-height: 128px; padding: .7rem .25rem; border: 1px solid #7887a8; border-radius: 14px; color: #f0f3ff; background: #171f3d; cursor: pointer; font: inherit; }
+.zodiac-tile[aria-pressed="true"] { outline: 2px solid #f2dfb6; outline-offset: 1px; }
+.zodiac-tile.collected { border-color: var(--sign-color); background: #272544; }
+.zodiac-tile-symbol { font-size: 1.65rem; line-height: 1.2; color: var(--sign-color); }
+.zodiac-tile strong { font-size: .9rem; }
+.zodiac-tile > span:not(.zodiac-tile-symbol) { color: #c5d2eb; font-size: .7rem; }
+.zodiac-tile .zodiac-mini-stars { color: #f5dca8 !important; letter-spacing: .12em; }
+.zodiac-map button:focus-visible, .zodiac-rules summary:focus-visible { outline: 3px solid #fff3ba; outline-offset: 4px; }
+.zodiac-rules { margin-top: 1rem; color: #c8d2e8; font-size: .85rem; }
+.zodiac-rules summary { cursor: pointer; padding: .65rem 0; min-height: 44px; color: #f0e4ff; }
+.zodiac-rules p { line-height: 1.7; }
+.zodiac-dialog { color: #f4f6ff; background: #11172d; border: 1px solid #b7a8df; border-radius: 24px; width: min(410px,calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 18px; overflow: auto; text-align: center; }
+.zodiac-dialog::backdrop { background: #070b20d9; backdrop-filter: blur(5px); }
+.zodiac-dialog > h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #f4f6ff; }
+.zodiac-dialog > p { color: #c8d2e8; font-size: .75rem; }
+.zodiac-dialog > .zodiac-reveal { margin-top: 1rem; }
+.zodiac-collector { position: relative; isolation: isolate; overflow: hidden; width: min(310px,100%); margin: auto; padding: 2px; border-radius: 22px; background: linear-gradient(135deg,var(--sign-color),#99cfff 30%,#f3d3ff 55%,#d6ecba 75%,var(--sign-color)); box-shadow: 0 12px 36px #0007, 0 0 28px #ada7e32b; transform: perspective(900px) rotateY(-3deg) rotateX(2deg); }
+.zodiac-collector::after { content: ''; pointer-events: none; position: absolute; z-index: 2; inset: -100% -50%; background: linear-gradient(115deg,transparent 42%,#ffffff16 48%,#bdf4ff1a 50%,transparent 56%); transform: translateX(-45%); animation: zodiac-foil 8s ease-in-out infinite; }
+.zodiac-collector-inner { position: relative; border-radius: 20px; padding: 16px; background: #141a33; }
+.zodiac-card-top, .zodiac-card-bottom { display: flex; justify-content: space-between; gap: .5rem; align-items: center; color: #d5d9ee; font-size: .65rem; }
+.zodiac-card-top { letter-spacing: .06em; }
+.zodiac-card-seal { position: absolute; right: 18px; top: 40px; color: var(--sign-color); font-size: 1.7rem; }
+.zodiac-collector .zodiac-art { margin: 8px auto 0; width: 100%; max-height: 210px; }
+.zodiac-card-english { color: #c6b8e9; font-size: .65rem; letter-spacing: .3em; margin: .2rem 0; }
+.zodiac-collector h3 { margin: .3rem 0; font-size: 1.7rem; color: #fff5d9; letter-spacing: .15em; }
+.zodiac-card-title { color: var(--sign-color); font-size: .95rem; margin: .4rem 0; letter-spacing: .12em; }
+.zodiac-card-motto { color: #d6deee; font-size: .78rem; line-height: 1.7; padding-bottom: .9rem; border-bottom: 1px solid #667391; }
+.zodiac-card-bottom { flex-direction: column; gap: .5rem; }
+.zodiac-card-bottom > span:first-child { color: #ffe1a0; letter-spacing: .35em; }
+@keyframes zodiac-foil { 0%,20% { transform: translateX(-45%) rotate(0); } 65%,100% { transform: translateX(45%) rotate(0); } }
+@media(max-width: 700px) { .zodiac-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } .zodiac-showcase { grid-template-columns: 1fr; gap: .25rem; text-align: center; } .zodiac-feature-art { max-width: 250px; width: 100%; margin: auto; } .zodiac-feature-copy h3 { font-size: 1.2rem; } .zodiac-feature-copy p { margin: .5rem 0; } .zodiac-map { padding: 18px 12px; } .zodiac-tile { min-height: 118px; } }
+@media(prefers-reduced-motion: reduce) { .zodiac-collector { transform: none; } .zodiac-collector::after { animation: none; display: none; } .zodiac-motif.lit { filter: none; } }
+@media(forced-colors: active) { .zodiac-map,.zodiac-showcase,.zodiac-journey,.zodiac-tile,.zodiac-dialog,.zodiac-collector-inner { background: Canvas; color: CanvasText; border: 1px solid CanvasText; } .zodiac-map :is(h2,h3,p,span,strong,small,summary), .zodiac-dialog :is(h2,h3,p,span) { color: CanvasText; } .zodiac-map button { background: ButtonFace; color: ButtonText; border-color: ButtonText; } .zodiac-tile[aria-pressed="true"] { outline-color: Highlight; } .zodiac-collector::after { display: none; } .zodiac-motif,.zodiac-orbit,.zodiac-line { stroke: CanvasText; filter: none; } .zodiac-point circle { fill: CanvasText; } .zodiac-point.lit circle { fill: Highlight; } }
+
+/* 儿童三页与独立家长管理，v9。 */
+.parent-menu { display: grid; gap: 12px; grid-template-columns: repeat(2,minmax(0,1fr)); margin: 20px 0; }
+.parent-menu > a { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 20px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 16px; color: var(--text); text-decoration: none; }
+.parent-menu > a > span:first-of-type { grid-row: 2; color: var(--text-muted); font-size: .85rem; }
+.parent-menu > a > span:last-child { grid-column: 2; grid-row: 1 / 3; align-self: center; }
+.parent-todos { display: flex; gap: 16px; flex-wrap: wrap; }
+.parent-todos a { color: var(--accent-text); padding: 10px; }
+.bank-panel { margin: 16px 0; border: 1px solid #cfc5df; background: #fffdf7; color: #362c48; border-radius: 18px; padding: 18px; }
+.bank-panel > summary { cursor: pointer; font-weight: 700; min-height: 32px; }
+.bank-panel > summary > span { float: right; font-size: .85rem; font-weight: 400; }
+.bank-balances { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 18px 0; }
+.bank-balances > div { display: grid; gap: 6px; background: #f3ecdf; padding: 16px; border-radius: 12px; }
+.bank-balances strong { font-size: 1.6rem; }.bank-balances small {font-size:.8rem;}
+.bank-panel form { display: grid; gap: 14px; }.bank-panel label { display: grid; gap: 8px; }.bank-panel input[type=number] { max-width: 240px; padding: 12px; border: 1px solid #7c6b90; border-radius: 10px; background: white; color: #302743; }
+.bank-panel .bank-toggle { display: flex; gap: 10px; }.bank-actions {display:flex;gap:12px;flex-wrap:wrap;}
+.bank-panel details { margin: 18px 0 0; }.bank-panel details p { line-height: 1.7; }.bank-message {min-height:1.5em;color:#674817;}
+.bank-history { list-style:none;padding:0; }.bank-history li { display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #ded5c5; }
+.signing-page { max-width:650px;margin:auto;background:#fffcf7;padding:24px;border:1px solid #c9bbd9;border-radius:20px; }.signing-page li{margin:12px 0;line-height:1.8;}.signing-page label{display:grid;gap:10px;}
+.parent-menu a:focus-visible,.bank-panel summary:focus-visible {outline:3px solid #655181;outline-offset:4px;}
+@media(max-width:600px){.parent-menu{grid-template-columns:1fr;}.parent-menu>a{padding:16px;}.bank-panel{padding:14px;}.bank-balances{gap:8px;}.bank-balances>div{padding:12px;}.family-hero .family-shortcuts{flex-wrap:wrap;}}
+
+/* 小步的家 v10：场景、物品和冒险共享完整宽度。 */
+.buddy-home { min-width: 0; border: 1px solid #ddd5eb; border-radius: 28px; padding: 22px; background: radial-gradient(ellipse at 82% 38%,#f5edca80,transparent 55%),linear-gradient(145deg,#f1eafa,#faf9ff 48%,#edf5e8); color: #352b50; overflow: hidden; }
+.buddy-home-heading { display:flex; align-items:center; justify-content:space-between; gap:18px; }.buddy-home-heading > div:first-child{min-width:0;}.buddy-home-heading h1 { margin:0;font-size:clamp(1.3rem,3vw,1.9rem);color:#392d55; }.buddy-home-heading p{margin:.5rem 0 0;color:#655874;line-height:1.6;}.buddy-home-heading .star-wallet{flex:none;margin:0;font-size:.9rem;padding:9px 12px;}.buddy-home-heading .star-wallet strong{font-size:1.2rem;}
+.bird-habitat { min-width:0; width:100%; }.bird-habitat .habitat-scene{position:relative;height:clamp(240px,38vw,390px);width:min(100%,760px);margin:0 auto;isolation:isolate;}.habitat-glow{position:absolute;inset:12% 7% 2%;border-radius:50%;background:radial-gradient(ellipse,#f5e6b595,transparent 66%);filter:blur(15px);z-index:-1;}
+.habitat-house{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 14px 15px #4b493b20);transform-origin:50% 85%;animation:habitat-drift 7s ease-in-out infinite;}.habitat-house.house-building{filter:saturate(.78) drop-shadow(0 14px 15px #4b493b20);}
+.bird-habitat .bird-touch{position:absolute;z-index:3;left:1%;bottom:2%;width:39%;max-width:280px;min-width:0;margin:0;padding:0;border:0;border-radius:35%;background:transparent;filter:drop-shadow(0 9px 7px #343e242b);}.bird-habitat .bird-touch:hover{background:transparent;}.bird-habitat .bird-motion{display:block;}.bird-habitat .bird-touch > span:last-child{display:inline-block;background:#fffef5ec;color:#51425f;border:1px solid #ddd3bd;border-radius:20px;padding:4px 9px;font-size:.75rem;white-space:normal;}
+.bird-habitat .buddy-bird{width:100%;}.bird-habitat .bird-scene-base,.bird-habitat .bird-home-art{display:none;}.bird-habitat .bird-chat{position:absolute;z-index:3;left:0;top:8%;max-width:45%;margin:0;padding:8px 12px;background:#ffffffd9;border:1px solid #e5ddeb;border-radius:16px;color:#54435d;font-size:.8rem;line-height:1.6;box-shadow:0 5px 16px #7b618010;}.habitat-house-label{position:absolute;z-index:3;right:3%;bottom:0;padding:4px 9px;background:#ffffffdf;color:#5c4d3d;border:1px solid #e1d4bc;border-radius:16px;font-size:.7rem;}
+.habitat-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px;}.habitat-actions button{font:inherit;cursor:pointer;display:grid;grid-template-columns:30px 1fr;gap:2px 10px;align-items:center;text-align:left;min-height:70px;padding:12px 16px;border:1px solid #d7cce5;border-radius:18px;background:#ffffffdc;color:#433351;box-shadow:0 4px 0 #e4dced;}.habitat-actions button>span{grid-row:1/3;display:grid;place-items:center;font-size:1.7rem;color:#80609d;}.habitat-actions small{font-size:.75rem;color:#71607d;}.habitat-actions button[aria-expanded=true]{border-color:#8b70a4;background:#eee5f7;box-shadow:0 2px 0 #d0bfdf;}
+.habitat-panel{margin-top:18px;min-width:0;}.habitat-panel[hidden]{display:none;}.habitat-panel .bird-wardrobe{background:#fffef9;color:#36452e;}.habitat-panel .bird-items{grid-template-columns:repeat(auto-fit,minmax(min(160px,100%),1fr));}.habitat-panel .bird-owned button{max-width:none;min-width:0;min-height:155px;}.habitat-panel .bird-items button strong{overflow-wrap:anywhere;line-height:1.5;}.habitat-panel .bird-items svg{max-width:76px;width:100%;}.bird-discover{margin-top:20px;}.habitat-panel .bird-unowned{grid-template-columns:repeat(3,minmax(0,1fr));}.habitat-panel .bird-unowned button{min-height:0;padding:10px 5px;border:1px dashed #c7cebc;opacity:1;background:#f4f5ef;color:#53604b;}.habitat-panel .bird-unowned svg{width:44px;}.habitat-panel .bird-unowned strong{font-size:.75rem;}.habitat-panel .bird-unowned small{font-size:.65rem;}.habitat-panel .adventure-card{margin:0;background:#fffdf6;color:#413747;}.habitat-panel .adventure-heading{gap:12px;}.habitat-panel .adventure-heading h2{font-size:1.2rem;}.habitat-panel .adventure-routes{grid-template-columns:repeat(3,minmax(0,1fr));}
+.habitat-actions button:focus-visible{outline:3px solid #75578f;outline-offset:4px;}@keyframes habitat-drift{0%,100%{transform:translateY(0) rotate(-.3deg)}50%{transform:translateY(-4px) rotate(.3deg)}}
+@media(max-width:600px){.buddy-home{padding:16px 12px;border-radius:24px;}.buddy-home-heading{gap:8px;align-items:flex-start;}.buddy-home-heading .star-wallet{padding:7px 8px;}.buddy-home-heading .star-wallet>span{display:none;}.buddy-home-heading p{font-size:.8rem;}.bird-habitat .habitat-scene{height:270px;}.bird-habitat .bird-touch{width:44%;left:0;bottom:5%;}.bird-habitat .bird-chat{top:5%;max-width:51%;font-size:.72rem;padding:6px 9px;}.habitat-house{object-fit:contain;}.habitat-house-label{font-size:.6rem;right:0;}.habitat-actions{gap:10px;margin-top:8px;}.habitat-actions button{padding:10px;grid-template-columns:22px 1fr;gap:2px 6px;min-height:66px;}.habitat-actions small{font-size:.65rem;}.habitat-panel .bird-owned{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}.habitat-panel .bird-owned button{padding:10px 6px;}.habitat-panel .bird-wardrobe{padding:14px;}.habitat-panel .adventure-card{padding:14px;}}
+@media(prefers-reduced-motion:reduce){.habitat-house{animation:none;}.bird-habitat .bird-motion,.bird-habitat .bird-rendered{animation:none;}}
+@media(forced-colors:active){.buddy-home,.habitat-actions button,.bird-habitat .bird-chat,.habitat-house-label{background:Canvas;color:CanvasText;border-color:CanvasText;}.buddy-home-heading h1,.buddy-home-heading p,.habitat-actions small,.habitat-actions button>span{color:CanvasText;}.habitat-glow{display:none;}}
+
+/* 小步之家音景：单独开启，避免声音占满儿童界面。 */
+.bird-music{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px 14px;margin:12px 0 4px;padding:8px;color:#51425f;}.bird-music .btn{background:#fffef8;color:#51425f;border:1px solid #cbbfd8;min-height:40px;}.bird-music label{display:flex;align-items:center;gap:8px;font-size:.8rem;}.bird-music input{max-width:110px;}.bird-music small{font-size:.68rem;}.bird-music a{color:#65507c;text-decoration:underline;}.bird-music p{width:100%;text-align:center;}
+
+/* 扑翅使用分解姿态，头和身体不再整体摇摆。 */
+.buddy-bird .bird-rendered,.buddy-bird.budgie-speaking .bird-rendered,.bird-touched .buddy-bird,.bird-action-0.bird-touched .buddy-bird{animation:none;rotate:none;translate:none;}
+.bird-frame{opacity:0;}.bird-frame-0{opacity:1;}
+.bird-flapping .bird-frame-0{animation:flap-rest .48s steps(1,end) 4;}
+.bird-flapping .bird-frame-1{animation:flap-half .48s steps(1,end) 4;}
+.bird-flapping .bird-frame-2{animation:flap-up .48s steps(1,end) 4;}
+.bird-flapping .bird-frame-3{animation:flap-down .48s steps(1,end) 4;}
+@keyframes flap-rest{0%,11%,89%,100%{opacity:1}12%,88%{opacity:0}}
+@keyframes flap-half{0%,12%,28%,69%,89%,100%{opacity:0}13%,27%,70%,88%{opacity:1}}
+@keyframes flap-up{0%,27%,50%,100%{opacity:0}28%,49%{opacity:1}}
+@keyframes flap-down{0%,49%,70%,100%{opacity:0}50%,69%{opacity:1}}
+.parent-music-controls{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-top:20px;border-top:1px solid var(--border);padding-top:16px;}.parent-music-controls label{display:flex;align-items:center;gap:10px;}.parent-music-controls small{max-width:50ch;}
+@media(prefers-reduced-motion:reduce){.bird-flapping .bird-frame{animation:none;opacity:0}.bird-flapping .bird-frame-0{opacity:1}}
+
+/* 冒险准备、发现与家园装饰 v11。 */
+.adventure-preparation-row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:14px 0;}
+.adventure-preparation-row p{flex:1;margin:0;}
+.adventure-star-track{display:flex;gap:4px;flex:none;font-size:1.15rem;letter-spacing:0;}
+.adventure-star-track span{color:#d4cfc5;text-shadow:0 1px #fff;}
+.adventure-star-track span.lit{color:#e8b94f;filter:drop-shadow(0 2px 3px #b9852033);}
+.adventure-start-waiting{background:linear-gradient(135deg,#fff7da,#f3e3bf);border:1px solid #d8bb7d;color:#624d2f;box-shadow:0 4px 0 #d9c397;}
+.adventure-start-waiting:hover{background:linear-gradient(135deg,#fff2c7,#ebd39f);}
+.adventure-preparation{margin:14px 0;padding:15px;border:1px solid #ead5a9;border-radius:18px;background:#fff9e9;color:#59492f;animation:adventure-help-in .25s ease-out;}
+.adventure-preparation>strong{display:block;font-size:1rem;}.adventure-preparation>p{margin:6px 0 12px;}
+.adventure-find-preview{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:10px 12px;border-radius:14px;background:#fff;border:1px dashed #d7bd84;}
+.adventure-find-preview span,.adventure-find-preview small{font-size:.72rem;color:#77674e;}.adventure-find-preview strong{font-size:.82rem;color:#674d24;}
+.adventure-routes button small{display:block;color:#756780;font-size:.68rem;line-height:1.45;min-height:2.9em;}
+.adventure-treasure{display:grid;grid-template-columns:74px minmax(0,1fr) auto;align-items:center;gap:12px;margin:12px 0;padding:12px;border:1px solid #d9d3ed;border-radius:18px;background:linear-gradient(135deg,#f7f3ff,#eff9f5);}
+.adventure-treasure .bird-item-picture{width:70px;height:70px;}
+.adventure-treasure>div{min-width:0;}.adventure-treasure span{display:block;color:#7a668b;font-size:.68rem;letter-spacing:.08em;}.adventure-treasure strong{display:block;margin:2px 0 4px;font-size:.98rem;}.adventure-treasure p{margin:0;font-size:.75rem;line-height:1.55;color:#63586c;}
+.home-decoration-picker{margin:22px 0;padding:16px;border-radius:18px;background:linear-gradient(140deg,#fffaf0,#f3f1ff);border:1px solid #ded3c2;color:#493d58;}
+.home-decoration-picker h4{margin:0 0 5px;font-size:1rem;}.home-decoration-picker>p{margin:0 0 12px;font-size:.78rem;line-height:1.6;color:#6e617c;}
+.home-decor-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+.home-decor-options button{display:grid;justify-items:center;gap:4px;min-width:0;min-height:112px;padding:8px 4px;border:1px solid #d9d0e3;border-radius:14px;background:#fff;color:#50445c;font:inherit;cursor:pointer;}
+.home-decor-options button[aria-pressed=true]{border-color:#8c72a5;background:#eee6f7;box-shadow:inset 0 0 0 1px #8c72a5;}
+.home-decor-options button:disabled{cursor:wait;opacity:.72;}.home-decor-options .bird-item-picture{width:54px;height:54px;}
+.home-decor-options strong,.home-decor-options small{max-width:100%;overflow-wrap:anywhere;text-align:center;line-height:1.35;}.home-decor-options strong{font-size:.72rem;}.home-decor-options small{font-size:.62rem;color:#72667c;}
+.home-decor-empty{padding:12px;border:1px dashed #d7cadf;border-radius:12px;background:#fff9;}
+.bird-discover dl{display:grid;gap:8px;margin:10px 0 0;}.bird-discover dl>div{display:grid;grid-template-columns:80px 1fr;gap:10px;padding:9px 10px;background:#f6f5ef;border-radius:12px;}
+.bird-discover dt{font-weight:700;color:#59634f;}.bird-discover dd{margin:0;color:#687060;line-height:1.55;}
+.bird-motion{position:relative;}
+.bird-sparkles{position:absolute!important;inset:5% 2% 20%;pointer-events:none;z-index:3;}
+.bird-sparkles i{position:absolute;font-style:normal;color:#fff2a8;font-size:1.45rem;text-shadow:0 0 8px #f5c650,0 2px 2px #8d6b26;animation:bird-sparkle .72s ease-out both;}
+.bird-sparkles i:nth-child(1){left:14%;top:32%;}.bird-sparkles i:nth-child(2){right:18%;top:18%;animation-delay:.12s;}.bird-sparkles i:nth-child(3){right:10%;bottom:26%;animation-delay:.24s;}
+.bird-flapping .bird-sprite{transform-box:fill-box;transform-origin:50% 64%;animation:bird-flap-lift .6s ease-in-out 4;}
+.habitat-decoration{position:absolute;z-index:2;width:15%;min-width:68px;max-width:132px;margin:0;right:7%;bottom:17%;filter:drop-shadow(0 8px 9px #3c2f2434);animation:home-treasure-float 4.2s ease-in-out infinite;}
+.habitat-decoration .bird-item-picture{display:block;width:100%;height:auto;}
+.habitat-decoration figcaption{position:absolute;left:50%;bottom:-4px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 8px;border-radius:12px;background:#fffdf3e8;color:#5c4a2e;border:1px solid #dccca7;font-size:.62rem;}
+.habitat-decoration-gem,.habitat-decoration-flower{right:8%;top:24%;bottom:auto;}.habitat-decoration-chime{right:19%;top:12%;bottom:auto;}.habitat-decoration-mushroom{right:5%;bottom:24%;}.habitat-decoration-honey,.habitat-decoration-berry{right:12%;bottom:12%;}
+.adventure-treasure .btn,.home-decor-options button:focus-visible,.adventure-start:focus-visible{outline-offset:3px;}
+@keyframes adventure-help-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@keyframes bird-sparkle{0%{opacity:0;transform:scale(.25) rotate(-18deg)}35%{opacity:1;transform:scale(1.15) rotate(8deg)}100%{opacity:0;transform:scale(.7) translateY(-18px) rotate(20deg)}}
+@keyframes bird-flap-lift{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes home-treasure-float{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-5px) rotate(1deg)}}
+@media(max-width:600px){
+  .adventure-preparation-row{align-items:flex-start;flex-direction:column;gap:8px;}.adventure-star-track{align-self:center;}
+  .adventure-treasure{grid-template-columns:58px minmax(0,1fr);}.adventure-treasure .bird-item-picture{width:56px;height:56px;}.adventure-treasure .btn{grid-column:1/-1;width:100%;}
+  .home-decor-options{grid-template-columns:repeat(2,minmax(0,1fr));}.habitat-decoration{width:18%;min-width:58px;}.habitat-decoration figcaption{font-size:.56rem;}
+}
+@media(prefers-reduced-motion:reduce){.bird-sparkles,.habitat-decoration,.bird-flapping .bird-sprite,.adventure-preparation{animation:none;}}
+@media(forced-colors:active){.adventure-preparation,.adventure-find-preview,.adventure-treasure,.home-decoration-picker,.home-decor-options button,.bird-discover dl>div,.habitat-decoration figcaption{background:Canvas;color:CanvasText;border:1px solid CanvasText;}.adventure-star-track .lit{color:Highlight;}.bird-sparkles{display:none;}}
+
+/* 小步乐园 v12：轻量养成、照料动作和独立冒险空间。 */
+.child-today-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 24px 28px;
+  border: 1px solid #e4dcef;
+  border-radius: 26px;
+  background: radial-gradient(ellipse at 88% 18%, #f4e5bc66, transparent 42%), linear-gradient(135deg, #eee9fa, #faf9ff 62%, #edf5ea);
+}
+.child-today-hero > div:first-child { min-width: 0; }
+.child-today-hero h1 { margin: .35rem 0; font-size: clamp(1.5rem, 4vw, 2.1rem); color: #3f315b; }
+.child-today-hero p { margin: 0; color: #655978; }
+.child-today-hero .star-wallet { flex: none; margin: 0; }
+.buddy-play-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, .7fr);
+  gap: 22px;
+  align-items: center;
+  padding: 26px 30px;
+  border: 1px solid #ded4e9;
+  border-radius: 28px;
+  background: radial-gradient(circle at 83% 16%, #fff0b86b, transparent 26%), radial-gradient(circle at 15% 110%, #cfe8d7a3, transparent 43%), linear-gradient(125deg, #ece7fa, #fbf9ff 54%, #eff6ed);
+  overflow: hidden;
+}
+.buddy-play-hero h1 { margin: .3rem 0 .45rem; font-size: clamp(1.8rem, 4.5vw, 2.7rem); color: #3a2d59; }
+.buddy-play-hero p { margin: 0; color: #665a78; line-height: 1.7; }
+.buddy-bond-card {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid #d7c8e7;
+  border-radius: 20px;
+  background: #ffffffc9;
+  box-shadow: 0 14px 28px #6a4d7a18;
+}
+.buddy-bond-card > span { color: #77648c; font-size: .72rem; font-weight: 700; letter-spacing: .08em; }
+.buddy-bond-card > strong { color: #49336f; font-size: 1.3rem; }
+.buddy-bond-card progress { width: 100%; height: 9px; accent-color: #8b6eb5; }
+.buddy-bond-card small { color: #6a5c75; line-height: 1.5; }
+.child-buddy-page .buddy-home { padding: 22px; }
+.child-buddy-page .buddy-home-heading h2 { margin: 0; color: #392d55; font-size: clamp(1.25rem, 3vw, 1.65rem); }
+.buddy-xp-pill {
+  flex: none;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0 7px;
+  align-items: baseline;
+  padding: 8px 13px;
+  border: 1px solid #e2d5bb;
+  border-radius: 18px;
+  background: #fffdf5e8;
+  color: #624d28;
+}
+.buddy-xp-pill > span { grid-column: 1 / -1; font-size: .68rem; color: #7b6b50; }
+.buddy-xp-pill strong { font-size: 1.45rem; }
+.buddy-xp-pill small { font-size: .62rem; }
+.bird-habitat .habitat-scene {
+  position: relative;
+  width: min(100%, 920px);
+  height: clamp(370px, 42vw, 520px);
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid #d9cfdf;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 76% 26%, #fff4c5 0 4%, transparent 10%),
+    radial-gradient(ellipse at 50% 100%, #abc98e 0 20%, transparent 52%),
+    linear-gradient(#cfe4ed 0 45%, #f3ecd4 73%, #b9cf99 100%);
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  isolation: isolate;
+}
+.bird-habitat .habitat-scene::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 8% 3% 2%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #fff4c780, transparent 67%);
+  filter: blur(12px);
+  pointer-events: none;
+}
+.habitat-sky { position:absolute; inset:0; z-index:0; pointer-events:none; }
+.habitat-sky i {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff9c9;
+  box-shadow: 0 0 10px #ffe897;
+  animation: habitat-firefly 3.8s ease-in-out infinite;
+}
+.habitat-sky i:nth-child(1) { left:11%; top:16%; animation-delay:-1.1s; }
+.habitat-sky i:nth-child(2) { left:28%; top:8%; animation-delay:-2.8s; }
+.habitat-sky i:nth-child(3) { left:57%; top:14%; animation-delay:-.6s; }
+.habitat-sky i:nth-child(4) { right:17%; top:24%; animation-delay:-2s; }
+.habitat-sky i:nth-child(5) { right:5%; top:8%; animation-delay:-3.2s; }
+.habitat-house {
+  position: absolute;
+  inset: -7% -8% -8%;
+  width: 116%;
+  height: 116%;
+  max-width: none;
+  object-fit: contain;
+  transform-style: preserve-3d;
+  translate: calc(var(--scene-x, 0) * -10px) calc(var(--scene-y, 0) * -6px);
+  rotate: calc(var(--scene-x, 0) * 1.2deg);
+  scale: 1.035;
+  transition: translate .22s ease-out, rotate .22s ease-out;
+}
+.habitat-foreground { position:absolute; z-index:2; inset:auto -2% -4%; height:29%; pointer-events:none; }
+.habitat-foreground i {
+  position:absolute;
+  bottom:0;
+  width:23%;
+  height:62%;
+  border-radius:90% 10% 80% 20%;
+  background:linear-gradient(145deg,#7fa86b,#426e4d);
+  box-shadow:inset 8px 8px #b5cf7a55;
+  transform-origin:50% 100%;
+  rotate:-24deg;
+}
+.habitat-foreground i:nth-child(1) { left:-2%; }
+.habitat-foreground i:nth-child(2) { left:18%; height:44%; rotate:18deg; background:linear-gradient(145deg,#a9c477,#5f8e57); }
+.habitat-foreground i:nth-child(3) { right:15%; height:48%; rotate:-11deg; background:linear-gradient(145deg,#c0d087,#668b51); }
+.habitat-foreground i:nth-child(4) { right:-4%; height:67%; rotate:31deg; }
+.bird-habitat .bird-touch {
+  width: 34%;
+  max-width: 330px;
+  left: 1.5%;
+  bottom: 0;
+  translate: calc(var(--scene-x, 0) * 13px) calc(var(--scene-y, 0) * 8px);
+  transition: translate .2s ease-out;
+  will-change: translate;
+}
+.bird-habitat .bird-touch .buddy-bird { filter: drop-shadow(0 15px 10px #26332145); }
+.bird-habitat .bird-touch > span:last-child {
+  backdrop-filter: blur(8px);
+  box-shadow: 0 5px 15px #57435f22;
+}
+.habitat-action-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: none;
+}
+.habitat-activity-prop {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  filter: drop-shadow(0 8px 5px #4d3d3522);
+}
+.habitat-food {
+  left: 29%;
+  right: auto;
+  bottom: 5%;
+  width: clamp(88px, 15%, 142px);
+  animation: care-food-in .45s cubic-bezier(.2,.9,.25,1.2) both;
+}
+.habitat-seed {
+  position: absolute;
+  left: 31%;
+  bottom: 20%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50% 50% 45% 45%;
+  background: #d19b42;
+  border: 2px solid #9c6f2f;
+  box-shadow: 0 2px 3px #4d381b33;
+  animation: habitat-seed-toss 1.15s ease-out infinite;
+}
+.habitat-seed-2 { animation-delay:.18s; }
+.habitat-seed-3 { animation-delay:.36s; }
+.habitat-affection {
+  position: absolute;
+  left: 24%;
+  bottom: 27%;
+  color: #e87c91;
+  font-size: clamp(1rem,2vw,1.45rem);
+  text-shadow: 0 2px 0 #fff;
+  animation: habitat-affection-rise 1.4s ease-out infinite;
+}
+.habitat-affection-2 { left:20%; animation-delay:.55s; }
+.habitat-ball {
+  right: 8%;
+  bottom: 7%;
+  width: clamp(64px, 10%, 100px);
+  animation: care-ball-bounce 1.2s ease-in-out 2;
+}
+.habitat-bounce-ring {
+  position: absolute;
+  right: 10%;
+  bottom: 4%;
+  width: clamp(60px, 10%, 96px);
+  aspect-ratio: 2.2;
+  border: 3px solid #fff6bce0;
+  border-radius: 50%;
+  animation: habitat-ball-ring 1.2s ease-out 2;
+}
+.habitat-play-spark {
+  position:absolute;
+  color:#fff0a0;
+  font-size:1.6rem;
+  text-shadow:0 0 10px #e9b93b;
+  animation:habitat-spark-float 1.6s ease-out infinite;
+}
+.habitat-play-spark-1 { right:16%; bottom:28%; }
+.habitat-play-spark-2 { right:5%; bottom:39%; animation-delay:.55s; }
+.habitat-feather {
+  right: 18%;
+  top: 14%;
+  width: clamp(48px, 8%, 78px);
+  animation: care-feather-float 1.3s ease-in-out infinite;
+}
+.habitat-brush {
+  position:absolute;
+  left:12%;
+  top:34%;
+  width:clamp(48px,8%,76px);
+  height:26px;
+  border:2px solid #755d76;
+  border-radius:50% 18% 18% 50%;
+  background:linear-gradient(90deg,#e8d1ad 0 68%,#b97b80 68%);
+  box-shadow:0 5px 7px #57435f33;
+  transform-origin:80% 50%;
+  animation:habitat-brush-sweep 1.2s ease-in-out 3;
+}
+.habitat-brush span { position:absolute; right:-14px; top:3px; width:17px; height:15px; border-radius:4px; background:#684e68; }
+.habitat-brush i { position:absolute; left:8px; top:4px; width:2px; height:16px; background:#967d63; transform:rotate(10deg); }
+.habitat-brush i:nth-child(3) { left:19px; }.habitat-brush i:nth-child(4) { left:30px; }
+.habitat-loose-feather {
+  position:absolute;
+  left:20%;
+  top:47%;
+  width:16px;
+  height:32px;
+  border-radius:80% 15% 75% 20%;
+  background:#d8e6c1;
+  border:1px solid #7c9274;
+  animation:habitat-feather-drop 1.7s ease-out infinite;
+}
+.habitat-loose-feather-2 { left:29%; animation-delay:.55s; background:#d7e4f2; }
+.habitat-adventure-sign {
+  right: 7%;
+  top: 17%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 9px 13px;
+  border: 2px solid #9a7650;
+  border-radius: 7px;
+  background: #d7ae73;
+  color: #4c3824;
+  font-weight: 800;
+  box-shadow: inset 0 0 0 3px #f1d59f, 0 8px 16px #4f382a2c;
+  transform: rotate(2deg);
+  animation: care-adventure-pulse 1.2s ease-in-out infinite;
+}
+.habitat-adventure-sign span { font-size: clamp(.58rem, 1.5vw, .8rem); white-space: nowrap; }
+.habitat-adventure-sign i { color: #fff3ae; font-size: 1rem; font-style: normal; text-shadow: 0 0 8px #ffe276; }
+.habitat-adventure-path {
+  position:absolute;
+  inset:18% 8% 8% 17%;
+  border:3px dashed #fff5b6b8;
+  border-left-color:transparent;
+  border-radius:50%;
+  rotate:-9deg;
+  animation:habitat-path-glow 1.1s ease-in-out infinite alternate;
+}
+.habitat-adventure-path i { position:absolute; width:8px; height:8px; border-radius:50%; background:#fff1a1; box-shadow:0 0 12px #f4d16c; }
+.habitat-adventure-path i:nth-child(1){left:8%;top:70%}.habitat-adventure-path i:nth-child(2){left:30%;top:17%}.habitat-adventure-path i:nth-child(3){right:31%;top:4%}.habitat-adventure-path i:nth-child(4){right:2%;top:38%}
+.habitat-flight-star { position:absolute; color:#fff2a0; text-shadow:0 0 12px #f5ca46; animation:habitat-flight-spark 1.5s ease-out infinite; }
+.habitat-flight-star-1{left:31%;top:39%}.habitat-flight-star-2{left:47%;top:18%;animation-delay:.35s}.habitat-flight-star-3{left:59%;top:45%;animation-delay:.7s}
+.habitat-sleep-sign {
+  right: 5%;
+  top: 12%;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 128px;
+  padding: 12px 16px;
+  border: 1px solid #aeb8d0;
+  border-radius: 22px;
+  background: #18233fd9;
+  color: #f4f1ff;
+  box-shadow: 0 10px 24px #11182f4d;
+}
+.habitat-sleep-sign strong { color: #ffe2a2; font-size: 1.15rem; letter-spacing: .15em; }
+.habitat-sleep-sign small { color: #d9def0; font-size: .67rem; }
+.habitat-moon {
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  box-shadow: -8px 3px 0 0 #ffe4a0;
+  transform: translateX(4px);
+}
+.bird-activity-sleep .habitat-scene::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border-radius: 30px;
+  background: linear-gradient(#10162e64, #19233f45);
+  pointer-events: none;
+}
+.bird-activity-sleep .habitat-house { filter: brightness(.64) saturate(.72) drop-shadow(0 14px 15px #0c152d55); animation-duration: 9s; }
+.bird-activity-sleep .bird-rendered { transform-origin: 50% 90%; animation: bird-sleep-breathe 3.2s ease-in-out infinite !important; }
+.bird-activity-feed .bird-rendered { animation: bird-peck .55s ease-in-out 3 !important; }
+.bird-activity-play .bird-rendered { animation: bird-play-hop .7s ease-in-out 3 !important; }
+.bird-activity-groom .bird-rendered { filter: saturate(1.08) drop-shadow(0 0 8px #fff0a7); animation: bird-groom .9s ease-in-out 2 !important; }
+.bird-activity-adventure .habitat-house { animation: habitat-drift 1.05s ease-in-out infinite; }
+.bird-activity-adventure .bird-rendered { animation: bird-adventure-ready .7s ease-in-out 2 !important; }
+.bird-activity-adventure .bird-motion { animation: bird-adventure-loop 2.8s ease-in-out infinite; }
+.bird-activity-play .bird-touch { animation: bird-play-follow 1.2s ease-in-out 2; }
+.bird-activity-groom .habitat-scene { filter: saturate(1.06); }
+.habitat-sleep-layer .bird-sleep-blanket {
+  position: absolute;
+  z-index: 5;
+  left: 5%;
+  bottom: 7%;
+  width: 39%;
+  height: 23%;
+  border: 2px solid #8f84aa;
+  border-radius: 50% 50% 38% 38%;
+  background:
+    radial-gradient(circle at 30% 28%, #fff5b8 0 4px, transparent 5px),
+    radial-gradient(circle at 67% 45%, #d8c8ee 0 5px, transparent 6px),
+    linear-gradient(145deg,#bfc8ee,#8da4d4);
+  box-shadow: 0 8px 16px #0f183b44, inset 0 7px #ffffff70;
+  transform-origin: 50% 100%;
+  animation: blanket-breathe 3.2s ease-in-out infinite;
+}
+.habitat-sleep-layer .bird-sleep-blanket span {
+  position:absolute;
+  left:13%;
+  top:38%;
+  width:74%;
+  height:3px;
+  border-radius:50%;
+  background:#ffffff7d;
+}
+.habitat-sleep-layer .bird-sleep-blanket i {
+  position:absolute;
+  right:12%;
+  bottom:18%;
+  width:16px;
+  height:16px;
+  border:2px solid #fff5ba;
+  rotate:45deg;
+}
+.habitat-dream-bubble {
+  position:absolute;
+  left:25%;
+  top:28%;
+  color:#ffe69b;
+  font-size:1.25rem;
+  text-shadow:0 0 10px #ffe27a;
+  animation:habitat-dream-rise 2.4s ease-in-out infinite;
+}
+.habitat-dream-bubble-2 { left:35%; top:20%; animation-delay:.8s; font-size:.85rem; }
+.buddy-care {
+  margin: 12px 0 2px;
+  padding: 16px;
+  border: 1px solid #d9cfe8;
+  border-radius: 22px;
+  background: linear-gradient(145deg, #fffdf8, #f3effa);
+  color: #443552;
+}
+.buddy-care-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.buddy-care-heading h3 { margin: 3px 0 0; font-size: 1.05rem; }
+.buddy-care-count { flex: none; padding: 5px 10px; border-radius: 16px; background: #e7def3; color: #5e477c; font-size: .75rem; font-weight: 800; }
+.buddy-care-actions { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 9px; margin: 13px 0 10px; }
+.buddy-care-actions button {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px minmax(0,1fr);
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 68px;
+  padding: 9px 8px;
+  border: 1px solid #dcd2e7;
+  border-radius: 15px;
+  background: #ffffffe8;
+  color: #4c3c5c;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #e5dcec;
+}
+.buddy-care-actions button:hover:not(:disabled) { border-color: #a78bc2; background: #f5effa; }
+.buddy-care-actions button:active:not(:disabled) { translate: 0 2px; box-shadow: none; }
+.buddy-care-actions button[aria-pressed="true"] { border-color: #8c6dac; background: #eee5f7; box-shadow: inset 0 0 0 1px #8c6dac; }
+.buddy-care-actions button:disabled { opacity: .58; cursor: default; }
+.buddy-care-actions svg { width: 30px; height: 30px; fill: none; stroke: #72578e; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.buddy-care-actions span { min-width: 0; }
+.buddy-care-actions strong, .buddy-care-actions small { display: block; }
+.buddy-care-actions strong { font-size: .84rem; }
+.buddy-care-actions small { margin-top: 2px; color: #776881; font-size: .64rem; line-height: 1.35; }
+.buddy-care-actions i { position: absolute; right: 5px; top: 4px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: #dcebd9; color: #3f6a4c; font-size: .7rem; font-style: normal; font-weight: 900; }
+.buddy-care-message { min-height: 1.5em; margin: 0; color: #62546e; font-size: .78rem; line-height: 1.55; }
+.habitat-actions button:disabled { opacity: .55; cursor: default; }
+.buddy-play-guide { padding: 20px; border: 1px solid #ddd4e9; border-radius: 24px; background: #fffdf9; color: #443652; }
+.buddy-play-guide h2 { margin: 4px 0 15px; font-size: 1.25rem; }
+.buddy-play-guide-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.buddy-play-guide-grid article { position: relative; min-width: 0; padding: 13px; border-radius: 16px; background: #f4f0f8; }
+.buddy-play-guide-grid article:nth-child(2) { background: #f2f6eb; }
+.buddy-play-guide-grid article:nth-child(3) { background: #fff5e7; }
+.buddy-play-guide-grid span { color: #a290b5; font-size: .64rem; font-weight: 800; letter-spacing: .12em; }
+.buddy-play-guide-grid strong { display: block; margin: 4px 0; color: #51415f; }
+.buddy-play-guide-grid p { margin: 0; color: #6d6175; font-size: .76rem; line-height: 1.6; }
+@keyframes care-food-in { from { opacity: 0; transform: translateY(20px) scale(.7); } to { opacity: 1; transform: none; } }
+@keyframes care-ball-bounce { 0%,100% { transform: translate(0,0) rotate(0); } 50% { transform: translate(-18px,-25px) rotate(35deg); } }
+@keyframes care-feather-float { 0%,100% { transform: translateY(0) rotate(12deg); } 50% { transform: translateY(-10px) rotate(-8deg); } }
+@keyframes care-adventure-pulse { 0%,100% { transform: rotate(2deg) scale(1); } 50% { transform: rotate(-2deg) scale(1.04); } }
+@keyframes bird-sleep-breathe { 0%,100% { transform: translateY(2px) scale(.98); } 50% { transform: translateY(-2px) scale(1); } }
+@keyframes bird-peck { 0%,100% { transform: translateY(0) rotate(0); } 55% { transform: translate(5px,9px) rotate(4deg); } }
+@keyframes bird-play-hop { 0%,100% { transform: translateY(0); } 45% { transform: translateY(-10px) rotate(-2deg); } 65% { transform: translate(6px,1px) rotate(2deg); } }
+@keyframes bird-groom { 0%,100% { transform: rotate(0); } 40% { transform: rotate(-3deg) translateX(-3px); } 70% { transform: rotate(3deg) translateX(3px); } }
+@keyframes bird-adventure-ready { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-7px) scale(1.03); } }
+@keyframes habitat-firefly { 0%,100% { opacity:.28; transform:translateY(0) scale(.7); } 50% { opacity:1; transform:translateY(-11px) scale(1.2); } }
+@keyframes habitat-seed-toss { 0% { opacity:1; transform:translate(0,0) rotate(0); } 65% { opacity:1; } 100% { opacity:0; transform:translate(-58px,-74px) rotate(220deg) scale(.55); } }
+@keyframes habitat-affection-rise { 0% { opacity:0; transform:translateY(8px) scale(.6); } 35% { opacity:1; } 100% { opacity:0; transform:translate(-13px,-34px) scale(1.2); } }
+@keyframes habitat-ball-ring { 0%,100% { opacity:0; transform:scale(.5); } 45% { opacity:.8; transform:scale(1.25); } }
+@keyframes habitat-spark-float { 0% { opacity:0; transform:translateY(8px) scale(.5); } 35% { opacity:1; } 100% { opacity:0; transform:translateY(-28px) scale(1.15) rotate(24deg); } }
+@keyframes habitat-brush-sweep { 0%,100% { transform:rotate(20deg) translateX(0); } 50% { transform:rotate(-12deg) translateX(24px); } }
+@keyframes habitat-feather-drop { 0% { opacity:0; transform:translateY(-8px) rotate(-8deg); } 30% { opacity:1; } 100% { opacity:0; transform:translate(24px,58px) rotate(110deg); } }
+@keyframes habitat-path-glow { from { opacity:.45; filter:drop-shadow(0 0 2px #ffe998); } to { opacity:1; filter:drop-shadow(0 0 8px #ffe998); } }
+@keyframes habitat-flight-spark { 0% { opacity:0; transform:translateY(10px) scale(.5); } 40% { opacity:1; } 100% { opacity:0; transform:translate(18px,-24px) scale(1.2); } }
+@keyframes bird-adventure-loop { 0%,100% { transform:translate(0,0) rotate(0); } 25% { transform:translate(18px,-10px) rotate(2deg); } 50% { transform:translate(35px,-3px) rotate(-2deg); } 75% { transform:translate(18px,6px) rotate(1deg); } }
+@keyframes bird-play-follow { 0%,100% { transform:translateX(0); } 45% { transform:translateX(12px); } 70% { transform:translateX(7px); } }
+@keyframes blanket-breathe { 0%,100% { transform:translateY(2px) scaleX(1); } 50% { transform:translateY(-2px) scaleX(1.025); } }
+@keyframes habitat-dream-rise { 0%,100% { opacity:.35; transform:translateY(8px) scale(.8); } 50% { opacity:1; transform:translateY(-12px) scale(1.12); } }
+@media(max-width:700px) {
+  .child-today-hero { padding: 18px; align-items: flex-start; }
+  .child-today-hero h1 { font-size: 1.45rem; }
+  .child-today-hero p { font-size: .82rem; }
+  .buddy-play-hero { grid-template-columns: 1fr; gap: 14px; padding: 20px 17px; }
+  .buddy-play-hero h1 { font-size: 1.8rem; }
+  .buddy-play-hero p { font-size: .86rem; }
+  .buddy-bond-card { padding: 12px 14px; }
+  .buddy-xp-pill { padding: 7px 9px; }
+  .buddy-xp-pill small, .buddy-xp-pill > span { display: none; }
+  .buddy-care { padding: 13px 10px; }
+  .buddy-care-actions { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .buddy-play-guide { padding: 16px; }
+  .buddy-play-guide-grid { grid-template-columns: 1fr; }
+  .habitat-sleep-sign { right: 2%; top: 10%; min-width: 108px; padding: 9px 10px; }
+  .habitat-adventure-sign { right: 3%; }
+  .bird-habitat .habitat-scene { height: 360px; border-radius: 24px; }
+  .habitat-house { inset:-5% -14% -2%; width:128%; height:108%; scale:1.02; }
+  .bird-habitat .bird-touch { width:53%; max-width:250px; left:-1%; bottom:3%; }
+  .habitat-sleep-layer .bird-sleep-blanket { left:0; width:52%; height:22%; }
+  .habitat-food { left:27%; width:86px; }
+  .habitat-seed { left:30%; }
+  .habitat-brush { left:7%; top:38%; }
+  .habitat-adventure-sign { right:2%; top:8%; }
+  .habitat-sky i:nth-child(2), .habitat-sky i:nth-child(4) { display:none; }
+  .habitat-foreground i:nth-child(2), .habitat-foreground i:nth-child(3) { display:none; }
+}
+@media(max-width:390px) {
+  .child-today-hero { display: grid; }
+  .child-today-hero .star-wallet { justify-self: start; }
+  .buddy-home-heading { gap: 6px; }
+  .buddy-care-actions button { grid-template-columns: 27px minmax(0,1fr); padding: 8px 6px; }
+  .buddy-care-actions svg { width: 26px; height: 26px; }
+  .buddy-care-actions strong { font-size: .78rem; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .habitat-food,.habitat-ball,.habitat-feather,.habitat-adventure-sign,
+  .bird-activity-sleep .bird-rendered,.bird-activity-feed .bird-rendered,
+  .bird-activity-play .bird-rendered,.bird-activity-groom .bird-rendered,
+  .bird-activity-adventure .bird-rendered,.habitat-seed,.habitat-affection,.habitat-bounce-ring,
+  .habitat-play-spark,.habitat-brush,.habitat-loose-feather,.habitat-adventure-path,
+  .habitat-flight-star,.bird-activity-adventure .bird-motion,.bird-activity-play .bird-touch,
+  .habitat-sleep-layer .bird-sleep-blanket,.habitat-dream-bubble { animation: none !important; }
+}
+@media(forced-colors:active) {
+  .child-today-hero,.buddy-play-hero,.buddy-bond-card,.buddy-care,.buddy-care-actions button,
+  .buddy-play-guide,.buddy-play-guide-grid article,.habitat-sleep-sign,.habitat-adventure-sign {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+  .buddy-play-hero :is(h1,p,span,strong,small), .buddy-care :is(h3,p,span,strong,small),
+  .buddy-play-guide :is(h2,p,span,strong), .habitat-sleep-sign * {
+    color: CanvasText;
+  }
+  .buddy-care-actions svg { stroke: CanvasText; }
+}
+
+/* 成长星空：轻量分层透视，保持所有操作为原生按钮。 */
+.dream-sky { position:relative; isolation:isolate; perspective:1000px; background:radial-gradient(ellipse at 20% 0%,#39316c 0, #151e40 52%,#0c142c 100%); color:#f5f3ff; padding:clamp(16px,3vw,32px); border-radius:28px; box-shadow:0 18px 50px #141c4033,inset 0 1px 0 #ffffff38; }
+.dream-sky .zodiac-intro,.dream-sky .journey-kicker,.dream-sky .zodiac-totals span,.dream-sky small { color:#dfdef4; }
+.dream-sky .zodiac-showcase { background:linear-gradient(125deg,#3b3966,#1b2849); border:1px solid #a8b6ef70; transform:rotateX(2deg); box-shadow:0 18px 30px #050b2566,inset 0 1px 0 #ffffff35; }
+.dream-sky .zodiac-feature-copy,.dream-sky .zodiac-feature-copy p,.dream-sky h3,.dream-sky .zodiac-edition { color:#f5f3ff; }
+.dream-sky .zodiac-feature-art { transform:translateZ(24px); filter:drop-shadow(0 14px 18px #0008); }
+.dream-sky .zodiac-tile { color:#efedff; background:linear-gradient(145deg,#303960,#19233f); border:1px solid #8495c2; box-shadow:0 7px 0 #080f25,0 14px 22px #03081866; transition:transform .2s,box-shadow .2s; }
+.dream-sky .zodiac-tile:hover { transform:translateY(-4px) rotateX(5deg); }
+.dream-sky .zodiac-tile.ready { border:2px solid #ffda85; }
+.dream-sky .zodiac-tile.collected { background:linear-gradient(135deg,#65512d,#283352); border:2px solid #ffe0a0; }
+.dream-sky .zodiac-tile[aria-pressed="true"] { outline:3px solid #c5d9ff; outline-offset:4px; }
+.dream-sky .zodiac-tile small { white-space:normal; font-size:12px; line-height:1.5; }
+.dream-sky .zodiac-album-title,.dream-sky .zodiac-rules { color:#f5f3ff; }
+.dream-sky .zodiac-rules { background:#1c2846; border:1px solid #8495c2; }
+.dream-sky button:focus-visible { outline:3px solid #fff0b4; outline-offset:5px; }
+.dream-sky progress { max-width:100%; accent-color:#ffdb8d; }
+@media(prefers-reduced-motion:reduce) { .dream-sky .zodiac-tile { transition:none;transform:none; } }
+
+/* 竖版星座收藏卡：插画作为装饰，状态与操作仍由真实文本和按钮提供。 */
+.cosmic-album { background:radial-gradient(ellipse at 90% 0%,#34497988,transparent 45%),radial-gradient(ellipse at 0% 65%,#48336977,transparent 50%),#080f25; }
+.cosmic-card-art { position:absolute; inset:0; display:block; background-size:cover; background-position:center top; background-repeat:no-repeat; pointer-events:none; }
+.cosmic-album .zodiac-showcase { background:linear-gradient(130deg,#1d2949aa,#101a32aa); padding:24px; grid-template-columns:minmax(200px,310px) minmax(0,1fr); gap:32px; align-items:center; transform:none; }
+.cosmic-album .zodiac-feature-art { max-width:310px; width:100%; margin:auto; }
+.cosmic-collector { width:min(310px,100%); aspect-ratio:2/3; padding:0; background:#10172d; border:1px solid #f4dfab; border-radius:20px; box-shadow:0 20px 45px #0009,0 0 24px #e7c57c22; transform:perspective(900px) rotateY(-5deg) rotateX(3deg); }
+.cosmic-card-vignette { position:absolute; inset:0; background:linear-gradient(#02071966,transparent 30%,transparent 48%,#070e2ddd 78%,#060d22 100%); }
+.cosmic-card-frame { position:absolute; inset:7px; border:1px solid #efddaa99; border-radius:14px; pointer-events:none; }
+.cosmic-card-heading { position:absolute; top:17px; left:18px; right:18px; display:flex; justify-content:space-between; color:#fff1cf; font-size:9px; letter-spacing:.1em; text-shadow:0 1px 4px #000; }
+.cosmic-card-constellation { position:absolute; top:26px; left:18%; right:18%; height:32%; opacity:.8; pointer-events:none; }
+.cosmic-card-constellation .zodiac-art { width:100%; height:100%; }
+.cosmic-card-constellation .zodiac-motif,.cosmic-card-constellation .zodiac-orbit { display:none; }
+.cosmic-card-caption { position:absolute; bottom:22px; left:17px; right:17px; text-align:center; }
+.cosmic-card-tag { display:inline-block; border:1px solid #ebd59b88; border-radius:20px; background:#0e1939d9; color:#fff1ce; font-size:10px; padding:4px 10px; margin-bottom:9px; }
+.cosmic-collector .zodiac-card-english { color:#eed7a1; font-size:10px; letter-spacing:.22em; margin:2px 0; }
+.cosmic-collector h3 { font-size:30px; color:#fff0ca; text-shadow:0 2px 12px #eac16e77; margin:4px 0; }
+.cosmic-collector .zodiac-card-title { font-size:13px; color:#ffe3a2; margin:4px 0; }
+.cosmic-collector .zodiac-card-motto { font-size:11px; color:#e2e8fb; border:0; padding:0; margin:9px 0 0; }
+.cosmic-collector.is-preview .cosmic-card-art { filter:saturate(.75) brightness(.8); }
+.cosmic-album .zodiac-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; padding:5px; }
+.cosmic-album .zodiac-tile { position:relative; isolation:isolate; display:block; aspect-ratio:2/3; min-height:0; overflow:hidden; padding:0; border-radius:16px; border:1px solid #8f9cbd; background:#111c35; text-align:center; box-shadow:0 8px 18px #0007; }
+.cosmic-album .zodiac-tile::after { content:''; position:absolute; inset:0; z-index:0; background:linear-gradient(#08102b22,transparent 28%,#060d2333 45%,#060d23ed 76%,#060d23 100%); pointer-events:none; }
+.cosmic-album .zodiac-tile:not(.collected):not(.ready) .cosmic-card-art { filter:saturate(.55) brightness(.65); }
+.cosmic-album .zodiac-tile.collected { border-color:#f8da90; }
+.cosmic-album .zodiac-tile.ready { border:1px solid #ffe3a2; box-shadow:0 0 20px #ebc87733; }
+.cosmic-tile-number { position:absolute; top:10px; left:12px; z-index:1; font-size:10px; color:#ffedc4!important; }
+.cosmic-tile-copy { position:absolute; left:8px; right:8px; bottom:14px; z-index:1; display:flex; flex-direction:column; align-items:center; gap:5px; }
+.cosmic-album .cosmic-tile-copy strong { color:#fff0ce; font-size:clamp(17px,2vw,25px); letter-spacing:.14em; text-shadow:0 1px 6px #000; }
+.cosmic-tile-english { color:#dfc68c; font-size:9px; letter-spacing:.1em; }
+.cosmic-tile-state { color:#fff0c9; border:1px solid #c3b58588; background:#111b35e6; border-radius:20px; padding:3px 9px; font-size:11px; }
+.cosmic-album .cosmic-tile-copy small { font-size:10px; line-height:1.4; color:#e4e9fa; }
+.cosmic-album .zodiac-dialog { width:min(410px,calc(100vw - 24px)); }
+@media(max-width:700px) {
+ .cosmic-album .zodiac-showcase { grid-template-columns:1fr; padding:20px 14px; gap:22px; }
+ .cosmic-album .zodiac-feature-art { max-width:270px; }
+ .cosmic-album .zodiac-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+ .cosmic-album .cosmic-tile-copy strong { font-size:21px; }
+ .cosmic-album .cosmic-tile-copy small { font-size:10px; }
+}
+@media(prefers-reduced-motion:reduce) { .cosmic-collector { transform:none; } }
+@media(forced-colors:active) { .cosmic-card-art,.cosmic-card-vignette,.cosmic-card-frame,.cosmic-album .zodiac-tile::after { display:none; } .cosmic-album .zodiac-tile,.cosmic-collector { background:Canvas; color:CanvasText; border-color:CanvasText; } .cosmic-card-caption :is(h3,p,span),.cosmic-tile-copy :is(strong,span,small) { color:CanvasText!important; } }
+
+.cosmic-card-art { bottom:18%; }
+
+/* 荣誉唤醒隐藏星轨，星点保持原生键盘按钮。 */
+.honor-star-chart { position:relative; height:310px; margin:18px 0 0; border-radius:24px; overflow:hidden; background:radial-gradient(ellipse at 30% 65%,#4c50b866,transparent 45%),radial-gradient(ellipse at 65% 20%,#07578c55,transparent 40%),radial-gradient(circle at 20% 20%,#b8daff 0 1px,transparent 2px),radial-gradient(circle at 70% 60%,#b8daff 0 1px,transparent 2px),#070f27; background-size:auto,auto,43px 61px,73px 83px,auto; box-shadow:inset 0 0 45px #0009; }
+.honor-star-chart svg { position:absolute; inset:0; width:100%; height:100%; }
+.honor-star-chart line { stroke:#8198c5; stroke-width:.35; opacity:.55; }
+.honor-star-chart line.lit { stroke:#ffe18d; opacity:1; filter:drop-shadow(0 0 2px #ffcf6b); }
+.honor-star { position:absolute; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; border:0; background:transparent; color:#bbd6ff; padding:4px; min-width:48px; min-height:48px; cursor:pointer; }
+.honor-star>span { font-size:32px; line-height:1.1; filter:drop-shadow(0 0 6px #8db6ff77); }
+.honor-star small { color:#e9efff!important; font-size:10px; white-space:nowrap; padding-top:4px; text-shadow:0 1px 4px #000; }
+.honor-star.lit { color:#ffdb76; }
+.honor-star.lit>span { filter:drop-shadow(0 0 9px #ffd166); }
+.honor-star.revealed>span { color:#d1f2ff; animation:honor-star-pulse 2s ease-in-out infinite alternate; }
+.honor-star.hidden-star>span { font-size:25px; color:#8094bf; }
+.honor-star[aria-pressed="true"] { outline:1px dashed #e6dbb4; outline-offset:2px; border-radius:12px; }
+.honor-star-detail { padding:16px; min-height:145px; margin-top:12px; background:#0b1532; border:1px solid #7b8fb566; border-radius:16px; }
+.honor-star-detail p { margin:.4rem 0; }
+.honor-sky .zodiac-showcase { grid-template-columns:minmax(180px,270px) minmax(0,1fr); align-items:start; gap:24px; }
+.honor-sky .zodiac-feature-art>.zodiac-reveal { display:block; margin:18px auto 0; font-size:13px; }
+.honor-ledger { padding:16px; margin:20px 0; border:1px solid #9eadd080; border-radius:16px; background:#12203a; color:#edf1ff; }
+.honor-ledger summary { cursor:pointer; font-weight:600; min-height:30px; }
+.honor-ledger p { font-size:13px; line-height:1.7; }
+.honor-filters { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+.honor-filters button { border:1px solid #8e9fc5; color:#edf1ff; background:#1c2d4f; border-radius:20px; padding:8px 12px; cursor:pointer; }
+.honor-filters button[aria-pressed="true"] { background:#f6df9e; color:#302917; }
+.honor-badges { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); list-style:none; padding:0; gap:10px; }
+.honor-badges li { display:flex; flex-direction:column; gap:7px; padding:14px; background:#1a2a49; border:1px solid #9aaac666; border-radius:12px; font-size:12px; }
+.honor-badges li>span:first-child { color:#ffdf8b; font-size:28px; }
+.honor-badges small { color:#e0e7fb; }
+.honor-notice { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:14px 18px; margin-bottom:16px; color:#362f4e; background:#f3edff; border:1px solid #c3b1e1; border-radius:16px; font-size:14px; }
+.honor-notice a { color:#443078; text-decoration:underline; font-weight:600; }
+.honor-notice button { border:1px solid #9b88bc; border-radius:20px; padding:7px 12px; background:#fff; color:#443078; cursor:pointer; }
+@keyframes honor-star-pulse { to { filter:drop-shadow(0 0 12px #b3e9ff); transform:scale(1.12); } }
+@media(max-width:700px) { .honor-sky .zodiac-showcase { grid-template-columns:1fr; } .honor-star-chart { height:285px; } .honor-star-chart small { font-size:10px; } }
+@media(prefers-reduced-motion:reduce) { .honor-star.revealed>span { animation:none; } }
+@media(forced-colors:active) { .honor-star-chart,.honor-star-detail,.honor-ledger,.honor-notice { background:Canvas; color:CanvasText; border:1px solid CanvasText; } .honor-star-chart line,.honor-star-chart line.lit { stroke:CanvasText; filter:none; } .honor-star,.honor-star.lit,.honor-star.revealed>span { color:ButtonText; filter:none; } }
+
+/* 荣誉馆：金属浮雕圆章、绶带与一次性的惊喜光芒。 */
+.medal-gallery { background:linear-gradient(145deg,#23184e,#182346); border:1px solid #9d83d180; border-radius:22px; padding:20px; }
+.honor-gallery-hero { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; margin:16px 0; padding:20px; border-radius:20px; background:radial-gradient(ellipse at 20% 0%,#a88eec44,transparent 65%),#30215a; border:1px solid #b8a0df66; }
+.honor-gallery-hero h3 { color:#ffe39a!important; margin:6px 0; font-size:23px; }
+.honor-gallery-kicker { color:#e0d2ff; font-size:12px; }
+.honor-gallery-hero p { color:#e6ddff; margin:5px 0; }
+.honor-collection-count { display:flex; align-items:baseline; gap:6px; color:#ffdf88; }
+.honor-collection-count strong { font-size:34px; }
+.honor-gallery-hero progress { grid-column:1/-1; width:100%; height:9px; accent-color:#c3a1ff; }
+.medal-gallery .honor-badges { grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.medal-gallery .honor-badges li { display:block; padding:0; overflow:visible; background:none; border:0; }
+.medal-gallery .honor-badges li>button { display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; height:100%; min-height:210px; border:1px solid #b6a3d980; border-radius:20px; padding:18px 10px; background:linear-gradient(150deg,#4a326b,#27204c); color:#f4edff; cursor:pointer; box-shadow:inset 0 1px 0 #fff2,0 8px 16px #0003; transition:transform .2s,box-shadow .2s; }
+.medal-gallery .honor-badges li.earned>button { border-color:#e3c174; background:radial-gradient(ellipse at 50% 25%,#c5924544,transparent 70%),linear-gradient(145deg,#503756,#29234b); }
+.medal-gallery .honor-badges li>button:hover { transform:translateY(-3px); box-shadow:0 10px 28px #0005; }
+.medal-gallery .honor-badges strong { color:#ffe3a1; font-size:15px; text-align:center; }
+.medal-gallery .honor-badges button>span:not(.honor-medal) { color:#e6ddfb; font-size:11px; }
+.medal-gallery .honor-badges progress { width:90%; accent-color:#bc97ff; }
+.honor-medal { position:relative; display:inline-block; width:112px; height:128px; flex-shrink:0; }
+.medal-disc { position:absolute; inset:5px 4px 21px; border-radius:50%; background:conic-gradient(from 30deg,#fff4be,#bd761b,#ffdd73,#fff7c9,#b47019,#fff0aa); box-shadow:0 0 0 2px #9c671e,0 0 0 4px #f7da8c55,0 8px 16px #08032088,0 0 25px #f9c94f44; padding:8px; }
+.medal-portrait { display:block; width:100%; height:100%; border-radius:50%; background-image:var(--medal-art); background-size:cover; background-position:center; border:2px solid #fff0a2; box-shadow:inset 0 0 12px #dd9e42; }
+.medal-laurel { position:absolute; bottom:-3px; left:-1px; color:#fff2b0; font-size:42px; line-height:1; transform:rotate(-25deg); text-shadow:0 2px 3px #7c4b10; }
+.medal-tier { position:absolute; bottom:-2px; left:50%; transform:translateX(-50%); padding:2px 10px; min-width:34px; background:linear-gradient(#ffe9a8,#d39a3d); border:1px solid #fff1b6; color:#4a2c0c; font-weight:800; font-size:11px; border-radius:9px; box-shadow:0 2px 5px #0006; }
+.medal-ribbon { position:absolute; top:70px; width:29px; height:51px; background:linear-gradient(90deg,#6441b2,#c393f5,#663bb0); clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%); }
+.medal-ribbon.left { left:20px; transform:rotate(19deg); }
+.medal-ribbon.right { right:20px; transform:rotate(-19deg); }
+.medal-spark { position:absolute; color:#ffe5a0; text-shadow:0 0 10px #ffdc7a; }
+.medal-spark.one { top:0; left:-4px; font-size:20px; }
+.medal-spark.two { top:65px; right:-6px; font-size:26px; }
+.honor-medal.mystery { filter:grayscale(.8) brightness(.68); }
+.mystery .medal-portrait { filter:blur(3px); opacity:.35; }
+.medal-question { position:absolute; inset:22px; display:grid; place-items:center; color:#f1e4ff; font-size:32px; }
+.honor-detail-dialog { width:min(440px,calc(100vw - 28px)); max-height:calc(100dvh - 32px); overflow:auto; padding:26px 22px; border:1px solid #ddc186; border-radius:26px; text-align:center; color:#eee6ff; background:radial-gradient(circle at 50% 15%,#69448088,transparent 48%),#20173f; box-shadow:0 25px 80px #0008; }
+.honor-detail-dialog::backdrop { background:#07091acc; backdrop-filter:blur(7px); }
+.honor-detail-dialog h2 { color:#ffe4a0; font-size:23px; margin:0 0 22px; }
+.honor-detail-dialog h3 { color:#ffebb9; font-size:16px; margin:22px 0 10px; }
+.honor-detail-dialog p { font-size:14px; line-height:1.75; color:#eee4ff; }
+.honor-detail-dialog .honor-medal { transform:scale(1.25); margin:18px 0; }
+.honor-detail-tag { color:#ffe3a1!important; }
+.honor-detail-note { font-size:12px!important; color:#d8cfeb!important; }
+.honor-star-links { display:grid; gap:10px; margin:14px 0 22px; }
+.honor-star-links a { display:flex; flex-direction:column; gap:6px; padding:14px; border:1px solid #d7bc77; border-radius:14px; background:#44325f; color:#fff0c8; text-decoration:none; font-weight:600; }
+.honor-star-links a span { font-size:12px; color:#e4d8fc; }
+.honor-notice { position:relative; overflow:hidden; }
+.notice-medal { width:58px; height:64px; flex-shrink:0; }
+.notice-medal .honor-medal { transform:scale(.5); transform-origin:top left; }
+.honor-confetti { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.honor-confetti i { position:absolute; left:calc(7% + var(--i)*7.5%); top:20%; width:7px; height:12px; border-radius:2px; background:#b78bfa; animation:honor-confetti 2.6s ease-out both; animation-delay:calc(var(--i)*.035s); }
+.honor-confetti i:nth-child(even) { background:#e4b849; }
+.honor-confetti i:nth-child(3n) { background:#7dbdd3; border-radius:50%; }
+.honor-surprise .notice-medal { animation:honor-medal-reveal 1.1s cubic-bezier(.2,.8,.3,1) both; }
+@keyframes honor-medal-reveal { 0% { transform:scale(.3) rotate(-25deg); opacity:0; } 65% { transform:scale(1.18) rotate(5deg); opacity:1; } 100% { transform:scale(1) rotate(0); } }
+@keyframes honor-confetti { 0% { transform:translateY(-28px) rotate(0); opacity:0; } 15% { opacity:1; } 100% { transform:translateY(105px) rotate(230deg); opacity:0; } }
+@media(max-width:520px) { .medal-gallery { padding:14px; } .medal-gallery .honor-badges { gap:10px; grid-template-columns:repeat(2,minmax(0,1fr)); } .medal-gallery .honor-badges li>button { min-height:198px; padding:14px 7px; } .medal-gallery .honor-badges strong { font-size:13px; } .honor-gallery-hero { padding:15px; } .honor-gallery-hero h3 { font-size:19px; } }
+@media(prefers-reduced-motion:reduce) { .honor-confetti { display:none; } .honor-surprise .notice-medal { animation:none; } .medal-gallery .honor-badges li>button { transition:none; } .medal-gallery .honor-badges li>button:hover { transform:none; } }
+@media(forced-colors:active) { .honor-detail-dialog,.honor-gallery-hero,.medal-gallery,.medal-gallery .honor-badges li>button { background:Canvas; color:CanvasText; border:1px solid CanvasText; } .medal-disc { background:Canvas; border:2px solid CanvasText; box-shadow:none; } .medal-portrait,.medal-ribbon,.medal-spark { display:none; } .medal-tier { background:Canvas; color:CanvasText; } }
+
+/* 真正的3D森林岛：模型与动作在同一空间，成长后才出现建筑。 */
+.park-world { overflow:hidden; border-radius:28px; border:1px solid #d0e4d2; background:linear-gradient(155deg,#edf7e8,#dbebe5); box-shadow:0 18px 40px #4c755021; }
+.park-world-title { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:20px 24px 0; color:#3f6656; }
+.park-world-title>div { display:flex; flex-direction:column; gap:5px; }
+.park-world-title strong { font-size:22px; color:#2d5144; }
+.park-world-title span { font-size:12px; }
+.park-viewport { position:relative; height:480px; background:radial-gradient(ellipse at 50% 45%,#fcfae9 0,#daeee5 55%,#c4e1dc 100%); touch-action:pan-y; }
+.park-viewport canvas { display:block; width:100%; height:100%; touch-action:pan-y; cursor:grab; }
+.park-viewport canvas:active { cursor:grabbing; }
+.park-location-pill { position:absolute; top:18px; left:20px; padding:7px 13px; border:1px solid #a9c9b3; background:#fafff0df; color:#3c6653; border-radius:20px; font-size:12px; pointer-events:none; }
+.park-camera-controls { position:absolute; right:16px; top:16px; display:flex; gap:7px; }
+.park-camera-controls button { width:42px; height:42px; border:1px solid #a9c9b3; border-radius:50%; color:#3e6354; background:#fbfff1e8; font-size:22px; cursor:pointer; }
+.park-pet-button { position:absolute; bottom:15px; left:50%; transform:translateX(-50%); white-space:nowrap; border:1px solid #b1caa7; border-radius:22px; padding:10px 20px; background:#fff9eae8; color:#46604b; box-shadow:0 5px 14px #506f4326; cursor:pointer; font-size:13px; }
+.park-zones { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:9px; padding:12px 18px 6px; }
+.park-zones button { display:flex; flex-direction:column; align-items:center; gap:5px; border:1px solid #adc5b0; border-radius:16px; padding:12px 5px; color:#375746; background:#f7fbea; cursor:pointer; }
+.park-zones button>span { font-size:25px; color:#668b63; }
+.park-zones strong { font-size:13px; }
+.park-zones small { font-size:10px; line-height:1.5; }
+.park-zones button[aria-pressed="true"] { background:#e4edbd; border:2px solid #6c8f52; padding:11px 4px; }
+.park-zones button:disabled { background:#e6eae0; color:#626f65; border-color:#ccd4ca; cursor:default; }
+.park-zones button:disabled>span { color:#889288; }
+.park-world-description { margin:12px 22px; color:#3b5e50; font-size:13px; line-height:1.8; }
+.park-unlock-hint { margin:0; padding:13px 22px; background:#f6f5de; color:#655d38; font-size:12px; border-top:1px solid #dadcbb; }
+.park-fallback { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#3b6152; pointer-events:none; }
+.park-fallback .buddy-bird { width:min(300px,75%); }
+.park-fallback small { font-size:12px; padding:10px; }
+.park-mode-sleep .park-viewport { background:radial-gradient(ellipse at 55% 30%,#7c91af,#344f6a); transition:background 1s; }
+.park-mode-sleep .park-location-pill { background:#e9eef5da; color:#354d65; }
+.bird-habitat .park-chat { position:static; margin:14px 0; width:auto; max-width:none; background:#fffaf0; border:1px solid #ded8bd; color:#5e5942; border-radius:15px; padding:12px 16px; }
+.park-world button:focus-visible { outline:3px solid #6750a4; outline-offset:4px; }
+@media(max-width:600px) { .park-viewport { height:370px; } .park-world-title { padding:16px 14px 0; align-items:start; } .park-world-title strong { font-size:19px; } .park-world-title>span { max-width:98px; text-align:right; line-height:1.5; } .park-zones { gap:5px; padding:10px 9px 5px; } .park-zones button { padding:9px 3px; border-radius:12px; } .park-zones strong { font-size:11px; } .park-zones small { font-size:9px; } .park-location-pill { top:12px; left:12px; font-size:10px; padding:6px 9px; } .park-camera-controls { top:9px; right:9px; gap:5px; } .park-camera-controls button { width:34px; height:34px; font-size:20px; } }
+@media(prefers-reduced-motion:reduce) { .park-mode-sleep .park-viewport { transition:none; } }
+@media(forced-colors:active) { .park-world,.park-world-title,.park-zones button,.park-location-pill,.park-world-description,.park-unlock-hint,.park-pet-button { background:Canvas; color:CanvasText; border-color:CanvasText; } }
+
+/* Care stays next to the character; scenery is an optional secondary choice. */
+.park-world>.buddy-care { margin:0; border-radius:0; border-width:1px 0; box-shadow:none; background:#fffdf5; }
+.park-settings { padding:14px 0 0; }
+.park-settings>summary { margin:0 18px 12px; padding:12px 14px; border:1px solid #b9ceba; border-radius:14px; background:#f7fbea; color:#375746; cursor:pointer; font-weight:700; font-size:14px; }
+.park-settings>summary:focus-visible { outline:3px solid #6750a4; outline-offset:3px; }
+.park-settings .park-zones { padding-top:0; }
+.bird-stage-portrait { width:100%; max-width:180px; height:auto; object-fit:contain; }
+@media(forced-colors:active) { .park-settings>summary { background:Canvas; color:CanvasText; border-color:CanvasText; } }
+
+.growth-current>.bird-stage-portrait { flex:none; width:150px; }
+.buddy-play-help>summary { cursor:pointer; padding:15px 18px; background:#fffdf6; border:1px solid #ded7e9; border-radius:16px; color:#514267; font-weight:700; }
+.buddy-play-help>summary:focus-visible { outline:3px solid #6750a4; outline-offset:3px; }
+@media(max-width:600px) { .growth-current>.bird-stage-portrait { width:100px; } }

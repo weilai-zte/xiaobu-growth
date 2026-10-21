@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url'
 import { networkInterfaces } from 'node:os'
 import {
   DB_PATH,
-  claimAdventure,
+  claimAdventure, bankOperation,
   ENTITIES,
   counts,
   deleteEverything,
@@ -46,6 +46,7 @@ const MIME = {
   '.webmanifest': 'application/manifest+json',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
+  '.webp': 'image/webp',
   '.jpg': 'image/jpeg',
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',
@@ -123,6 +124,13 @@ async function handleApi(req, res, url) {
     return
   }
 
+  if (path === '/api/bank' && method === 'POST') {
+    const body = await readBody(req)
+    const account = bankOperation(body)
+    sendJson(res, 200, { account, tables: changedTables(Number(body.since) || 0), seq: maxSeq() })
+    return
+  }
+
   if (path === '/api/adventure' && method === 'POST') {
     const body = await readBody(req)
     sendJson(res, 200, { adventure: claimAdventure(body.childId, body.date, body.route) })
@@ -134,7 +142,7 @@ async function handleApi(req, res, url) {
     const since = Number(body.since ?? 0)
     const applied = { created: 0, updated: 0, stale: 0, same: 0 }
     // 先保存完成记录，最后处理心愿，余额检查才能包含本次刚打卡的星星。
-    const priority = entity => entity === 'routineRules' ? 0 : entity === 'wishes' ? 2 : 1
+    const priority = entity => ({ childProfiles: 0, routineRules: 1, familyMembers: 2, wishes: 4, growthPacts: 5, pactSignatures: 6, familyChecks: 7, familyReactions: 8 }[entity] ?? 3)
     for (const [entity, rows] of Object.entries(body.changes ?? {}).sort(([a], [b]) => priority(a) - priority(b))) {
       if (!ENTITIES.includes(entity) || !Array.isArray(rows)) continue
       for (const row of rows) {
@@ -163,7 +171,7 @@ async function handleApi(req, res, url) {
   const match = path.match(/^\/api\/([a-zA-Z]+)(?:\/(.+))?$/)
   if (match && ENTITIES.includes(match[1])) {
     const entity = match[1]
-    if (entity === 'adventureRuns' && method !== 'GET') return sendJson(res, 400, { error: '冒险奖励不能修改、删除或重新抽取' })
+    if (['adventureRuns','bankAccounts','bankEntries'].includes(entity) && method !== 'GET') return sendJson(res, 400, { error: '冒险奖励不能修改、删除或重新抽取' })
     const id = match[2] ? decodeURIComponent(match[2]) : null
     if (!id && method === 'GET') {
       sendJson(res, 200, { rows: listEntity(entity), seq: maxSeq(), serverTime: nowIso() })

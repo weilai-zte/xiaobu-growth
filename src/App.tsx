@@ -1,4 +1,5 @@
-import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { HonorNotice } from './components/HonorNotice'
+import { HashRouter, Navigate, Route, Routes, Outlet, useLocation } from 'react-router-dom'
 import { AppProvider, useApp } from './app/AppProvider'
 import { SyncProvider, useSync } from './app/SyncProvider'
 import { AppNav, TopBar } from './components/Nav'
@@ -17,16 +18,22 @@ import { Weekly } from './pages/Weekly'
 import { Experiments } from './pages/Experiments'
 import { Settings } from './pages/Settings'
 import { ChildToday } from './pages/ChildToday'
-import { ChildRules } from './pages/ChildRules'
+import { ChildGrowth } from './pages/ChildGrowth'
+import { ChildBuddy } from './pages/ChildBuddy'
 import { ChildProgress } from './pages/ChildProgress'
 import { ChildStudy } from './pages/ChildStudy'
+import { Family } from './pages/Family'
 import { CloudConnect } from './pages/CloudConnect'
 import { IS_GITHUB_PAGES } from './db/sync'
+import { ParentHome, ParentRecords } from './pages/ParentHome'
+import { Bank } from './components/Bank'
+import { PactSigning } from './pages/PactSigning'
 import { BirdSpeaker } from './components/BirdCompanion'
 
 function Shell() {
-  const { loading, profile } = useApp()
+  const { loading, profile, childView, parentUnlocked } = useApp()
   const { bootstrapped } = useSync()
+  const signing = useLocation().pathname.startsWith('/sign/')
 
   if (loading) {
     return (
@@ -63,76 +70,40 @@ function Shell() {
       <TopBar />
       <BirdSpeaker />
       {/* 导航要排在内容之前：平板档它是吸顶的横向导航，排在后面就会掉到页面底部 */}
-      <AppNav />
+      {!signing && (childView || parentUnlocked) && <AppNav />}
       <main className="app-main">
         <SyncBanner />
+        <HonorNotice />
         <Routes>
-          <Route path="/rewards" element={<ParentGate><ChildProgress parent /></ParentGate>} />
-          <Route path="/" element={<Today />} />
-          <Route
-            path="/sleep"
-            element={
-              <ParentGate>
-                <Sleep />
-              </ParentGate>
-            }
-          />
-          <Route path="/study" element={<Study />} />
-          <Route path="/rules" element={<Rules />} />
-          <Route
-            path="/more"
-            element={
-              <ParentGate>
-                <More />
-              </ParentGate>
-            }
-          />
-          <Route
-            path="/conflicts"
-            element={
-              <ParentGate>
-                <Conflicts />
-              </ParentGate>
-            }
-          />
-          <Route path="/strengths" element={<Strengths />} />
-          <Route
-            path="/weekly"
-            element={
-              <ParentGate>
-                <Weekly />
-              </ParentGate>
-            }
-          />
-          <Route
-            path="/experiments"
-            element={
-              <ParentGate>
-                <Experiments />
-              </ParentGate>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ParentGate>
-                <Settings />
-              </ParentGate>
-            }
-          />
-          <Route
-            path="/print/sleep"
-            element={
-              <ParentGate>
-                <SleepPrint />
-              </ParentGate>
-            }
-          />
+          <Route path="/" element={<Navigate to="/child" replace />} />
           <Route path="/child" element={<ChildToday />} />
-          <Route path="/child/rules" element={<ChildRules />} />
+          <Route path="/child/buddy" element={<ChildBuddy />} />
+          <Route path="/child/rules" element={<Navigate to="/child" replace />} />
+          <Route path="/child/family" element={<Navigate to="/parent/family" replace />} />
           <Route path="/child/study" element={<ChildStudy />} />
+          <Route path="/child/growth" element={<ChildGrowth />} />
           <Route path="/child/progress" element={<ChildProgress />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/sign/:pactId" element={<ParentGate><PactSigning /></ParentGate>} />
+          <Route path="/parent" element={<ParentGate><Outlet /></ParentGate>}>
+            <Route index element={<ParentHome />} />
+            <Route path="today" element={<Today />} />
+            <Route path="checkins" element={<Rules />} />
+            <Route path="family" element={<Family parent />} />
+            <Route path="rewards" element={<ChildProgress parent />} />
+            <Route path="bank" element={<Bank parent />} />
+            <Route path="records" element={<ParentRecords />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="more" element={<More />} />
+            <Route path="sleep" element={<Sleep />} />
+            <Route path="study" element={<Study />} />
+            <Route path="conflicts" element={<Conflicts />} />
+            <Route path="strengths" element={<Strengths />} />
+            <Route path="weekly" element={<Weekly />} />
+            <Route path="experiments" element={<Experiments />} />
+            <Route path="print/sleep" element={<SleepPrint />} />
+          </Route>
+          {Object.entries({family:'family',rewards:'rewards',rules:'checkins',settings:'settings',more:'more',sleep:'sleep',study:'study',conflicts:'conflicts',strengths:'strengths',weekly:'weekly',experiments:'experiments','print/sleep':'print/sleep'}).map(([old,next]) => <Route key={old} path={`/${old}`} element={<Navigate to={`/parent/${next}`} replace />} />)}
+          <Route path="*" element={<Navigate to="/child" replace />} />
         </Routes>
       </main>
     </div>
@@ -142,11 +113,9 @@ function Shell() {
 export default function App() {
   return (
     <SyncProvider>
-      <AppProvider>
-        <HashRouter>
-          <Shell />
-        </HashRouter>
-      </AppProvider>
+      <HashRouter>
+        <AppProvider><Shell /></AppProvider>
+      </HashRouter>
     </SyncProvider>
   )
 }

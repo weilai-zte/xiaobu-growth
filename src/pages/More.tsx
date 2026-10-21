@@ -24,8 +24,10 @@ export function More() {
   return (
     <>
       <PageHeader title="更多" intro="冲突复盘、优势事例、每周复盘、实验和数据设置都收在这里。" />
-      <Card title="功能入口">
+      <Card title="功能入口"><div className="quick-links"><Link className="quick-link" to="/parent/today"><strong>原有今日与记录</strong><span>保留原来的完整首页</span></Link><Link className="quick-link" to="/parent/sleep"><strong>睡眠与身体</strong></Link><Link className="quick-link" to="/parent/study"><strong>学习管理</strong></Link><Link className="quick-link" to="/parent/records"><strong>成长记录</strong></Link><Link className="quick-link" to="/parent/bank"><strong>星星银行设置</strong></Link></div>
         <div className="quick-links">
+          <Link className="quick-link" to="/rules"><strong>原有家庭规则</strong><span>维护日常打卡图卡与步骤</span></Link>
+          <Link className="quick-link" to="/family"><strong>家庭成员与成长公约</strong><span>一起制定约定，签订和双向打卡</span></Link>
           <Link className="quick-link" to="/rewards"><span className="quick-link-icon" aria-hidden="true"><IconHeart size={19} /></span><strong>星星与心愿礼物</strong><span>确认心愿星数，兑现孩子的礼物</span></Link>
           <Link className="quick-link" to="/conflicts">
             <span className="quick-link-icon" aria-hidden="true">

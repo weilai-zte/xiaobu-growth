@@ -1,6 +1,7 @@
 import type { EntityName, GrowthDB } from '../db/db'
 import { ENTITY_LABELS, ENTITY_NAMES } from '../db/db'
 import { LABELS } from '../db/types'
+import { validFamilyRow } from './family'
 import { validWish } from './rewards'
 import { validAdventure } from './adventure'
 import {
@@ -19,7 +20,7 @@ import {
 } from './validate'
 import { formatDateTime, isDayKey } from './date'
 
-export const EXPORT_VERSION = 1
+export const EXPORT_VERSION = 3
 export const EXPORT_APP_ID = 'xiaobu-growth'
 
 export interface ExportBundle {
@@ -38,7 +39,16 @@ const NATURAL_KEYS: Partial<Record<EntityName, string[]>> = {
   weeklyReviews: ['childId', 'weekStart'],
 }
 
+const validBank = (entity: string, row: Record<string, unknown>) => {
+ const natural = (v: unknown) => Number.isSafeInteger(v) && Number(v) >= 0
+ if(typeof row.childId!=='string'||!row.childId||typeof row.id!=='string')return false
+ if(entity==='bankAccounts')return row.id===`bank:${row.childId}` && natural(row.balance)&&natural(row.eligibleBalance)&&Number(row.eligibleBalance)<=Number(row.balance)&&natural(row.remainder)&&Number(row.remainder)<10000&&typeof row.enabled==='boolean'&&[row.weeklyRateBps,row.configuredRateBps].every(v=>natural(v)&&Number(v)<=2000)&&typeof row.nextInterestDate==='string'&&isDayKey(row.nextInterestDate)
+ return ['deposit','withdraw','interest','configure'].includes(String(row.kind))&&natural(row.amount)&&(!['deposit','withdraw'].includes(String(row.kind))||Number(row.amount)>0)&&typeof row.date==='string'&&isDayKey(row.date)
+}
 const VALIDATORS: Partial<Record<EntityName, (row: Draft<never>) => ValidationResult>> = {
+  ...Object.fromEntries(['familyMembers', 'growthPacts', 'pactSignatures', 'familyChecks', 'familyReactions'].map(name => [name, (row: Record<string, unknown>) => ({ ok: validFamilyRow(name as EntityName, row), errors: ['家庭记录格式无效'] })])),
+  bankAccounts: row => ({ok:validBank('bankAccounts',row),errors:['银行账户格式无效']}),
+  bankEntries: row => ({ok:validBank('bankEntries',row),errors:['银行流水格式无效']}),
   routineChecks: validateRoutineCheck as never,
   adventureRuns: (row) => validAdventure(row) ? { ok: true, errors: [] } : { ok: false, errors: ['冒险记录无效'] },
   wishes: (row) => validWish(row) ? { ok: true, errors: [] } : { ok: false, errors: ['心愿内容或星数无效'] },

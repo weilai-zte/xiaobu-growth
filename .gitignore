@@ -9,3 +9,11 @@ data/
 .env
 .env.*
 !.env.example
+
+# 本机研发记录、截图和冻结归档不随公开程序发布。
+.req/
+Dashboard/
+outputs/
+releases/
+.bak*
+*.bak.*

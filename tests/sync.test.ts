@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { GrowthDB } from '../src/db/db'
 import { createRepo } from '../src/db/repo'
 import { createSyncEngine, type SyncEngine } from '../src/db/sync'
+import { createFamilyRepo } from '../src/lib/family'
 import { birdLoot, birdInventory } from '../src/lib/birdCompanion'
 
 const PORT = 8799
@@ -66,6 +67,63 @@ beforeEach(async () => {
 })
 
 describe('双向同步', () => {
+  it('家庭公约跨设备签订、离线打卡重传和鼓励记录保持唯一', async () => {
+    const a = await openDevice()
+    const b = await openDevice()
+    try {
+      const child = await a.repo.createProfile({name:'家庭测试'})
+      const fa = createFamilyRepo(a.database), fb = createFamilyRepo(b.database)
+      const [parent, kid] = await fa.ensureMembers(child.id)
+      const pact = await fa.createPact(child.id,parent.id,'一起成长',[{memberId:parent.id,text:'专心陪伴'},{memberId:kid.id,text:'收好玩具'}])
+      await fa.sealPact(pact.id,parent.id)
+      await fa.signPact(pact.id,parent.id)
+      expect(await a.engine.syncNow()).toBe(true)
+      expect(await b.engine.syncNow()).toBe(true)
+      await fb.signPact(pact.id,kid.id)
+      expect(await b.engine.syncNow()).toBe(true)
+      expect(await a.engine.syncNow()).toBe(true)
+      expect(await fa.listSignatures(child.id)).toHaveLength(2)
+      await fb.checkIn(pact.id,1,kid.id,'2026-10-20')
+      await fb.checkIn(pact.id,1,kid.id,'2026-10-20')
+      expect(await b.engine.syncNow()).toBe(true)
+      expect(await a.engine.syncNow()).toBe(true)
+      const [check] = await fa.listChecks(child.id)
+      await fa.encourage(check.id,parent.id)
+      expect(await a.engine.syncNow()).toBe(true)
+      expect(await b.engine.syncNow()).toBe(true)
+      expect(await fb.listChecks(child.id)).toHaveLength(1)
+      expect(await fb.listReactions(child.id)).toHaveLength(1)
+      expect(await a.repo.outboxCount()).toBe(0)
+      expect(await b.repo.outboxCount()).toBe(0)
+    } finally { await closeDevice(a); await closeDevice(b) }
+  })
+  it('新心愿和关联公约同批同步，另一台分别签订，原打卡只计一次星', async () => {
+    const a = await openDevice(), b = await openDevice()
+    try {
+      const child = await a.repo.createProfile({name:'心愿同步测试'})
+      await a.repo.ensureHabitPlan(child.id)
+      const fa = createFamilyRepo(a.database), fb = createFamilyRepo(b.database)
+      const [parent,kid] = await fa.ensureMembers(child.id)
+      const [rule] = (await a.repo.listRules(child.id)).filter(r=>r.active)
+      const wish = await a.repo.proposeWish(child.id,'积木','gift')
+      await a.repo.changeWish(wish.id,'approve',10)
+      const pact = await fa.createWishPact(child.id,kid.id,wish.id,[rule.id])
+      await fa.sealPact(pact.id,parent.id); await fa.signPact(pact.id,parent.id)
+      expect(await a.engine.syncNow()).toBe(true)
+      expect(await b.engine.syncNow()).toBe(true)
+      expect((await fb.listPacts(child.id))[0].wishPlan?.wishId).toBe(wish.id)
+      await fb.signPact(pact.id,kid.id)
+      const date = new Intl.DateTimeFormat('sv-SE', { timeZone:'Asia/Shanghai' }).format(new Date())
+      await b.repo.setCheck(child.id,rule.id,date,'done',null,{stepsDone:rule.steps})
+      expect(await b.engine.syncNow()).toBe(true)
+      expect(await a.engine.syncNow()).toBe(true)
+      expect(await fa.listSignatures(child.id)).toHaveLength(2)
+      expect(await fa.listChecks(child.id)).toHaveLength(0)
+      expect(await a.repo.listChecks(child.id)).toHaveLength(1)
+      expect(await a.repo.outboxCount()).toBe(0)
+      expect(await b.repo.outboxCount()).toBe(0)
+    } finally { await closeDevice(a); await closeDevice(b) }
+  })
   it('三类新打卡按1/2星跨设备同步，5星可冒险，兑换使用相同余额', async () => {
     const a = await openDevice()
     const b = await openDevice()
