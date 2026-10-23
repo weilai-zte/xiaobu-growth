@@ -67,6 +67,30 @@ beforeEach(async () => {
 })
 
 describe('双向同步', () => {
+  it('英语计划和即时错词跨设备往返，未完成不加星且不需要新表', async () => {
+    const a = await openDevice(), b = await openDevice()
+    try {
+      const child = await a.repo.createProfile({ name: '英语同步测试' })
+      await a.repo.ensureHabitPlan(child.id)
+      const rule = (await a.repo.listRules(child.id)).find(r => r.habitKey === 'picture_words')!
+      const plan = await a.repo.ensureStudyPlan(child.id, rule.id, '2026-10-20')
+      await a.repo.recordStudyAttempt(child.id, rule.id, '2026-10-20', { id: 'first-attempt', word: plan[0], selectedWord: plan[1], revealed: false, answeredAt: '2026-10-20T01:00:00.000Z' })
+      expect(await a.engine.syncNow()).toBe(true)
+      expect(await b.engine.syncNow()).toBe(true)
+      const checks = await b.repo.listChecks(child.id)
+      expect(checks[0].studyPlan).toEqual(plan)
+      expect(checks[0].studyAttempts?.[0].word).toBe(plan[0])
+      expect(checks[0].status).toBe('partial')
+      expect(await b.repo.ensureStudyPlan(child.id, rule.id, '2026-10-20')).toEqual(plan)
+      await b.repo.setCheck(child.id, rule.id, '2026-10-20', 'done', null, { studyWords: plan.slice(0,4), studyLevel: 'easy' })
+      expect(await b.engine.syncNow()).toBe(true)
+      expect(await a.engine.syncNow()).toBe(true)
+      const restored = (await a.repo.listChecks(child.id))[0]
+      expect(restored.status).toBe('done')
+      expect(restored.studyAttempts?.[0].word).toBe(plan[0])
+      expect(restored.rewardStars).toBe(2)
+    } finally { await closeDevice(a); await closeDevice(b) }
+  })
   it('家庭公约跨设备签订、离线打卡重传和鼓励记录保持唯一', async () => {
     const a = await openDevice()
     const b = await openDevice()

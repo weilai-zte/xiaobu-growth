@@ -36,6 +36,38 @@ describe('学习打卡', () => {
     }
     for (const word of WORDS) expect((await readFile(`public/audio/words/${word.word}.mp3`)).byteLength).toBeGreaterThan(1000)
   })
+  it('没做完就离开，重新进入仍保留错词与同一份题目', async () => {
+    const child = await repo.createProfile({ name: '复习测试' })
+    await repo.ensureHabitPlan(child.id)
+    window.location.hash = '#/child/study'
+    const user = userEvent.setup()
+    const first = render(<App />)
+    const deck = wordDeck(adventureDay(), 'easy')
+    const wrong = deck[0].options.find(o => o.word !== deck[0].correct.word)!
+    await user.click(await screen.findByRole('button', { name: `选择 ${wrong.word}` }))
+    await screen.findByText(/复习小篮子 · 1个词/)
+    first.unmount()
+    render(<App />)
+    await user.click(await screen.findByText(/复习小篮子 · 1个词/))
+    expect(await screen.findByRole('button', { name: `复习 ${deck[0].correct.word} 发音` })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: `选择 ${wrong.word}` })).toBeInTheDocument()
+    const checks = await repo.listChecks(child.id)
+    expect(checks[0].status).toBe('partial')
+    expect(starBalance([], checks, []).earned).toBe(0)
+  })
+  it('翻卡后重选当前难度仍保留提示事实', async () => {
+    const child = await repo.createProfile({ name: '提示测试' })
+    await repo.ensureHabitPlan(child.id)
+    window.location.hash = '#/child/study'
+    const user = userEvent.setup()
+    render(<App />)
+    const deck = wordDeck(adventureDay(), 'easy')
+    await user.click(await screen.findByRole('button', { name: '翻卡看一眼答案' }))
+    await screen.findByRole('button', { name: '收起答案，继续看图' })
+    await user.click(screen.getByRole('button', { name: /轻松看看/ }))
+    await user.click(await screen.findByRole('button', { name: `选择 ${deck[0].correct.word}` }))
+    await waitFor(async () => expect((await repo.listChecks(child.id))[0].studyAttempts?.[0].revealed).toBe(true))
+  })
   it('先练完一组才获2星，发音不提交答案，重复练习不重复计分', async () => {
     const child = await repo.createProfile({ name: '全全' })
     await repo.ensureHabitPlan(child.id)
@@ -47,15 +79,19 @@ describe('学习打卡', () => {
     await screen.findByRole('button', { name: '翻卡看一眼答案' })
     await user.click(screen.getByRole('button', { name: `听 ${deck[0].correct.word} 发音` }))
     expect(HTMLMediaElement.prototype.play).toHaveBeenCalled()
-    expect(await repo.listChecks(child.id)).toHaveLength(0)
+    expect((await repo.listChecks(child.id)).filter(c => c.status === 'done')).toHaveLength(0)
     const wrong = deck[0].options.find(o => o.word !== deck[0].correct.word)!
     await user.click(screen.getByRole('button', { name: `选择 ${wrong.word}` }))
-    expect(screen.getByRole('button', { name: '下一张图片' })).toBeDisabled()
+    expect(await screen.findByRole('button', { name: '下一张图片' })).toBeDisabled()
+    expect((await repo.listChecks(child.id))[0].studyAttempts?.[0].word).toBe(deck[0].correct.word)
+    await user.click(await screen.findByText(/复习小篮子 · 1个词/))
+    expect(await screen.findByRole('button', { name: `复习 ${deck[0].correct.word} 发音` })).toBeInTheDocument()
     for (let i = 0; i < deck.length; i++) {
-      await user.click(screen.getByRole('button', { name: `选择 ${deck[i].correct.word}` }))
+      await user.click(await screen.findByRole('button', { name: `选择 ${deck[i].correct.word}` }))
+      await screen.findByText(`找到了！${deck[i].correct.word}，${deck[i].correct.cn}。`)
       if (i < deck.length - 1) await user.click(screen.getByRole('button', { name: '下一张图片' }))
     }
-    expect(await repo.listChecks(child.id)).toHaveLength(0)
+    expect((await repo.listChecks(child.id)).filter(c => c.status === 'done')).toHaveLength(0)
     await user.click(screen.getByRole('button', { name: '完成这一组，收下2星' }))
     await waitFor(async () => expect((await repo.listChecks(child.id)).filter(c => c.status === 'done')).toHaveLength(1))
     const check = (await repo.listChecks(child.id))[0]

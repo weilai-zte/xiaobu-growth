@@ -23,6 +23,8 @@ import { nowISO } from '../lib/date'
 import { toDayKey } from '../lib/date'
 import { starBalance, validWish } from '../lib/rewards'
 import { HABIT_PLAN } from '../lib/habits'
+import { dailyWordPlan, WORDS } from '../lib/words'
+import type { StudyAttempt } from './types'
 import {
   birdInventory,
   changeBuddyCare,
@@ -439,7 +441,7 @@ export function createRepo(database: GrowthDB) {
     date: DayKey,
     status: RuleStatus,
     parentNote?: string | null,
-    details: Pick<RoutineCheck, 'minutes' | 'studyLevel' | 'studyWords' | 'stepsDone'> = {},
+    details: Pick<RoutineCheck, 'minutes' | 'studyLevel' | 'studyWords' | 'studyPlan' | 'studyHints' | 'studyAttempts' | 'stepsDone'> = {},
   ) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('日期格式不正确')
     const rule = await database.routineRules.get(ruleId)
@@ -449,6 +451,8 @@ export function createRepo(database: GrowthDB) {
       .where('[ruleId+date]')
       .equals([ruleId, date])
       .first()
+    // 准备题目/答题中的partial不是获星快照；首次真正完成才锁定当时的奖励。
+    const firstStudyCompletion = existing?.studyPlan && existing.status !== 'done' && !existing.studyWords && status === 'done'
     const row: RoutineCheck = {
       id: existing?.id ?? `check:${childId}:${ruleId}:${date}`,
       createdAt: existing?.createdAt ?? nowISO(),
@@ -458,16 +462,56 @@ export function createRepo(database: GrowthDB) {
       date,
       status,
       parentNote: parentNote ?? existing?.parentNote ?? null,
-      rewardStars: existing ? existing.rewardStars : rule.rewardStars,
+      rewardStars: firstStudyCompletion ? rule.rewardStars : existing ? existing.rewardStars : rule.rewardStars,
       minutes: existing?.minutes,
       studyLevel: existing?.studyLevel,
       studyWords: existing?.studyWords,
+      studyPlan: existing?.studyPlan,
+      studyHints: existing?.studyHints,
+      studyAttempts: existing?.studyAttempts,
       stepsDone: existing?.stepsDone,
       ...details,
     }
     check(validateRoutineCheck(row))
     await write('routineChecks', row)
     return row
+  }
+
+  async function ensureStudyPlan(childId: ID, ruleId: ID, date: DayKey) {
+    return database.transaction('rw', database.routineChecks, database.routineRules, database.syncQueue, async () => {
+      const rule = await database.routineRules.get(ruleId)
+      if (!rule || rule.childId !== childId || rule.habitKey !== 'picture_words') throw new Error('找不到英语学习图卡')
+      const history = await listChecks(childId)
+      const existing = history.find(c => c.ruleId === ruleId && c.date === date)
+      if (existing?.studyPlan?.length === 8 && new Set(existing.studyPlan).size === 8 && existing.studyPlan.every(word => WORDS.some(w => w.word === word))) return existing.studyPlan
+      const plan = dailyWordPlan(date, history)
+      await setCheck(childId, ruleId, date, existing?.status ?? 'partial', undefined, { studyPlan: plan })
+      return plan
+    })
+  }
+
+  async function recordStudyHint(childId: ID, ruleId: ID, date: DayKey, word: string) {
+    return database.transaction('rw', database.routineChecks, database.routineRules, database.syncQueue, async () => {
+      const plan = await ensureStudyPlan(childId, ruleId, date)
+      if (!plan.includes(word)) throw new Error('学习单词不在本次练习中')
+      const existing = await database.routineChecks.where('[ruleId+date]').equals([ruleId, date]).first()
+      if (existing?.studyHints?.includes(word)) return
+      await setCheck(childId, ruleId, date, existing?.status ?? 'partial', undefined, { studyHints: [...(existing?.studyHints ?? []), word] })
+    })
+  }
+
+  async function recordStudyAttempt(childId: ID, ruleId: ID, date: DayKey, attempt: StudyAttempt) {
+    return database.transaction('rw', database.routineChecks, database.routineRules, database.syncQueue, async () => {
+      const plan = await ensureStudyPlan(childId, ruleId, date)
+      if (!plan.includes(attempt.word) || !WORDS.some(w => w.word === attempt.selectedWord)) throw new Error('学习单词不在本次练习中')
+      const existing = await database.routineChecks.where('[ruleId+date]').equals([ruleId, date]).first()
+      const attempts = existing?.studyAttempts ?? []
+      if (attempts.some(a => a.id === attempt.id)) return
+      // 只保留每词当天首次作答与首次答错；重做不无限膨胀记录，也不能覆盖曾经答错的事实。
+      const sameWord = attempts.filter(a => a.word === attempt.word)
+      if (sameWord.length && (attempt.word === attempt.selectedWord || sameWord.some(a => a.word !== a.selectedWord))) return
+      await setCheck(childId, ruleId, date, existing?.status ?? 'partial', undefined, { studyAttempts: [...attempts, { ...attempt, revealed: attempt.revealed || Boolean(existing?.studyHints?.includes(attempt.word)) }] })
+    })
   }
 
   /* ---------- 冲突复盘 ---------- */
@@ -744,6 +788,9 @@ export function createRepo(database: GrowthDB) {
     updateRule,
     listChecks,
     setCheck,
+    ensureStudyPlan,
+    recordStudyAttempt,
+    recordStudyHint,
     listConflicts,
     createConflict,
     updateConflict,

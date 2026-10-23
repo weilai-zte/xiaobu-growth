@@ -247,11 +247,22 @@ export interface RoutineRule extends Base {
 }
 
 /** 每天每条规则一条执行记录（childId + ruleId + date 唯一） */
+export interface StudyAttempt {
+  id: string
+  word: string
+  selectedWord: string
+  revealed: boolean
+  answeredAt: string
+}
+
 export interface RoutineCheck extends Base {
   rewardStars?: 1 | 2
   minutes?: number
   studyLevel?: Difficulty
   studyWords?: string[]
+  studyPlan?: string[]
+  studyHints?: string[]
+  studyAttempts?: StudyAttempt[]
   stepsDone?: string[]
   childId: ID
   ruleId: ID
