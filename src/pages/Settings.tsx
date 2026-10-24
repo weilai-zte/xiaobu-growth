@@ -425,6 +425,7 @@ export function Settings() {
           <Notice>
             已导入：新增 {importReport.added} 条，跳过重复 {importReport.skippedDuplicate} 条，
             跳过无效 {importReport.skippedInvalid} 条。
+            {importReport.localOnly>0&&<p>其中 {importReport.localOnly} 条银行或冒险记录仅恢复到本机，不能覆盖云端奖励。请连接原家庭云端核对。</p>}
             {importReport.invalidMessages.length > 0 && (
               <ul>
                 {importReport.invalidMessages.slice(0, 5).map((m) => (
@@ -539,7 +540,8 @@ export function Settings() {
           setPendingImport(null)
           await repo.setSetting(SETTINGS_KEYS.lastImportAt, new Date().toISOString())
           refreshProfile()
-          toast.show(`恢复完成：新增 ${report.added} 条`)
+          const synced = await engine.syncNow()
+          toast.show(`恢复完成：新增 ${report.added} 条${synced?'，已同步':'，未传完的记录已保留，请检查同步提示'}`)
         }}
       />
 

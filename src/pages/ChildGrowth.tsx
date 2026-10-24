@@ -13,7 +13,7 @@ export function ChildGrowth() {
     adventures: await repo.listAdventures(childId),
   } : undefined, [childId])
   if (!data) return <p role="status">正在点亮星空…</p>
-  return <div className="play-world child-growth"><header><h1>梦幻星空</h1><p>做过的小事，都在发光。</p></header>
+  return <div className="play-world child-growth"><header><h1>梦幻星空</h1></header>
     <ConstellationMap childId={childId ?? ''} tasks={data.tasks} checks={data.checks} adventures={data.adventures} profile={profile} focusStarId={params.get('star')??undefined} />
   </div>
 }

@@ -12,7 +12,7 @@
 import { ENTITY_NAMES, type EntityName } from './db'
 import type { AdventureRoute, AdventureRun, BankAccount } from './types'
 import { validAdventure } from '../lib/adventure'
-import type { Repo } from './repo'
+import type { Repo, SyncRejection } from './repo'
 
 export const SYNC_KEYS = {
   seq: 'sync.seq',
@@ -68,6 +68,7 @@ export interface SyncEngine {
 }
 
 interface SyncResponse {
+  rejected?: SyncRejection[]
   account?: BankAccount
   adventure?: AdventureRun
   serverTime?: string
@@ -238,13 +239,13 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
           since,
           changes,
         })
-        const seqs = outbox
-          .map((item) => item.seq)
-          .filter((seq): seq is number => typeof seq === 'number')
-        await repo.dropFromOutbox(seqs)
-        // 队列已清空，这时远程返回的最终版本可以放心覆盖本地
+        const rejected = pushed.rejected ?? []
+        if (!Array.isArray(rejected) || rejected.some(r => !r || typeof r.entity !== 'string' || typeof r.id !== 'string' || typeof r.error !== 'string' || !['WISH_CONFLICT','INVALID_RECORD'].includes(r.code) || !(r.canonical === null || (typeof r.canonical === 'object' && !Array.isArray(r.canonical))))) throw new Error('同步响应格式不正确，待传记录已保留。')
+        await repo.settleSyncBatch(outbox, rejected)
+        // 已确认快照已出队；合并仍会保护新编辑和被拒绝的待传记录
         await applyTables(pushed.tables)
         await repo.setSetting(SYNC_KEYS.seq, Number(pushed.seq ?? 0))
+        if (rejected.length) throw new Error(rejected.map(r => r.error).join('；'))
       }
 
       const stamp = new Date().toISOString()
@@ -344,14 +345,11 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
       await refreshCounters()
 
       // 本地的每次写入都进队列，并在稍后自动推一次
-      repo.setWriteHook(async (entity, row) => {
-        try {
-          await repo.enqueue(entity, row)
-          await refreshCounters()
-          scheduleSoon()
-        } catch {
-          // 入队失败不该拦住写入本身；这条记录会在下次同步时按 updatedAt 重新比对
-        }
+      repo.setWriteHook(() => {
+        scheduleSoon()
+        // Some writes run inside an outer transaction without settings access.
+        // Queue durability is owned by repo.write; counters may refresh later.
+        void refreshCounters().catch(() => {})
       })
 
       if (typeof window !== 'undefined') {

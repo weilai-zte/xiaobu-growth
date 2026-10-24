@@ -1,5 +1,6 @@
+import { adventureDay } from './adventure'
 import type { RoutineCheck, TaskRecord } from '../db/types'
-import { isDayKey, todayKey } from './date'
+import { isDayKey } from './date'
 
 export const CHECKINS_PER_SIGN = 5
 /** 原创星座主题插画和连线示意，不按生日限制收藏。 */
@@ -19,7 +20,7 @@ export const ZODIAC_SIGNS = [
 ] as const
 export type ZodiacSign = typeof ZODIAC_SIGNS[number]
 
-export function countCompletedCheckins(childId: string, tasks: TaskRecord[], checks: RoutineCheck[], until = todayKey()) {
+export function countCompletedCheckins(childId: string, tasks: TaskRecord[], checks: RoutineCheck[], until = adventureDay()) {
   const actions = new Set<string>()
   const validDate = (date: string) => isDayKey(date) && date <= until
   for (const task of tasks) if (!task.deleted && task.childId === childId && task.completion === 'independent' && validDate(task.date) && (task.templateId || task.name?.trim())) actions.add(`task:${task.date}:${task.templateId || task.name.trim()}`)

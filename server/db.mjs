@@ -1,3 +1,4 @@
+import { mergeProfileCollections } from './profile-merge.mjs'
 import { achievementBonus } from './star-achievements.mjs'
 /**
  * 「小步成长」的在线数据层。
@@ -140,11 +141,10 @@ export function upsertRecord(entity, input) {
   }
   // 荣誉和星星是永久收藏；跨版本或跨设备更新采用并集。
   if (entity === 'childProfiles' && existing) {
-    const claims = {...existing.starClaims, ...input.starClaims}
-    const honors = {...existing.honorClaims, ...input.honorClaims}
-    const added = Object.keys(claims).some(key => !existing.starClaims?.[key]) || Object.keys(honors).some(key => !existing.honorClaims?.[key])
-    const stale = (input.updatedAt ?? '') <= existing.updatedAt
-    input = stale && added ? {...existing, starClaims:claims, honorClaims:honors, updatedAt:nowIso()} : {...input, starClaims:claims, honorClaims:honors}
+    const newer = (input.updatedAt ?? '') > existing.updatedAt
+    const merged = mergeProfileCollections(existing, input, newer)
+    const monotonicChanged = ['starClaims','honorClaims','buddyCare','honorsSeenAt'].some(key => JSON.stringify(merged[key]) !== JSON.stringify(existing[key]))
+    input = monotonicChanged ? {...merged, updatedAt:new Date(Math.max(Date.now(), Date.parse(existing.updatedAt)+1)).toISOString()} : merged
   }
   const clientUpdatedAt = input.updatedAt ?? input.updated_at ?? nowIso()
 
@@ -176,13 +176,13 @@ export function upsertRecord(entity, input) {
       }
       const committed = listEntity('wishes').filter(w => w.childId === input.childId && w.id !== input.id && ['requested', 'redeemed'].includes(w.status)).reduce((sum, w) => sum + w.cost, 0)
       const bonus = listEntity('adventureRuns').filter(r => r.childId === input.childId).reduce((sum, r) => sum + r.bonusStars, 0)
-      if ([...actions.values()].reduce((sum, stars) => sum + stars, 0) + bonus + achievementBonus(getRecord('childProfiles',input.childId)?.starClaims) + bankWalletDelta(listEntity('bankEntries').filter(e => e.childId === input.childId)) < committed + input.cost) throw new Error('星星余额不足，可能已在另一台设备申请礼物。请取消本次申请后重新同步。')
+      if ([...actions.values()].reduce((sum, stars) => sum + stars, 0) + bonus + achievementBonus(getRecord('childProfiles',input.childId)?.starClaims) + bankWalletDelta(listEntity('bankEntries').filter(e => e.childId === input.childId)) < committed + input.cost) throw Object.assign(new Error('星星余额不足，本次申请已退回，请同步后重新选择礼物。'), {code:'WISH_CONFLICT'})
     }
   }
 
   const { syncSeq, updatedAt, ...payload } = { ...existing, ...input }
   const deleted = payload.deleted ? 1 : 0
-  const stamp = nowIso()
+  const stamp = new Date(Math.max(Date.now(), Date.parse(existing?.updatedAt ?? '') + 1 || 0)).toISOString()
   const seq = nextSeq()
   db.prepare(
     `INSERT INTO records (entity, id, payload, updated_at, sync_seq, deleted)
@@ -196,6 +196,33 @@ export function upsertRecord(entity, input) {
     applied: true,
     reason: existing ? 'updated' : 'created',
   }
+}
+
+/** A rejected business record must not block unrelated accepted records. */
+export function syncBatch(changes) {
+  const applied = {created:0, updated:0, stale:0, same:0}
+  const rejected = []
+  const touched = {}
+  const priority = entity => ({childProfiles:0,routineRules:1,familyMembers:2,wishes:4,growthPacts:5,pactSignatures:6,familyChecks:7,familyReactions:8}[entity] ?? 3)
+  for (const [entity, rows] of Object.entries(changes ?? {}).sort(([a],[b])=>priority(a)-priority(b))) {
+    if (!ENTITIES.includes(entity) || !Array.isArray(rows)) continue
+    for (const row of rows) {
+      db.exec('SAVEPOINT sync_record')
+      try {
+        const result = upsertRecord(entity, row)
+        db.exec('RELEASE sync_record')
+        ;(touched[entity] ??= new Set()).add(result.row.id)
+        applied[result.applied ? result.reason : result.reason === 'stale' ? 'stale' : 'same'] += 1
+      } catch (error) {
+        db.exec('ROLLBACK TO sync_record'); db.exec('RELEASE sync_record')
+        // Storage errors are retryable service failures, never acknowledgements.
+        if (String(error.code ?? '').includes('SQLITE')) throw error
+        rejected.push({entity, id:typeof row?.id==='string'?row.id:'', code:error.code==='WISH_CONFLICT'?'WISH_CONFLICT':'INVALID_RECORD', error:error.message ?? '记录校验失败', canonical:typeof row?.id==='string'?getRecord(entity,row.id):null})
+      }
+    }
+  }
+  const confirmed = Object.fromEntries(Object.entries(touched).map(([entity, ids]) => [entity, [...ids].map(id => getRecord(entity,id))]))
+  return {applied, rejected, confirmed}
 }
 
 /** 增量拉取：sync_seq 大于客户端水位线的记录（含删除墓碑） */
