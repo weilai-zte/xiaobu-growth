@@ -122,6 +122,8 @@ export interface ImportReport {
   added: number
   skippedDuplicate: number
   skippedInvalid: number
+  /** Bank/adventure records are restored locally; their authority stays on the server. */
+  localOnly: number
   perEntity: Record<
     string,
     { added: number; skippedDuplicate: number; skippedInvalid: number }
@@ -147,13 +149,16 @@ export async function importBundle(
     added: 0,
     skippedDuplicate: 0,
     skippedInvalid: 0,
+    localOnly: 0,
     perEntity: {},
     invalidMessages: [],
   }
 
   await database.transaction('rw', database.tables, async () => {
     if (mode === 'replace') {
-      for (const table of database.tables) await table.clear()
+      // Connection keys and cursors belong to this device, not to the backup.
+      for (const name of ENTITY_NAMES) await database[name].clear()
+      await database.syncQueue.clear()
     }
 
     const existingNaturalKeys = new Set<string>()
@@ -198,7 +203,15 @@ export async function importBundle(
             continue
           }
         }
-        await database[name].put(row as never)
+        // A backup's server sequence belongs to its original sync history.
+        const { syncSeq: _sourceSeq, ...restored } = row
+        await database[name].put(restored as never)
+        if (['bankAccounts','bankEntries','adventureRuns'].includes(name)) {
+          report.localOnly += 1
+        } else {
+          const queued = await database.syncQueue.where('[entity+recordId]').equals([name,id]).first()
+          await database.syncQueue.put({...(queued?.seq !== undefined ? {seq:queued.seq} : {}), entity:name, recordId:id, payload:restored, enqueuedAt:new Date().toISOString()})
+        }
         existingIds.add(`${name}:${id}`)
         if (natural) existingNaturalKeys.add(natural)
         bucket.added += 1

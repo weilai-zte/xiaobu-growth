@@ -26,7 +26,7 @@ import {
   nowIso,
   setMeta,
   softDelete,
-  upsertRecord,
+  upsertRecord, syncBatch,
 } from './db.mjs'
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
@@ -140,23 +140,18 @@ async function handleApi(req, res, url) {
   if (path === '/api/sync' && method === 'POST') {
     const body = await readBody(req)
     const since = Number(body.since ?? 0)
-    const applied = { created: 0, updated: 0, stale: 0, same: 0 }
-    // 先保存完成记录，最后处理心愿，余额检查才能包含本次刚打卡的星星。
-    const priority = entity => ({ childProfiles: 0, routineRules: 1, familyMembers: 2, wishes: 4, growthPacts: 5, pactSignatures: 6, familyChecks: 7, familyReactions: 8 }[entity] ?? 3)
-    for (const [entity, rows] of Object.entries(body.changes ?? {}).sort(([a], [b]) => priority(a) - priority(b))) {
-      if (!ENTITIES.includes(entity) || !Array.isArray(rows)) continue
-      for (const row of rows) {
-        const result = upsertRecord(entity, row)
-        if (result.applied) applied[result.reason] += 1
-        else applied[result.reason === 'stale' ? 'stale' : 'same'] += 1
-      }
+    const {applied, rejected, confirmed} = syncBatch(body.changes)
+    const tables = changedTables(since)
+    // Include acknowledged rows even when a previous failed push advanced the cursor.
+    for (const [entity, rows] of Object.entries(confirmed)) {
+      tables[entity] = [...new Map([...tables[entity], ...rows].map(row => [row.id,row])).values()]
     }
     sendJson(res, 200, {
       serverTime: nowIso(),
       seq: maxSeq(),
       resetSeq: getMeta('reset_seq', 0),
-      applied,
-      tables: changedTables(since),
+      applied, rejected,
+      tables,
     })
     return
   }

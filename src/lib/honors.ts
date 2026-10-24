@@ -1,13 +1,14 @@
+import { adventureDay } from './adventure'
 import { HONORS, SKY_STARS, validTime } from '../../server/honor-catalog.mjs'
 import type { AdventureRun, BuddyCareState, RoutineCheck, RoutineRule, TaskRecord } from '../db/types'
 import { countCompletedCheckins } from './constellations'
 import { uniqueAdventures } from './adventure'
 import { adventureTreasure } from './birdCompanion'
 import { HABIT_PLAN } from './habits'
-import { isDayKey, todayKey } from './date'
+import { isDayKey } from './date'
 export { HONORS, SKY_STARS }
 export function evaluateHonors(childId:string,tasks:TaskRecord[],checks:RoutineCheck[],adventures:AdventureRun[],care:BuddyCareState|null|undefined,rules:RoutineRule[],claims:Record<string,string>={}) {
- const validDate=(date:string)=>isDayKey(date)&&date<=todayKey()
+ const validDate=(date:string)=>isDayKey(date)&&date<=adventureDay()
  const ownTasks=tasks.filter(t=>t.childId===childId&&!t.deleted&&t.completion==='independent'&&validDate(t.date)&&(t.templateId||t.name?.trim()))
  const ownChecks=[...new Map(checks.filter(c=>c.childId===childId&&!c.deleted&&c.status==='done'&&validDate(c.date)&&c.ruleId?.trim()).map(c=>[`${c.date}:${c.ruleId}`,c])).values()]
  const categories=new Map(rules.filter(r=>r.childId===childId).map(r=>[r.id,r.category??HABIT_PLAN.find(h=>h.key===r.habitKey)?.category]))

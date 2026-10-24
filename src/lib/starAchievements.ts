@@ -1,7 +1,8 @@
+import { adventureDay } from './adventure'
 import { skyBonus } from '../../server/honor-catalog.mjs'
 import type { AdventureRun, BuddyCareState, RoutineCheck, TaskRecord } from '../db/types'
 import { countCompletedCheckins, ZODIAC_SIGNS } from './constellations'
-import { isDayKey, todayKey } from './date'
+import { isDayKey } from './date'
 import { uniqueAdventures } from './adventure'
 
 export type StarClaims = Record<string, string>
@@ -17,7 +18,7 @@ export function achievementBonus(claims: StarClaims = {}) {
   return ZODIAC_SIGNS.filter(sign => typeof claims[sign.key] === 'string' && Number.isFinite(Date.parse(claims[sign.key]))).length * STAR_REWARD + skyBonus(claims)
 }
 export function evaluateStars(childId: string, tasks: TaskRecord[], checks: RoutineCheck[], adventures: AdventureRun[], care: BuddyCareState | null = null, claims: StarClaims = {}) {
-  const validDate=(date:string)=>isDayKey(date)&&date<=todayKey()
+  const validDate=(date:string)=>isDayKey(date)&&date<=adventureDay()
   const ownTasks=tasks.filter(t=>t.childId===childId&&!t.deleted&&t.completion==='independent'&&validDate(t.date))
   const ownChecks=checks.filter(c=>c.childId===childId&&!c.deleted&&c.status==='done'&&validDate(c.date))
   const count=countCompletedCheckins(childId,tasks,checks)

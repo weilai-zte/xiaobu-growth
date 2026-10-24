@@ -18,9 +18,10 @@ import {
   type TaskTemplate,
   type WeeklyReview,
   type Wish,
+  type OutboxEntry,
 } from './types'
 import { nowISO } from '../lib/date'
-import { toDayKey } from '../lib/date'
+import { adventureDay } from '../lib/adventure'
 import { starBalance, validWish } from '../lib/rewards'
 import { HABIT_PLAN } from '../lib/habits'
 import { dailyWordPlan, WORDS } from '../lib/words'
@@ -71,6 +72,14 @@ type Timestamped = { createdAt: string; updatedAt: string }
 function stamp<T extends object>(input: T): T & Timestamped {
   const ts = nowISO()
   return { ...input, createdAt: ts, updatedAt: ts }
+}
+
+export interface SyncRejection {
+  entity: string
+  id: string
+  code: 'WISH_CONFLICT' | 'INVALID_RECORD'
+  error: string
+  canonical: Record<string, unknown> | null
 }
 
 export function createRepo(database: GrowthDB) {
@@ -170,8 +179,7 @@ export function createRepo(database: GrowthDB) {
   /* ---------- 统一写入入口 ---------- */
 
   /**
-   * 本地写完之后的回调。同步层用它把这条记录放进待同步队列，
-   * 因此所有写入必须走 write()，绕过它就同步不出去。
+   * 写入完成通知；记录与待传队列由 write() 原子保存，回调仅调度同步和刷新界面。
    */
   let writeHook:
     | ((entity: EntityName, row: Record<string, unknown>) => void | Promise<void>)
@@ -186,8 +194,11 @@ export function createRepo(database: GrowthDB) {
   }
 
   async function write<T extends object>(entity: EntityName, row: T): Promise<T> {
-    await tableOf(entity).put(row as unknown as Record<string, unknown>)
-    // 等入队完成再返回：否则「刚写完就同步」会漏掉这条记录
+    await database.transaction('rw', tableOf(entity), database.syncQueue, async () => {
+      await tableOf(entity).put(row as unknown as Record<string, unknown>)
+      await enqueue(entity, row as unknown as Record<string, unknown>)
+    })
+    // Hooks schedule sync only; durability no longer depends on a running engine.
     await writeHook?.(entity, row as unknown as Record<string, unknown>)
     return row
   }
@@ -248,7 +259,7 @@ export function createRepo(database: GrowthDB) {
     return database.transaction('rw', [database.childProfiles,database.syncQueue], async () => {
       const existing = await database.childProfiles.get(id)
       if (!existing || existing.deleted) throw new Error('找不到这条儿童档案')
-      const care = changeBuddyCare(existing.buddyCare, command, at, toDayKey(new Date(at)))
+      const care = changeBuddyCare(existing.buddyCare, command, at, adventureDay(new Date(at)))
       const next = { ...existing, buddyCare: care, updatedAt: nowISO() }
       check(validateChildProfile(next))
       await write('childProfiles', next)
@@ -708,6 +719,33 @@ export function createRepo(database: GrowthDB) {
     await database.syncQueue.bulkDelete(seqs)
   }
 
+  /** Acknowledge only the exact snapshot sent; concurrent edits remain queued. */
+  async function settleSyncBatch(sent: OutboxEntry[], rejected: SyncRejection[]) {
+    await database.transaction('rw', database.syncQueue, database.wishes, async () => {
+      for (const item of sent) {
+        if (item.seq === undefined) continue
+        const current = await database.syncQueue.get(item.seq)
+        if (!current || current.enqueuedAt !== item.enqueuedAt || JSON.stringify(current.payload) !== JSON.stringify(item.payload)) continue
+        const failure = rejected.find(r => r.entity === item.entity && r.id === item.recordId)
+        if (failure) {
+          if (failure.entity !== 'wishes' || failure.code !== 'WISH_CONFLICT') continue
+          const canonical = failure.canonical
+          if (canonical && (canonical.id !== item.recordId || canonical.childId !== item.payload.childId || !validWish(canonical as unknown as Wish))) throw new Error('服务端返回的心愿冲突记录无效，请重试同步。')
+          const restored = canonical ?? {...item.payload, status:'approved'}
+          if (!validWish(restored as unknown as Wish)) throw new Error('本次申请无法自动退回，请联系家长核对。')
+          await database.wishes.put(restored as unknown as Wish)
+          if (!canonical) {
+            // The gift itself never reached the server. Keep its approved form
+            // queued while releasing only the rejected reservation.
+            await enqueue('wishes', restored)
+            continue
+          }
+        }
+        await database.syncQueue.delete(item.seq)
+      }
+    })
+  }
+
   async function outboxCount() {
     return database.syncQueue.count()
   }
@@ -718,6 +756,7 @@ export function createRepo(database: GrowthDB) {
    */
   async function applyRemote(entity: EntityName, rows: Record<string, unknown>[]) {
     const table = tableOf(entity)
+    return database.transaction('rw', table, database.syncQueue, async () => {
     const pending = new Set(
       (await database.syncQueue.where('entity').equals(entity).toArray()).map((e) => e.recordId),
     )
@@ -726,12 +765,17 @@ export function createRepo(database: GrowthDB) {
       const id = String(row.id ?? '')
       if (!id || pending.has(id)) continue
       const existing = await table.get(id)
-      if (existing && (String(existing.updatedAt ?? '') > String(row.updatedAt ?? '') || (String(existing.updatedAt ?? '') === String(row.updatedAt ?? '') && Number(existing.syncSeq ?? 0) >= Number(row.syncSeq ?? 0)))) continue
+      const remoteSeq = Number(row.syncSeq) || 0
+      const localSeq = Number(existing?.syncSeq) || 0
+      if (existing && (remoteSeq > 0
+        ? localSeq > remoteSeq
+        : String(existing.updatedAt ?? '') >= String(row.updatedAt ?? ''))) continue
       const next = entity === 'childProfiles' && existing ? {...row, honorClaims: {...(existing.honorClaims as Record<string,string> | undefined), ...(row.honorClaims as Record<string,string> | undefined)}, starClaims: {...(existing.starClaims as Record<string,string> | undefined), ...(row.starClaims as Record<string,string> | undefined)}} : row
       await table.put(next)
       applied += 1
     }
     return applied
+    })
   }
 
   async function setSetting(key: string, value: unknown) {
@@ -809,7 +853,7 @@ export function createRepo(database: GrowthDB) {
     countAll,
     enqueue,
     listOutbox,
-    dropFromOutbox,
+    dropFromOutbox, settleSyncBatch,
     outboxCount,
     applyRemote,
   }

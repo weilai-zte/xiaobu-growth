@@ -26,3 +26,16 @@ it('新勋章播放一次惊喜，同一会话刷新未读消息不会重复播�
  await screen.findByRole('button',{name:'打开惊喜勋章'})
  expect(document.querySelector('.honor-confetti')).not.toBeInTheDocument()
 })
+it('星空总览的新勋章提示默认收起，展开后仍可查看和标记已读',async()=>{
+ await repo.clearAll();const child=await repo.createProfile({name:'小满'});await repo.setSetting(SETTINGS_KEYS.childView,true)
+ await repo.db.routineChecks.put({id:'compact-honor-check',childId:child.id,ruleId:'r',date:'2026-10-20',status:'done',createdAt:'',updatedAt:''})
+ window.location.hash='#/child/growth';render(<App/>)
+ const summary=await screen.findByText(/枚新勋章 · 点开看看/)
+ const details=summary.closest('details')!
+ expect(details).not.toHaveAttribute('open')
+ expect(screen.getByRole('button',{name:'知道啦'})).not.toBeVisible()
+ await userEvent.click(summary)
+ expect(details).toHaveAttribute('open')
+ await userEvent.click(screen.getByRole('button',{name:'知道啦'}))
+ await waitFor(()=>expect(screen.queryByText(/枚新勋章 · 点开看看/)).not.toBeInTheDocument())
+})
