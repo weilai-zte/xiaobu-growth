@@ -4,7 +4,7 @@ import {createXiaobuModel} from '../preview/xiaobuModel'
 import {createPlumageTexture} from '../preview/plumageTexture'
 import {posturePoint} from '../preview/birdPosture'
 import {faceSurface} from '../preview/birdShape'
-import {poseRiggedBird,riggedFoodPoint,riggedBallTravel} from '../lib/riggedBirdMotion'
+import {applyRiggedGrowth,poseRiggedBird,riggedFoodPoint,riggedBallTravel} from '../lib/riggedBirdMotion'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import * as T from 'three'
 import type { BuddyActivity } from '../db/types'
@@ -70,8 +70,8 @@ export function createParkWorld(canvas:HTMLCanvasElement,initial:ParkState,onLos
  for(let i=0;i<6;i++){orb('#bdd398',-4+i*1.45,.2,-3.15,.35,.18,.32)}
  for(let i=0;i<14;i++){const a=i*2.4,r=.3+Math.sqrt(i)*.27;flower(Math.cos(a)*r,Math.sin(a)*r,['#f6adc5','#dac7ee','#fff0bb'][i%3],garden)}
  for(let i=0;i<5;i++){box('#f5e5c5',-1.1+i*.5,.25,-1.2,.08,.6,.08,garden)}box('#e2d0b3',0,.4,-1.2,2.4,.08,.08,garden)
- const butterfly=new T.Group();garden.add(butterfly);const butterflyWings=[orb('#f5c3d2',-.13,0,0,.17,.03,.23,butterfly),orb('#f5c3d2',.13,0,0,.17,.03,.23,butterfly)]
- const pool=new T.Group();pool.position.set(3.4,.13,1.5);root.add(pool)
+ const butterfly=new T.Group();garden.add(butterfly);butterfly.scale.setScalar(1.7);butterfly.position.set(1.2,2.8,.2);const butterflyWings=[orb('#f5c3d2',-.13,0,0,.17,.03,.23,butterfly),orb('#f5c3d2',.13,0,0,.17,.03,.23,butterfly)]
+ const pool=new T.Group();pool.position.set(3.4,.13,1.5);pool.scale.setScalar(1.45);root.add(pool)
  const poolWall=mesh(new T.CylinderGeometry(1.35,1.45,.35,48),'#f1e4d1',pool,0,.1,0);poolWall.scale.z=.72
  const water=mesh(new T.CylinderGeometry(1.18,1.18,.06,48),'#6bcce1',pool,0,.31,0);water.scale.z=.72;water.material=new T.MeshStandardMaterial({color:'#70d7e6',roughness:.18,metalness:.25,transparent:true,opacity:.86})
  const waves:T.Mesh[]=[]
@@ -88,7 +88,7 @@ export function createParkWorld(canvas:HTMLCanvasElement,initial:ParkState,onLos
   lid.position.copy(headBone.worldToLocal(model.mesh.localToWorld(point)))
   lid.rotation.set(Math.PI/22.5,sign*.48,0);lid.visible=false;return lid
  })
- const foodLocal=riggedFoodPoint(model)
+ let foodLocal=riggedFoodPoint(model)
  const footLocal=model.mesh.worldToLocal(model.contacts.foot.getWorldPosition(new T.Vector3()))
  const eggModel=createBirdEgg(),egg=eggModel.group;bird.add(egg)
  const ball=orb('#e7a9ba',.3,.3,1.3,.28);const ballRing=mesh(new T.TorusGeometry(.282,.015,5,32),'#fff0c5',ball);ballRing.rotation.x=.8
@@ -114,24 +114,35 @@ export function createParkWorld(canvas:HTMLCanvasElement,initial:ParkState,onLos
  let renderedActivity:BuddyActivity|'pending'='pending'
  const clock=createBirdClock()
  let renderDelta=0
- let state=initial,visible=true,frame=0,disposed=false,angle=0,last=0
+ let state=initial,visible=true,frame=0,disposed=false,angle=0,last=0,viewportWidth=800
+ let growthStage=''
+ const focus=new T.Vector3()
+ const areaFocus:Record<ParkArea,[number,number,number]>={meadow:[-.7,1.4,0],nest:[-2.2,1.3,-.7],home:[.7,1.4,-.5],garden:[-2.7,1.4,1.1],pool:[2.8,1.4,1.3]}
+ const areaColors:Record<ParkArea,[string,string,string]>={meadow:['#bcda9b','#83b58b','#fff2ce'],nest:['#d9ce9c','#a99a70','#ffe1a3'],home:['#cfdbac','#91a67f','#ffe0a2'],garden:['#bbd6a7','#819f87','#ffe0ed'],pool:['#a6cbd3','#749eaf','#c7ddff']}
+ focus.set(...areaFocus[state.area])
+ const starLights=new T.Group();pool.add(starLights)
+ for(let i=0;i<12;i++){const a=i*Math.PI/6;const star=mesh(new T.OctahedronGeometry(i%3===0?.095:.06),'#fff2a3',starLights,Math.cos(a)*1.5,.85+(i%3)*.6,Math.sin(a)*1.05);star.material=new T.MeshStandardMaterial({color:'#fff0ab',emissive:'#ffe28a',emissiveIntensity:1.2})}
  const reduce=matchMedia('(prefers-reduced-motion: reduce)')
- function sync(){nest.visible=state.count>=14;house.visible=state.count>=21;garden.visible=state.count>=28;pool.visible=state.count>=35;egg.visible=['egg','crack'].includes(state.stage);body.visible=!egg.visible;eggModel.crack.visible=state.stage==='crack';charm.visible=false;scarf.visible=state.accessory==='scarf';backpack.visible=state.accessory==='backpack';pin.visible=state.accessory==='pin';toy.visible=['bell','ball','swing'].includes(state.accessory);Object.entries(decorObjects).forEach(([key,g])=>{g.visible=key===state.decor});bird.scale.setScalar(['hatch','young'].includes(state.stage)?1.35:1.5);brush.visible=state.activity==='groom';bowl.visible=state.activity==='feed';foodStand.visible=bowl.visible;foodBase.visible=bowl.visible;ball.visible=state.activity==='play';}
+ function sync(){nest.visible=state.count>=14;house.visible=state.count>=21;garden.visible=state.count>=28;pool.visible=state.count>=35;egg.visible=['egg','crack'].includes(state.stage);body.visible=!egg.visible;eggModel.crack.visible=state.stage==='crack';charm.visible=false;scarf.visible=state.accessory==='scarf';backpack.visible=state.accessory==='backpack';pin.visible=state.accessory==='pin';toy.visible=['bell','ball','swing'].includes(state.accessory);Object.entries(decorObjects).forEach(([key,g])=>{g.visible=key===state.decor});if(growthStage!==state.stage){growthStage=state.stage;bird.scale.setScalar(applyRiggedGrowth(model,state.stage));foodLocal=riggedFoodPoint(model)}const colors=areaColors[state.area];(lawn.material as T.MeshStandardMaterial).color.set(colors[0]);(ground.material as T.MeshStandardMaterial).color.set(colors[1]);sun.color.set(colors[2]);starLights.visible=state.area==='pool';brush.visible=state.activity==='groom';bowl.visible=state.activity==='feed';foodStand.visible=bowl.visible;foodBase.visible=bowl.visible;ball.visible=state.activity==='play';}
  sync()
- const resize=new ResizeObserver(()=>{const {width,height}=canvas.getBoundingClientRect();if(width&&height){renderer.setSize(width,height,false);camera.aspect=width/height;camera.position.set(width<500?7:9,width<500?6:8,width<500?11:14);camera.lookAt(0,1,0);camera.updateProjectionMatrix()}});resize.observe(canvas)
+ const resize=new ResizeObserver(()=>{const {width,height}=canvas.getBoundingClientRect();if(width&&height){renderer.setSize(width,height,false);camera.aspect=width/height;viewportWidth=width;camera.updateProjectionMatrix()}});resize.observe(canvas)
  const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;pauseClock()});observer.observe(canvas)
  function animate(now:number){if(disposed)return;frame=requestAnimationFrame(animate);const active=visible&&!document.hidden;clock.tick(now,active);if(!active){renderDelta=0;return}renderDelta+=clock.delta;if(now-last<(reduce.matches?180:33))return;last=now;const dt=renderDelta;renderDelta=0;const t=reduce.matches?0:clock.time,moving=!reduce.matches
-  const sleeping=state.activity==='sleep',fly=state.activity==='adventure'||state.flapping
+  const sleeping=state.activity==='sleep',eggStage=['egg','crack'].includes(state.stage)
+  const practice=state.stage==='young'&&state.activity==='idle'&&state.area==='meadow'&&!reduce.matches&&(t%7)>2&&(t%7)<4.5
+  const soaring=state.stage==='adult'&&state.activity==='idle'&&state.area==='meadow'&&!reduce.matches&&(t%11)>4&&(t%11)<8
+  const fly=!eggStage&&(state.activity==='adventure'||state.flapping||practice||soaring)
   const gardenPlay=state.area==='garden'&&state.activity==='idle',swim=state.area==='pool'&&state.activity==='idle'
   const elapsed=clock.action
-  const target=sleeping||state.area==='nest'?new T.Vector3(-2.6,state.count>=14?.45:.25,-.9):swim?new T.Vector3(3.2,.45,1.5):gardenPlay?new T.Vector3(-3.1,.35,1.1):new T.Vector3(-1.1,.13,.25)
-  if(moving)target.y+=fly?(.7+Math.sin(elapsed*4)*.2)*(1-Math.exp(-elapsed*8)):gardenPlay?.25+Math.sin(t*3)*.16:0
+  const target=sleeping||state.area==='nest'?new T.Vector3(-2.6,state.count>=14?.45:.25,-.9):state.area==='pool'?new T.Vector3(3.2,.45,1.5):state.area==='garden'?new T.Vector3(-3.1,.35,1.1):state.area==='home'?new T.Vector3(.3,.13,.65):new T.Vector3(-1.1,.13,.25)
+  if(moving)target.y+=fly?(state.stage==='hatch'?.16:practice?.28:1.05)+Math.sin(t*4)*.12:gardenPlay?.35+Math.sin(t*3)*.18:0
+  if(soaring){target.x+=Math.sin(t*1.4)*.65;target.z+=Math.cos(t*1.4)*.35}
   bird.position.lerp(target,damping(8,dt,reduce.matches))
   sleepMat.visible=sleeping&&state.count<14
   egg.rotation.z=moving&&egg.visible?(state.stage==='crack'?.025:.012)*Math.sin(elapsed*7)*Math.exp(-elapsed*.5):0
   body.scale.y=1
   const previous=model.bones.map(b=>b.quaternion.clone())
-  poseRiggedBird(model,state.activity,elapsed,fly||swim||gardenPlay,reduce.matches)
+  poseRiggedBird(model,state.activity,practice||soaring?t:elapsed,fly||swim||gardenPlay,reduce.matches)
   model.bones.forEach((b,i)=>b.quaternion.copy(previous[i].slerp(b.quaternion,damping(18,dt,reduce.matches))))
   model.mesh.updateMatrixWorld(true);model.mesh.skeleton.update()
   const close=sleeping?(reduce.matches?1:T.MathUtils.smoothstep(elapsed,1.4,2.1)):0
@@ -145,8 +156,12 @@ export function createParkWorld(canvas:HTMLCanvasElement,initial:ParkState,onLos
   const kickPoint=footLocal.clone().add(new T.Vector3(.26,.08,.07))
   kickPoint.x+=riggedBallTravel(elapsed,reduce.matches)
   ball.position.copy(inPark(kickPoint));ball.rotation.z=-riggedBallTravel(elapsed,reduce.matches)/.28
-  if(moving){brush.position.copy(inPark(new T.Vector3(.5,1.5,1.1)));brush.position.x+=Math.sin(t*3)*.15;brush.rotation.z=Math.sin(t*3)*.3;butterfly.position.set(Math.cos(t)*.7,1.3+Math.sin(t*2)*.15,Math.sin(t)*.5);butterflyWings.forEach((w,i)=>w.rotation.z=(i?1:-1)*Math.sin(t*12)*.7);waves.forEach((w,i)=>{w.scale.setScalar(.8+((t*.3+i*.3)%1)*.5)});duck.rotation.y=Math.sin(t*.7)*.2;charm.rotation.y=t*.5}
+  if(moving){brush.position.copy(inPark(new T.Vector3(.5,1.5,1.1)));brush.position.x+=Math.sin(t*3)*.15;brush.rotation.z=Math.sin(t*3)*.3;butterfly.position.set(Math.cos(t)*1.5,2.8+Math.sin(t*2)*.3,Math.sin(t)*.7);butterflyWings.forEach((w,i)=>w.rotation.z=(i?1:-1)*Math.sin(t*12)*.7);waves.forEach((w,i)=>{w.scale.setScalar(.8+((t*.3+i*.3)%1)*.5)});duck.rotation.y=Math.sin(t*.7)*.2;charm.rotation.y=t*.5}
   const night=sleeping?.32:1;sun.intensity=T.MathUtils.lerp(sun.intensity,4*night,damping(5,dt,reduce.matches));fill.intensity=T.MathUtils.lerp(fill.intensity,sleeping?1.4:1.3,damping(8,dt,reduce.matches))
+  const frameArea=sleeping&&state.count>=14?'nest':state.area
+  const localFocus=new T.Vector3(...areaFocus[frameArea]);root.updateMatrixWorld(true);const worldFocus=root.localToWorld(localFocus)
+  focus.lerp(worldFocus,damping(6,dt,reduce.matches));const distance=viewportWidth<500?1.22:1
+  camera.position.copy(focus).add(new T.Vector3(6.2,4.8,9.2).multiplyScalar(distance));camera.lookAt(focus)
   root.rotation.y=T.MathUtils.lerp(root.rotation.y,angle,damping(7,dt,reduce.matches));renderer.render(scene,camera);renderedActivity=state.activity
  }
  frame=requestAnimationFrame(animate)
@@ -158,5 +173,5 @@ export function createParkWorld(canvas:HTMLCanvasElement,initial:ParkState,onLos
   root.children.forEach(o=>o.visible=o===bird);const center=bird.position.clone().add(new T.Vector3(0,egg.visible?1:1.65,.15))
   camera.position.copy(center).add(new T.Vector3(3.3,1,6.3));camera.lookAt(center);renderer.render(scene,camera)
   const image=canvas.toDataURL('image/png');root.children.forEach((o,i)=>o.visible=saved[i]);camera.position.copy(position);camera.quaternion.copy(quaternion);return image
- },update(next:ParkState){if(next.activity!==state.activity||next.interactionId!==state.interactionId||(!state.flapping&&next.flapping))clock.restart();state=next;sync()},rotate(delta:number){angle=T.MathUtils.clamp(angle+delta,-.55,.55)},dispose(){disposed=true;cancelAnimationFrame(frame);resize.disconnect();observer.disconnect();canvas.removeEventListener('webglcontextlost',lost);document.removeEventListener('visibilitychange',pauseClock);scene.traverse(o=>{if(o instanceof T.Mesh){o.geometry.dispose();const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>m.dispose())}});materials.forEach(m=>m.dispose());plumage.dispose();renderer.dispose();renderer.forceContextLoss()},info(){return {triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,house:house.visible,garden:garden.visible,pool:pool.visible,activity:state.activity,renderedActivity,actionElapsed:clock.action,environmentElapsed:clock.time,reducedMotion:reduce.matches,character:'rigged-v5',birdSize:bird.scale.toArray(),birdPosition:bird.position.toArray(),food:bowl.position.toArray(),ball:ball.position.toArray(),nest:nest.visible,sleepMat:sleepMat.visible,bones:model.stats.bones,characterTriangles:model.stats.triangles,beak:root.worldToLocal(model.contacts.beak.getWorldPosition(new T.Vector3())).toArray()}}}
+ },update(next:ParkState){if(next.activity!==state.activity||next.interactionId!==state.interactionId||(!state.flapping&&next.flapping))clock.restart();state=next;sync()},rotate(delta:number){angle=T.MathUtils.clamp(angle+delta,-.55,.55)},dispose(){disposed=true;cancelAnimationFrame(frame);resize.disconnect();observer.disconnect();canvas.removeEventListener('webglcontextlost',lost);document.removeEventListener('visibilitychange',pauseClock);scene.traverse(o=>{if(o instanceof T.Mesh){o.geometry.dispose();const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>m.dispose())}});materials.forEach(m=>m.dispose());plumage.dispose();renderer.dispose();renderer.forceContextLoss()},info(){return {triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,house:house.visible,garden:garden.visible,pool:pool.visible,activity:state.activity,renderedActivity,actionElapsed:clock.action,environmentElapsed:clock.time,reducedMotion:reduce.matches,character:'rigged-v5',stage:state.stage,area:state.area,headScale:headBone.scale.x,wingScale:model.bones.find(b=>b.name==='WingL')!.scale.x,tailScale:model.bones.find(b=>b.name==='Tail')!.scale.x,cameraFocus:focus.toArray(),birdSize:bird.scale.toArray(),birdPosition:bird.position.toArray(),food:bowl.position.toArray(),ball:ball.position.toArray(),nest:nest.visible,sleepMat:sleepMat.visible,bones:model.stats.bones,characterTriangles:model.stats.triangles,beak:root.worldToLocal(model.contacts.beak.getWorldPosition(new T.Vector3())).toArray()}}}
 }

@@ -2666,7 +2666,7 @@ legend {
 .park-fallback { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#3b6152; pointer-events:none; }
 .park-fallback .buddy-bird { width:min(300px,75%); }
 .park-fallback small { font-size:12px; padding:10px; }
-.park-mode-sleep .park-viewport { background:radial-gradient(ellipse at 55% 30%,#7c91af,#344f6a); transition:background 1s; }
+.park-world.park-mode-sleep .park-viewport { background:radial-gradient(ellipse at 55% 30%,#7c91af,#344f6a); transition:background 1s; }
 .park-mode-sleep .park-location-pill { background:#e9eef5da; color:#354d65; }
 .bird-habitat .park-chat { position:static; margin:14px 0; width:auto; max-width:none; background:#fffaf0; border:1px solid #ded8bd; color:#5e5942; border-radius:15px; padding:12px 16px; }
 .park-world button:focus-visible { outline:3px solid #6750a4; outline-offset:4px; }
@@ -2757,3 +2757,20 @@ legend {
 .sky-honor-body { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 8px 0 12px; }
 
 .sky-honor-body :is(button, a) { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* 每处家园有独立的天空与地面色调，主场景跟随当前区域。 */
+.park-area-nest .park-viewport { background:radial-gradient(ellipse at 45% 40%,#fff4d6,#e9dcc0 60%,#cbb894); }
+.park-area-home .park-viewport { background:radial-gradient(ellipse at 65% 35%,#fff0cc,#e7e8cd 60%,#b8c7a7); }
+.park-area-garden .park-viewport { background:radial-gradient(ellipse at 35% 35%,#fff1f6,#e9d9ee 55%,#c1d8c3); }
+.park-area-pool .park-viewport { background:radial-gradient(ellipse at 70% 35%,#e6f5ff,#bbd4ee 55%,#919fc8); }
+.park-growth-description { margin:0; padding:12px 22px; color:#3b5e50; background:#fffdf5; font-size:13px; line-height:1.8; }
+.park-stage-art { width:min(340px,78%); height:auto; max-height:78%; object-fit:contain; }
+.park-flat-scenery { position:absolute; width:100%; height:100%; inset:0; }
+.park-fallback .park-stage-art { position:relative; width:230px; max-width:48%; margin-right:25%; transform-origin:bottom center; }
+.park-stage-hatch .park-stage-art { transform:scale(.58); }
+.park-stage-young .park-stage-art { transform:scale(.8); }
+.park-fallback small { position:absolute; bottom:58px; background:#fffdf0e8; border-radius:10px; color:#3b6152; }
+
+.park-world[data-flapping="true"] .park-stage-art { animation:park-light-flap .45s ease-in-out infinite alternate; }
+@keyframes park-light-flap { from { translate:0 0; rotate:-4deg; } to { translate:0 -16px; rotate:4deg; } }
+@media(prefers-reduced-motion:reduce) { .park-world[data-flapping="true"] .park-stage-art { animation:none; } }

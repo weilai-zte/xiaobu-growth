@@ -24,3 +24,16 @@ it('回窝后再收头休息，叫醒恢复骨骼；减少动态时不循环扑�
  poseRiggedBird(m,'idle',1,true,true);const wing=m.bones.find(b=>b.name==='WingL')!.rotation.z
  poseRiggedBird(m,'idle',2,true,true);expect(m.bones.find(b=>b.name==='WingL')!.rotation.z).toBe(wing);m.dispose()
 })
+it('幼鸟的短翼短尾与成年有明显差异，切换阶段后完整恢复比例',async()=>{
+ const {applyRiggedGrowth}=await import('../src/lib/riggedBirdMotion')
+ const m=createXiaobuModel(),bone=(name:string)=>m.bones.find(b=>b.name===name)!
+ expect(applyRiggedGrowth(m,'hatch')).toBe(.9)
+ expect(bone('Head').scale.x).toBeGreaterThan(1.15)
+ expect(bone('WingL').scale.x).toBeLessThan(.7)
+ expect(bone('Tail').scale.x).toBeLessThan(.5)
+ expect(applyRiggedGrowth(m,'young')).toBe(1.2)
+ expect(bone('WingL').scale.x).toBe(.85)
+ expect(applyRiggedGrowth(m,'adult')).toBe(1.5)
+ expect(m.bones.every(b=>b.scale.x===1&&b.scale.y===1&&b.scale.z===1)).toBe(true)
+ m.dispose()
+})

@@ -39,3 +39,15 @@ export function riggedFoodPoint(model:Model){
  return point
 }
 export function riggedBallTravel(time:number,reduced=false){return reduced?.7:.7*T.MathUtils.smoothstep(time,.65,1.5)}
+
+/** 幼鸟保留较大的头、短翼短尾；成年恢复模型的完整比例。 */
+export function applyRiggedGrowth(model:Model,stage:string){
+ const hatch=stage==='hatch',young=stage==='young'
+ for(const bone of model.bones)bone.scale.setScalar(1)
+ const bone=(name:string)=>model.bones.find(b=>b.name===name)!
+ bone('Head').scale.setScalar(hatch?1.2:young?1.08:1)
+ for(const name of ['WingL','WingR'])bone(name).scale.setScalar(hatch?.62:young?.85:1)
+ bone('Tail').scale.setScalar(hatch?.45:young?.75:1)
+ model.mesh.updateMatrixWorld(true);model.mesh.skeleton.update()
+ return hatch?.9:young?1.2:1.5
+}

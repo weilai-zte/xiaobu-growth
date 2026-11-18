@@ -10,3 +10,8 @@ export function parkProgress(count:number) {
  const n=Number.isFinite(count)?Math.max(0,Math.floor(count)):0
  return PARK_AREAS.map(area=>({...area,unlocked:n>=area.at,remaining:Math.max(0,area.at-n)}))
 }
+
+/** 新进入乐园或解锁时，展示最近建成的区域；不改动解锁门槛。 */
+export function latestParkArea(count:number):ParkArea {
+ return [...parkProgress(count)].reverse().find(area=>area.unlocked)!.key
+}
