@@ -2772,3 +2772,9 @@ legend {
 .park-world[data-flapping="true"] .park-stage-art { animation:park-light-flap .45s ease-in-out infinite alternate; }
 @keyframes park-light-flap { from { translate:0 0; rotate:-4deg; } to { translate:0 -16px; rotate:4deg; } }
 @media(prefers-reduced-motion:reduce) { .park-world[data-flapping="true"] .park-stage-art { animation:none; } }
+.park-collection-note { margin:0; padding:10px 22px; color:#3b5e50; background:#f3f7e9; font-size:12px; line-height:1.7; }
+.park-fallback-collection { position:absolute; inset:0; z-index:1; pointer-events:none; }
+.park-fallback-collection>span { position:absolute; width:44px; height:44px; transform:translate(-50%,-50%); }
+.park-fallback-collection .bird-item-picture { display:block; width:100%; height:100%; }
+.park-fallback-collection>span.favorite { width:60px; height:60px; outline:2px solid #9c7b37; outline-offset:2px; border-radius:50%; filter:drop-shadow(0 3px 4px #78653244); }
+.park-fallback-collection:not(:empty)~small { top:58px; bottom:auto; max-width:calc(100% - 28px); padding:6px 10px; }

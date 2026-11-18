@@ -9,7 +9,8 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import * as T from 'three'
 import type { BuddyActivity } from '../db/types'
 import type { ParkArea } from '../lib/park'
-export interface ParkState {stage:string;count:number;activity:BuddyActivity;area:ParkArea;flapping:boolean;accessory:string;decor:string;interactionId?:number}
+import {parkCollection,treasurePlacement} from '../lib/parkCollection'
+export interface ParkState {stage:string;count:number;activity:BuddyActivity;area:ParkArea;flapping:boolean;accessory:string;decor:string;treasures?:string[];items?:string[];interactionId?:number}
 export function createParkWorld(canvas:HTMLCanvasElement,initial:ParkState,onLost:()=>void) {
  const renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'low-power'})
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap
@@ -135,17 +136,55 @@ export function createParkWorld(canvas:HTMLCanvasElement,initial:ParkState,onLos
  const scarf=new T.Group();model.bones.find(b=>b.name==='Neck')!.add(scarf);const collar=mesh(new T.TorusGeometry(.34,.075,8,32),'#dd9485',scarf,0,0,.05);collar.rotation.x=Math.PI/2;const end=box('#dd9485',.15,-.18,.35,.14,.36,.08,scarf);end.rotation.z=-.25
  const backpack=orb('#d9ba83',0,0,-.4,.32,.36,.16,model.bones.find(b=>b.name==='Chest')!)
  const pin=mesh(new T.OctahedronGeometry(.075),'#ffe4a0',model.bones.find(b=>b.name==='Chest')!,.23,-.1,.48)
- const toy=orb('#edc976',-.4,.45,1.7,.12)
- const decorObjects:Record<string,T.Group>={}
- for(const key of ['honey','berry','gem','shell','acorn','mushroom','chime','flower']){const g=new T.Group();g.position.set(2.7,.22,-.3);root.add(g);decorObjects[key]=g
-  if(key==='gem'){mesh(new T.OctahedronGeometry(.28),'#8dcfe6',g,0,.28,0)}
-  else if(key==='honey'){mesh(new T.CylinderGeometry(.2,.22,.4,20),'#dfb663',g,0,.2,0);mesh(new T.CylinderGeometry(.23,.23,.07,20),'#b49161',g,0,.44,0)}
-  else if(key==='berry'){for(let k=0;k<5;k++)orb('#b694b6',Math.sin(k*2)*.17,.2,Math.cos(k*2)*.17,.13,.12,.13,g)}
-  else if(key==='mushroom'){mesh(new T.CylinderGeometry(.09,.12,.4,12),'#eee0b5',g,0,.2,0);orb('#ddbca0',0,.47,0,.32,.18,.3,g)}
-  else if(key==='flower'){flower(0,0,'#edb7cd',g)}
-  else if(key==='chime'){box('#b4c6be',0,.68,0,.6,.07,.08,g);for(let k=0;k<3;k++)mesh(new T.CylinderGeometry(.035,.035,.4+k*.04,8),'#e5d3a4',g,(k-1)*.17,.38,0)}
-  else{orb(key==='shell'?'#dfc3d9':'#b99463',0,.25,0,.23,.28,.2,g)}
+ // 百宝箱物品均由拥有记录驱动，每种显示一件。
+ const toyObjects:Record<string,T.Group>={}
+ for(const key of ['bell','ball','swing']){const g=new T.Group();root.add(g);toyObjects[key]=g
+  if(key==='bell'){
+   g.position.set(-.2,.12,3.5)
+   mesh(new T.CylinderGeometry(.035,.055,1,8),'#b79a70',g,-.2,.5,0);box('#b79a70',.03,1,0,.55,.06,.06,g)
+   mesh(new T.TorusGeometry(.055,.018,6,12),'#d2ae62',g,.22,.88,0)
+   mesh(new T.CylinderGeometry(.10,.19,.25,16),'#e6bf68',g,.22,.68,0);orb('#b68b45',.22,.53,0,.04,.055,.04,g)
+  }else if(key==='ball'){
+   g.position.set(.8,.3,3.5);orb('#ba9bd9',0,0,0,.24,.24,.24,g)
+   mesh(new T.TorusGeometry(.241,.012,6,24),'#fff1c7',g).rotation.x=.8
+  }else{
+   g.position.set(-4.6,.12,1.15)
+   for(const x of [-.6,.6])mesh(new T.CylinderGeometry(.055,.08,1.8,8),'#b38c63',g,x,.9,0)
+   box('#b38c63',0,1.8,0,1.4,.09,.09,g)
+   for(const x of [-.4,.4])mesh(new T.CylinderGeometry(.015,.015,1.15,6),'#e0cf9c',g,x,1.15,0)
+   box('#c9a16e',0,.56,0,1,.1,.38,g)
+  }
  }
+ const decorObjects:Record<string,T.Group>={}
+ for(const key of ['honey','berry','gem','shell','acorn','mushroom','chime','flower']){const g=new T.Group();root.add(g);decorObjects[key]=g
+  if(key==='gem'){
+   mesh(new T.CylinderGeometry(.25,.29,.1,12),'#d5c3a1',g,0,.05,0)
+   const jewel=mesh(new T.OctahedronGeometry(.28),'#8dcfe6',g,0,.37,0);jewel.material=mat('#8dcfe6',.2,.3)
+  }else if(key==='honey'){
+   mesh(new T.CylinderGeometry(.2,.22,.4,20),'#dfb663',g,0,.2,0);mesh(new T.CylinderGeometry(.23,.23,.07,20),'#b49161',g,0,.44,0)
+   box('#fff0b6',0,.22,.214,.19,.17,.02,g)
+  }else if(key==='berry'){
+   mesh(new T.CylinderGeometry(.29,.22,.24,16),'#b99669',g,0,.12,0)
+   mesh(new T.TorusGeometry(.24,.025,6,20,Math.PI),'#98754e',g,0,.25,0)
+   for(let k=0;k<5;k++)orb(k%2?'#b496ce':'#8389c1',Math.sin(k*2)*.17,.28,Math.cos(k*2)*.17,.10,.10,.10,g)
+  }else if(key==='shell'){
+   orb('#edbdba',0,.3,0,.29,.29,.12,g)
+   for(let i=0;i<5;i++){const a=(i+.5)*Math.PI/5;const rib=box('#ffe3d2',Math.cos(a)*.11,.28+Math.sin(a)*.09,.12,.018,.31,.018,g);rib.rotation.z=-Math.cos(a)*.65}
+  }else if(key==='acorn'){
+   orb('#d1a15c',0,.25,0,.21,.27,.21,g);orb('#a4814d',0,.43,0,.24,.10,.24,g)
+   mesh(new T.CylinderGeometry(.035,.035,.13,6),'#8d724b',g,0,.55,0);const leaf=orb('#93b774',.12,.55,0,.15,.025,.06,g);leaf.rotation.z=.3
+  }else if(key==='mushroom'){
+   mesh(new T.CylinderGeometry(.09,.12,.4,12),'#eee0b5',g,0,.2,0);const cap=orb('#a99acb',0,.47,0,.32,.18,.3,g);cap.material=new T.MeshStandardMaterial({color:'#a99acb',emissive:'#6d5c9b',emissiveIntensity:.25})
+   for(let i=0;i<5;i++){const a=i*1.3;orb('#fff0c8',Math.cos(a)*.18,.59,Math.sin(a)*.16,.045,.018,.04,g)}
+  }else if(key==='chime'){
+   mesh(new T.CylinderGeometry(.025,.045,1.1,8),'#ad956c',g,-.35,.55,0);box('#b4c6be',0,1.1,0,.8,.06,.08,g)
+   for(let k=0;k<3;k++){mesh(new T.CylinderGeometry(.01,.01,.22,6),'#e2d1a8',g,(k-1)*.17,.97,0);mesh(new T.CylinderGeometry(.035,.035,.4+k*.04,8),'#e5d3a4',g,(k-1)*.17,.65,0)}
+   mesh(new T.OctahedronGeometry(.10),'#f8dc8e',g,0,.32,0)
+  }else{
+   mesh(new T.CylinderGeometry(.21,.15,.23,12),'#ccaa91',g,0,.12,0);flower(0,0,'#edb7cd',g)
+  }
+ }
+ const favoriteRing=mesh(new T.TorusGeometry(.45,.025,6,32),'#f4d486');favoriteRing.rotation.x=Math.PI/2
  let renderedActivity:BuddyActivity|'pending'='pending'
  const clock=createBirdClock()
  let renderDelta=0
@@ -158,7 +197,7 @@ export function createParkWorld(canvas:HTMLCanvasElement,initial:ParkState,onLos
  const starLights=new T.Group();pool.add(starLights)
  for(let i=0;i<12;i++){const a=i*Math.PI/6;const star=mesh(new T.OctahedronGeometry(i%3===0?.095:.06),'#fff2a3',starLights,Math.cos(a)*1.5,.85+(i%3)*.6,Math.sin(a)*1.05);star.material=new T.MeshStandardMaterial({color:'#fff0ab',emissive:'#ffe28a',emissiveIntensity:1.2})}
  const reduce=matchMedia('(prefers-reduced-motion: reduce)')
- function sync(){nest.visible=state.count>=14;house.visible=state.count>=21;garden.visible=state.count>=28;pool.visible=state.count>=35;egg.visible=['egg','crack'].includes(state.stage);body.visible=!egg.visible;eggModel.crack.visible=state.stage==='crack';charm.visible=false;scarf.visible=state.accessory==='scarf';backpack.visible=state.accessory==='backpack';pin.visible=state.accessory==='pin';toy.visible=['bell','ball','swing'].includes(state.accessory);Object.entries(decorObjects).forEach(([key,g])=>{g.visible=key===state.decor});if(growthStage!==state.stage){growthStage=state.stage;bird.scale.setScalar(applyRiggedGrowth(model,state.stage));foodLocal=riggedFoodPoint(model);footLocal=model.mesh.worldToLocal(model.contacts.foot.getWorldPosition(new T.Vector3()))}const colors=areaColors[state.area];(lawn.material as T.MeshStandardMaterial).color.set(colors[0]);(ground.material as T.MeshStandardMaterial).color.set(colors[1]);sun.color.set(colors[2]);starLights.visible=state.area==='pool';brush.visible=state.activity==='groom';bowl.visible=state.activity==='feed';foodStand.visible=bowl.visible;foodBase.visible=bowl.visible;ball.visible=state.activity==='play';}
+ function sync(){nest.visible=state.count>=14;house.visible=state.count>=21;garden.visible=state.count>=28;pool.visible=state.count>=35;egg.visible=['egg','crack'].includes(state.stage);body.visible=!egg.visible;eggModel.crack.visible=state.stage==='crack';charm.visible=false;scarf.visible=state.accessory==='scarf';backpack.visible=state.accessory==='backpack';pin.visible=state.accessory==='pin';const collection=parkCollection(state.treasures,state.items,state.decor);Object.entries(toyObjects).forEach(([key,g])=>{g.visible=collection.toys.some(item=>item===key)&&!(key==='ball'&&state.activity==='play');g.scale.setScalar(key===state.accessory?1.12:1)});Object.entries(decorObjects).forEach(([key,g])=>{g.visible=collection.treasures.some(item=>item===key);const placement=treasurePlacement(key,state.count,state.area,key===collection.favorite);g.position.set(...placement.position);g.scale.setScalar(placement.scale)});favoriteRing.visible=!!collection.favorite;if(collection.favorite){const position=treasurePlacement(collection.favorite,state.count,state.area,true).position;favoriteRing.position.set(position[0],.14,position[2])}if(growthStage!==state.stage){growthStage=state.stage;bird.scale.setScalar(applyRiggedGrowth(model,state.stage));foodLocal=riggedFoodPoint(model);footLocal=model.mesh.worldToLocal(model.contacts.foot.getWorldPosition(new T.Vector3()))}const colors=areaColors[state.area];(lawn.material as T.MeshStandardMaterial).color.set(colors[0]);(ground.material as T.MeshStandardMaterial).color.set(colors[1]);sun.color.set(colors[2]);starLights.visible=state.area==='pool';brush.visible=state.activity==='groom';bowl.visible=state.activity==='feed';foodStand.visible=bowl.visible;foodBase.visible=bowl.visible;ball.visible=state.activity==='play';}
  sync()
  const resize=new ResizeObserver(()=>{const {width,height}=canvas.getBoundingClientRect();if(width&&height){renderer.setSize(width,height,false);camera.aspect=width/height;viewportWidth=width;camera.updateProjectionMatrix()}});resize.observe(canvas)
  const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;pauseClock()});observer.observe(canvas)
@@ -208,5 +247,5 @@ export function createParkWorld(canvas:HTMLCanvasElement,initial:ParkState,onLos
   root.children.forEach(o=>o.visible=o===bird);const center=bird.position.clone().add(new T.Vector3(0,egg.visible?1:1.65,.15))
   camera.position.copy(center).add(new T.Vector3(3.3,1,6.3));camera.lookAt(center);renderer.render(scene,camera)
   const image=canvas.toDataURL('image/png');root.children.forEach((o,i)=>o.visible=saved[i]);camera.position.copy(position);camera.quaternion.copy(quaternion);return image
- },update(next:ParkState){if(next.activity!==state.activity||next.interactionId!==state.interactionId||(!state.flapping&&next.flapping))clock.restart();state=next;sync()},rotate(delta:number){angle=T.MathUtils.clamp(angle+delta,-.55,.55)},dispose(){disposed=true;cancelAnimationFrame(frame);resize.disconnect();observer.disconnect();canvas.removeEventListener('webglcontextlost',lost);document.removeEventListener('visibilitychange',pauseClock);scene.traverse(o=>{if(o instanceof T.Mesh){o.geometry.dispose();const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>m.dispose())}});materials.forEach(m=>m.dispose());plumage.dispose();renderer.dispose();renderer.forceContextLoss()},info(){return {triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,house:house.visible,garden:garden.visible,pool:pool.visible,activity:state.activity,renderedActivity,actionElapsed:clock.action,environmentElapsed:clock.time,reducedMotion:reduce.matches,character:'rigged-v5',stage:state.stage,area:state.area,headScale:headBone.scale.x,wingScale:model.bones.find(b=>b.name==='WingL')!.scale.x,tailScale:model.bones.find(b=>b.name==='Tail')!.scale.x,cameraFocus:focus.toArray(),birdSize:bird.scale.toArray(),birdPosition:bird.position.toArray(),food:bowl.position.toArray(),ball:ball.position.toArray(),nest:nest.visible,sleepMat:sleepMat.visible,bones:model.stats.bones,characterTriangles:model.stats.triangles,beak:root.worldToLocal(model.contacts.beak.getWorldPosition(new T.Vector3())).toArray()}}}
+ },update(next:ParkState){if(next.activity!==state.activity||next.interactionId!==state.interactionId||(!state.flapping&&next.flapping))clock.restart();state=next;sync()},rotate(delta:number){angle=T.MathUtils.clamp(angle+delta,-.55,.55)},dispose(){disposed=true;cancelAnimationFrame(frame);resize.disconnect();observer.disconnect();canvas.removeEventListener('webglcontextlost',lost);document.removeEventListener('visibilitychange',pauseClock);scene.traverse(o=>{if(o instanceof T.Mesh){o.geometry.dispose();const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>m.dispose())}});materials.forEach(m=>m.dispose());plumage.dispose();renderer.dispose();renderer.forceContextLoss()},info(){return {triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,house:house.visible,garden:garden.visible,pool:pool.visible,activity:state.activity,renderedActivity,actionElapsed:clock.action,environmentElapsed:clock.time,reducedMotion:reduce.matches,character:'rigged-v5',stage:state.stage,area:state.area,displayedTreasures:Object.entries(decorObjects).filter(([,g])=>g.visible).map(([key])=>key),displayedToys:Object.entries(toyObjects).filter(([,g])=>g.visible).map(([key])=>key),favorite:parkCollection(state.treasures,state.items,state.decor).favorite,headScale:headBone.scale.x,wingScale:model.bones.find(b=>b.name==='WingL')!.scale.x,tailScale:model.bones.find(b=>b.name==='Tail')!.scale.x,cameraFocus:focus.toArray(),birdSize:bird.scale.toArray(),birdPosition:bird.position.toArray(),food:bowl.position.toArray(),ball:ball.position.toArray(),nest:nest.visible,sleepMat:sleepMat.visible,bones:model.stats.bones,characterTriangles:model.stats.triangles,beak:root.worldToLocal(model.contacts.beak.getWorldPosition(new T.Vector3())).toArray()}}}
 }

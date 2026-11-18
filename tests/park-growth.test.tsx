@@ -35,3 +35,13 @@ it('轻量场景保留互动回应，睡觉时不能切换区域',()=>{
  rerender(<ParkScene {...props} count={35} stage="pool" activity="sleep"/> )
  for(const button of within(screen.getByRole('group',{name:'小布的家园区域'})).getAllByRole('button')) expect(button).toBeDisabled()
 })
+it('选择眼前的收藏不会收起其他已拥有物品，物品移除后场景同步更新',()=>{
+ const {rerender}=render(<ParkScene {...props} treasures={['gem','shell']} items={['bell','scarf','swing']} decor="gem"/> )
+ expect(screen.getByText(/乐园里摆着 2 件收藏、2 件玩具/)).toBeVisible()
+ expect(document.querySelector('.park-fallback-collection>.favorite svg')).toHaveAttribute('aria-label','蓝晶宝石')
+ rerender(<ParkScene {...props} treasures={['gem','shell']} items={['bell','scarf','swing']} decor="shell"/> )
+ expect(screen.getByText(/乐园里摆着 2 件收藏、2 件玩具/)).toBeVisible()
+ expect(document.querySelector('.park-fallback-collection>.favorite svg')).toHaveAttribute('aria-label','彩虹贝壳')
+ rerender(<ParkScene {...props} treasures={['gem']} items={[]} decor="shell"/> )
+ expect(screen.getByText(/乐园里摆着 1 件收藏、0 件玩具/)).toBeVisible()
+})
