@@ -53,6 +53,12 @@ export function createParkWorld(canvas:HTMLCanvasElement,initial:ParkState,onLos
  orb('#eee1b3',0,.21,0,.57,.06,.45,nest)
  for(let i=0;i<5;i++){const a=i*1.3;const cushion=orb(i%2?'#dce4aa':'#e8edbf',Math.cos(a)*.24,.25,Math.sin(a)*.2,.27,.035,.11,nest);cushion.rotation.y=-a}
 
+ // 叶棚、枝灯与软垫让小窝成为独立的休息角落。
+ for(const x of [-1,1])mesh(new T.CylinderGeometry(.045,.075,1.7,8),'#aa8053',nest,x,.85,-.65)
+ const canopy=orb('#9cbb75',0,1.75,-.65,1.3,.12,.65,nest);canopy.rotation.z=.08
+ for(let i=-2;i<=2;i++){const vein=box('#cee0a2',i*.4,1.85,-.65,.025,.025,.85,nest);vein.rotation.y=i*.16}
+ orb('#ffe0a1',-1.04,1.2,-.6,.12,.18,.12,nest)
+
  const sleepMat=orb('#c4bc85',-2.6,.16,-.9,1.6,.12,1.25);sleepMat.visible=false
  nest.scale.setScalar(1.8)
  const house=new T.Group();house.position.set(1.6,0,-1.6);house.rotation.y=-.12;root.add(house)
@@ -64,19 +70,48 @@ export function createParkWorld(canvas:HTMLCanvasElement,initial:ParkState,onLos
  mesh(new T.TorusGeometry(.38,.06,8,32),'#c69d74',house,.72,1.65,1.04)
  box('#c69d74',.72,1.65,1.07,.05,.7,.03,house);box('#c69d74',.72,1.65,1.07,.7,.05,.03,house)
  box('#d8bd91',0,.3,1.3,1.2,.2,.7,house);box('#ead5aa',0,.13,1.7,1.5,.12,.5,house)
+ // 门廊、花盆、烟囱和小灯串随小屋建成，留出门前活动空间。
+ box('#af947b',.7,3.1,-.35,.32,.85,.36,house)
+ const awning=box('#b7c991',0,2.05,1.25,1.3,.10,.55,house);awning.rotation.x=.15
+ for(let i=-2;i<=2;i++)orb('#ffe7a6',i*.4,2.35-Math.cos(i*.5)*.13,1.08,.075,.10,.075,house)
+ for(const x of [-1.35,1.35]){
+  mesh(new T.CylinderGeometry(.24,.17,.35,12),'#bd987a',house,x,.35,1.05)
+  for(let i=0;i<3;i++){orb('#91b77e',x+(i-1)*.12,.66+Math.sin(i)*.12,1.05,.14,.19,.12,house);orb(i%2?'#efc4cc':'#ffe5aa',x+(i-1)*.12,.85+Math.sin(i)*.12,1.05,.12,.08,.12,house)}
+ }
+ for(let i=0;i<6;i++)box('#f2dfb8',-1.5+i*.6,.44,-1.35,.12,.8,.1,house)
+ box('#d8bd91',0,.58,-1.35,3.2,.10,.1,house)
+ box('#d4c59e',0,.46,1.45,.75,.025,.38,house)
+
  const garden=new T.Group();garden.position.set(-3,.1,1.25);root.add(garden)
  function flower(x:number,z:number,color:string,parent:T.Group){mesh(new T.CylinderGeometry(.025,.035,.4,6),'#689a67',parent,x,.25,z);for(let k=0;k<5;k++){const a=k*Math.PI*2/5;orb(color,x+Math.cos(a)*.13,.5,z+Math.sin(a)*.13,.12,.07,.12,parent)}orb('#ffe8a4',x,.54,z,.075,.06,.075,parent)}
  for(let i=0;i<7;i++){flower(-3.8+i*.42,2.25+Math.sin(i)*.35,['#f4c3b6','#fff0bd','#c4bbdf'][i%3],root)}
  for(let i=0;i<6;i++){orb('#bdd398',-4+i*1.45,.2,-3.15,.35,.18,.32)}
  for(let i=0;i<14;i++){const a=i*2.4,r=.3+Math.sqrt(i)*.27;flower(Math.cos(a)*r,Math.sin(a)*r,['#f6adc5','#dac7ee','#fff0bb'][i%3],garden)}
  for(let i=0;i<5;i++){box('#f5e5c5',-1.1+i*.5,.25,-1.2,.08,.6,.08,garden)}box('#e2d0b3',0,.4,-1.2,2.4,.08,.08,garden)
- const butterfly=new T.Group();garden.add(butterfly);butterfly.scale.setScalar(1.7);butterfly.position.set(1.2,2.8,.2);const butterflyWings=[orb('#f5c3d2',-.13,0,0,.17,.03,.23,butterfly),orb('#f5c3d2',.13,0,0,.17,.03,.23,butterfly)]
+ const butterfly=new T.Group();garden.add(butterfly);butterfly.scale.setScalar(1.7);butterfly.rotation.x=.65;butterfly.position.set(1.2,2.8,.2);const butterflyWings=[orb('#f5c3d2',-.13,0,0,.17,.03,.23,butterfly),orb('#f5c3d2',.13,0,0,.17,.03,.23,butterfly)]
+ // 开花拱门和高低花丛，让花园不只是一小块地面摆件。
+ for(const x of [-1.3,1.3])mesh(new T.CylinderGeometry(.06,.08,2.5,8),'#b7c18c',garden,x,1.25,-.9)
+ mesh(new T.TorusGeometry(1.3,.07,8,32,Math.PI),'#b7c18c',garden,0,2.5,-.9)
+ for(let i=0;i<7;i++){const a=i*Math.PI/6;orb(i%2?'#e8b3cb':'#f7e5af',Math.cos(a)*1.3,2.5+Math.sin(a)*1.3,-.9,.22,.19,.13,garden)}
+ const extraButterflies=[['#b3dced',-1.4,3.05,.3],['#edd18e',1.1,3.6,.5]].map(([color,x,y,z])=>{
+  const g=new T.Group();garden.add(g);g.position.set(Number(x),Number(y),Number(z));g.rotation.x=.65
+  for(const sign of [-1,1])orb(String(color),sign*.18,0,0,.23,.045,.3,g)
+  orb('#807683',0,0,0,.035,.05,.16,g);return g
+ })
+
  const pool=new T.Group();pool.position.set(3.4,.13,1.5);pool.scale.setScalar(1.45);root.add(pool)
  const poolWall=mesh(new T.CylinderGeometry(1.35,1.45,.35,48),'#f1e4d1',pool,0,.1,0);poolWall.scale.z=.72
  const water=mesh(new T.CylinderGeometry(1.18,1.18,.06,48),'#6bcce1',pool,0,.31,0);water.scale.z=.72;water.material=new T.MeshStandardMaterial({color:'#70d7e6',roughness:.18,metalness:.25,transparent:true,opacity:.86})
  const waves:T.Mesh[]=[]
  for(let i=0;i<3;i++){const m=mesh(new T.TorusGeometry(.3+i*.25,.013,4,32),'#d0f6f6',pool,0,.36,0);m.rotation.x=Math.PI/2;waves.push(m)}
  const duck=new T.Group();pool.add(duck);orb('#ffe49b',.7,.49,.25,.17,.12,.18,duck);orb('#ffe49b',.72,.65,.32,.12,.12,.12,duck);orb('#f1a55c',.72,.64,.43,.06,.03,.07,duck)
+ // 池畔遮阳伞、救生圈和入水台阶，形成完整的玩水角落。
+ mesh(new T.CylinderGeometry(.025,.04,2.4,8),'#c7aa85',pool,1.35,1.2,-.55)
+ const umbrella=mesh(new T.ConeGeometry(.82,.45,8),'#afa8d4',pool,1.35,2.55,-.55)
+ umbrella.rotation.y=Math.PI/8
+ const floatRing=mesh(new T.TorusGeometry(.28,.085,10,28),'#f0b8bf',pool,-.65,.42,.55);floatRing.rotation.x=Math.PI/2
+ for(let i=0;i<3;i++)box('#e8d5b3',-.8+i*.3,.12+i*.06,1.15,.4,.12,.3,pool)
+ box('#c9b18b',1.35,.28,.65,.6,.12,.65,pool)
  // V5 shares the exact mesh, proportions and feather atlas with the reviewed preview.
  const bird=new T.Group();root.add(bird);bird.position.set(-1.1,.13,.25)
  const body=new T.Group();bird.add(body)
@@ -89,7 +124,7 @@ export function createParkWorld(canvas:HTMLCanvasElement,initial:ParkState,onLos
   lid.rotation.set(Math.PI/22.5,sign*.48,0);lid.visible=false;return lid
  })
  let foodLocal=riggedFoodPoint(model)
- const footLocal=model.mesh.worldToLocal(model.contacts.foot.getWorldPosition(new T.Vector3()))
+ let footLocal=model.mesh.worldToLocal(model.contacts.foot.getWorldPosition(new T.Vector3()))
  const eggModel=createBirdEgg(),egg=eggModel.group;bird.add(egg)
  const ball=orb('#e7a9ba',.3,.3,1.3,.28);const ballRing=mesh(new T.TorusGeometry(.282,.015,5,32),'#fff0c5',ball);ballRing.rotation.x=.8
  const bowl=new T.Group();bowl.position.set(-.8,.18,1);root.add(bowl);mesh(new T.CylinderGeometry(.35,.24,.18,32),'#e3bb90',bowl);for(let k=0;k<8;k++)orb('#f1d08c',Math.sin(k*2)*.22,.12,Math.cos(k*2)*.22,.045,.025,.04,bowl)
@@ -123,7 +158,7 @@ export function createParkWorld(canvas:HTMLCanvasElement,initial:ParkState,onLos
  const starLights=new T.Group();pool.add(starLights)
  for(let i=0;i<12;i++){const a=i*Math.PI/6;const star=mesh(new T.OctahedronGeometry(i%3===0?.095:.06),'#fff2a3',starLights,Math.cos(a)*1.5,.85+(i%3)*.6,Math.sin(a)*1.05);star.material=new T.MeshStandardMaterial({color:'#fff0ab',emissive:'#ffe28a',emissiveIntensity:1.2})}
  const reduce=matchMedia('(prefers-reduced-motion: reduce)')
- function sync(){nest.visible=state.count>=14;house.visible=state.count>=21;garden.visible=state.count>=28;pool.visible=state.count>=35;egg.visible=['egg','crack'].includes(state.stage);body.visible=!egg.visible;eggModel.crack.visible=state.stage==='crack';charm.visible=false;scarf.visible=state.accessory==='scarf';backpack.visible=state.accessory==='backpack';pin.visible=state.accessory==='pin';toy.visible=['bell','ball','swing'].includes(state.accessory);Object.entries(decorObjects).forEach(([key,g])=>{g.visible=key===state.decor});if(growthStage!==state.stage){growthStage=state.stage;bird.scale.setScalar(applyRiggedGrowth(model,state.stage));foodLocal=riggedFoodPoint(model)}const colors=areaColors[state.area];(lawn.material as T.MeshStandardMaterial).color.set(colors[0]);(ground.material as T.MeshStandardMaterial).color.set(colors[1]);sun.color.set(colors[2]);starLights.visible=state.area==='pool';brush.visible=state.activity==='groom';bowl.visible=state.activity==='feed';foodStand.visible=bowl.visible;foodBase.visible=bowl.visible;ball.visible=state.activity==='play';}
+ function sync(){nest.visible=state.count>=14;house.visible=state.count>=21;garden.visible=state.count>=28;pool.visible=state.count>=35;egg.visible=['egg','crack'].includes(state.stage);body.visible=!egg.visible;eggModel.crack.visible=state.stage==='crack';charm.visible=false;scarf.visible=state.accessory==='scarf';backpack.visible=state.accessory==='backpack';pin.visible=state.accessory==='pin';toy.visible=['bell','ball','swing'].includes(state.accessory);Object.entries(decorObjects).forEach(([key,g])=>{g.visible=key===state.decor});if(growthStage!==state.stage){growthStage=state.stage;bird.scale.setScalar(applyRiggedGrowth(model,state.stage));foodLocal=riggedFoodPoint(model);footLocal=model.mesh.worldToLocal(model.contacts.foot.getWorldPosition(new T.Vector3()))}const colors=areaColors[state.area];(lawn.material as T.MeshStandardMaterial).color.set(colors[0]);(ground.material as T.MeshStandardMaterial).color.set(colors[1]);sun.color.set(colors[2]);starLights.visible=state.area==='pool';brush.visible=state.activity==='groom';bowl.visible=state.activity==='feed';foodStand.visible=bowl.visible;foodBase.visible=bowl.visible;ball.visible=state.activity==='play';}
  sync()
  const resize=new ResizeObserver(()=>{const {width,height}=canvas.getBoundingClientRect();if(width&&height){renderer.setSize(width,height,false);camera.aspect=width/height;viewportWidth=width;camera.updateProjectionMatrix()}});resize.observe(canvas)
  const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;pauseClock()});observer.observe(canvas)
@@ -156,7 +191,7 @@ export function createParkWorld(canvas:HTMLCanvasElement,initial:ParkState,onLos
   const kickPoint=footLocal.clone().add(new T.Vector3(.26,.08,.07))
   kickPoint.x+=riggedBallTravel(elapsed,reduce.matches)
   ball.position.copy(inPark(kickPoint));ball.rotation.z=-riggedBallTravel(elapsed,reduce.matches)/.28
-  if(moving){brush.position.copy(inPark(new T.Vector3(.5,1.5,1.1)));brush.position.x+=Math.sin(t*3)*.15;brush.rotation.z=Math.sin(t*3)*.3;butterfly.position.set(Math.cos(t)*1.5,2.8+Math.sin(t*2)*.3,Math.sin(t)*.7);butterflyWings.forEach((w,i)=>w.rotation.z=(i?1:-1)*Math.sin(t*12)*.7);waves.forEach((w,i)=>{w.scale.setScalar(.8+((t*.3+i*.3)%1)*.5)});duck.rotation.y=Math.sin(t*.7)*.2;charm.rotation.y=t*.5}
+  if(moving){extraButterflies.forEach((g,i)=>{g.rotation.y=Math.sin(t*1.4+i)*.3;g.children.slice(0,2).forEach((w,k)=>{w.rotation.z=(k?1:-1)*Math.sin(t*10+i)*.55})});brush.position.copy(inPark(new T.Vector3(.5,1.5,1.1)));brush.position.x+=Math.sin(t*3)*.15;brush.rotation.z=Math.sin(t*3)*.3;butterfly.position.set(Math.cos(t)*1.5,2.8+Math.sin(t*2)*.3,Math.sin(t)*.7);butterflyWings.forEach((w,i)=>w.rotation.z=(i?1:-1)*Math.sin(t*12)*.7);waves.forEach((w,i)=>{w.scale.setScalar(.8+((t*.3+i*.3)%1)*.5)});duck.rotation.y=Math.sin(t*.7)*.2;charm.rotation.y=t*.5}
   const night=sleeping?.32:1;sun.intensity=T.MathUtils.lerp(sun.intensity,4*night,damping(5,dt,reduce.matches));fill.intensity=T.MathUtils.lerp(fill.intensity,sleeping?1.4:1.3,damping(8,dt,reduce.matches))
   const frameArea=sleeping&&state.count>=14?'nest':state.area
   const localFocus=new T.Vector3(...areaFocus[frameArea]);root.updateMatrixWorld(true);const worldFocus=root.localToWorld(localFocus)

@@ -40,7 +40,7 @@ export function BuddyBird({ stage = 'egg', celebrating = false, accessory = '', 
   </svg>
 }
 
-function StagePortrait({stage}:{stage:string}){return <img className="bird-stage-portrait" src={`${import.meta.env.BASE_URL}images/xiaobu-stages-v6/${stage}.png`} alt="" width="320" height="300" loading="lazy"/>}
+function StagePortrait({stage}:{stage:string}){return <img className="bird-stage-portrait" src={`${import.meta.env.BASE_URL}images/xiaobu-stages-v7/${stage}.png`} alt="" width="320" height="300" loading="lazy"/>}
 
 export function BirdGrowth({ count, runs = [] }: { count: number; runs?: AdventureRun[] }) {
   const stage = birdStage(count)

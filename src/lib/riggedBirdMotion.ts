@@ -24,6 +24,11 @@ export function poseRiggedBird(model:Model,activity:BuddyActivity,time:number,fl
   bone('Head').rotation.y=.5*Math.sin(t*2);bone('Head').rotation.z=.15*Math.sin(t*2)
   bone('WingR').rotation.z=-.15*(1+Math.sin(t*2))
  }else{bone('Head').rotation.y=Math.sin(t*.9)*.06;bone('Chest').rotation.z=Math.sin(t*2)*.008}
+ if(model.mesh.userData.growthStage==='young'&&activity==='idle'&&!flap){
+  bone('WingL').rotation.z=.3;bone('WingR').rotation.z=-.3
+  bone('WingTipL').rotation.z=.16;bone('WingTipR').rotation.z=-.16
+ }
+ if(model.mesh.userData.growthStage==='hatch'&&activity==='idle')bone('Head').rotation.z=.08
  if(flap&&activity!=='sleep'){
   const swing=reduced?.2:.3+.45*Math.sin(t*13)
   bone('WingL').rotation.z=swing;bone('WingR').rotation.z=-swing
@@ -40,14 +45,4 @@ export function riggedFoodPoint(model:Model){
 }
 export function riggedBallTravel(time:number,reduced=false){return reduced?.7:.7*T.MathUtils.smoothstep(time,.65,1.5)}
 
-/** 幼鸟保留较大的头、短翼短尾；成年恢复模型的完整比例。 */
-export function applyRiggedGrowth(model:Model,stage:string){
- const hatch=stage==='hatch',young=stage==='young'
- for(const bone of model.bones)bone.scale.setScalar(1)
- const bone=(name:string)=>model.bones.find(b=>b.name===name)!
- bone('Head').scale.setScalar(hatch?1.2:young?1.08:1)
- for(const name of ['WingL','WingR'])bone(name).scale.setScalar(hatch?.62:young?.85:1)
- bone('Tail').scale.setScalar(hatch?.45:young?.75:1)
- model.mesh.updateMatrixWorld(true);model.mesh.skeleton.update()
- return hatch?.9:young?1.2:1.5
-}
+export {applyRiggedGrowth} from './birdGrowthAppearance'
